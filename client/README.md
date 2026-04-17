@@ -37,7 +37,7 @@ npm install
 
 2. Create a `.env` file in the root directory:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5001/api
 ```
 
 3. Start the development server:
@@ -82,7 +82,7 @@ client/
 
 ## API Integration
 
-The application connects to the backend API at `http://localhost:5000/api` by default. The following endpoints are used:
+The application connects to the backend API at `http://localhost:5001/api` by default. The following endpoints are used:
 
 - `GET /api/visa-requirements` - Fetch visa requirements
 - `POST /api/applications` - Submit visa application
@@ -90,7 +90,7 @@ The application connects to the backend API at `http://localhost:5000/api` by de
 
 ## Environment Variables
 
-- `VITE_API_URL` - Backend API base URL (default: http://localhost:5000/api)
+- `VITE_API_URL` - Backend API base URL (default: http://localhost:5001/api)
 
 ## Design System
 

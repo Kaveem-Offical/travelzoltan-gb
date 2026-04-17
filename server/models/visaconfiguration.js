@@ -20,14 +20,18 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     service_fee: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      defaultValue: 0.00
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        admin_fee: 0,
+        service_fee: 0,
+        express_fee: 0
+      }
     },
     required_documents: {
       type: DataTypes.JSON,
       allowNull: true,
-      defaultValue: [] // Array of document names
+      defaultValue: [] // Array of { name, description, icon }
     },
     form_schema: {
       type: DataTypes.JSON,

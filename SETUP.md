@@ -80,7 +80,7 @@ npm install
 
 3. Create `.env` file in the `client` directory:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5001/api
 ```
 
 4. Start the frontend development server:
@@ -128,7 +128,7 @@ http://localhost:3000
 
 ### Verify Backend
 1. Check the server terminal - you should see API requests being logged
-2. Visit `http://localhost:5000` - you should see:
+2. Visit `http://localhost:5001` - you should see:
 ```json
 {"message": "Visa Booking Platform API is running!"}
 ```

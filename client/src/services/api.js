@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +8,57 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Helper to get Basic Auth header
+const getBasicAuthHeader = () => {
+  const username = localStorage.getItem('adminUsername');
+  const password = localStorage.getItem('adminPassword');
+  if (username && password) {
+    const credentials = btoa(`${username}:${password}`);
+    return `Basic ${credentials}`;
+  }
+  return null;
+};
+
+// Request interceptor to add Basic Auth header to all requests
+api.interceptors.request.use(
+  (config) => {
+    const authHeader = getBasicAuthHeader();
+    if (authHeader) {
+      config.headers.Authorization = authHeader;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log('[API Error]', error.config?.url, error.response?.status, error.response?.data);
+    
+    if (error.response?.status === 401) {
+      // Don't reload for auth-related request failures (login/verify)
+      const url = error.config?.url || '';
+      const isAuthRequest = url.includes('/admin/login') || url.includes('/admin/verify-credentials');
+      
+      console.log('[API Error] 401 detected, isAuthRequest:', isAuthRequest);
+      
+      if (!isAuthRequest) {
+        // Credentials invalid - clear storage (React state will show login form)
+        console.log('[API Error] Clearing stored credentials...');
+        localStorage.removeItem('adminUsername');
+        localStorage.removeItem('adminPassword');
+        localStorage.removeItem('adminUser');
+        // Note: No page reload - let React state handle UI naturally
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Public API endpoints
 export const visaAPI = {
@@ -50,17 +101,74 @@ export const visaAPI = {
 
 // Admin API endpoints
 export const adminAPI = {
-  // Get all applications
-  getAllApplications: async () => {
+  // Dashboard
+  getDashboardStats: async () => {
     try {
-      const response = await api.get('/admin/applications');
+      const response = await api.get('/admin/dashboard-stats');
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
     }
   },
 
-  // Get all configurations
+  // Applications
+  getAllApplications: async (params = {}) => {
+    try {
+      const response = await api.get('/admin/applications', { params });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  getApplicationById: async (id) => {
+    try {
+      const response = await api.get(`/admin/applications/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  updateApplicationStatus: async (id, status, notes) => {
+    try {
+      const response = await api.put(`/admin/applications/${id}/status`, { status, notes });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Payments
+  getAllPayments: async () => {
+    try {
+      const response = await api.get('/admin/payments');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  getPaymentStats: async () => {
+    try {
+      const response = await api.get('/admin/payments/stats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Analytics
+  getAnalytics: async () => {
+    try {
+      const response = await api.get('/admin/analytics');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Configurations
   getAllConfigurations: async () => {
     try {
       const response = await api.get('/admin/configurations');
@@ -70,7 +178,15 @@ export const adminAPI = {
     }
   },
 
-  // Update configuration
+  createConfiguration: async (data) => {
+    try {
+      const response = await api.post('/admin/configurations', data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   updateConfiguration: async (id, data) => {
     try {
       const response = await api.put(`/admin/configurations/${id}`, data);
@@ -79,6 +195,90 @@ export const adminAPI = {
       throw error.response?.data || error.message;
     }
   },
+
+  deleteConfiguration: async (id) => {
+    try {
+      const response = await api.delete(`/admin/configurations/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+};
+
+// Auth API endpoints
+export const authAPI = {
+  // Admin login - stores credentials for Basic Auth
+  login: async (username, password) => {
+    try {
+      const response = await api.post('/admin/login', { username, password });
+      
+      if (response.data.success) {
+        // Store credentials and user info in localStorage
+        localStorage.setItem('adminUsername', username);
+        localStorage.setItem('adminPassword', password);
+        localStorage.setItem('adminUser', JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Verify credentials validity
+  verifyCredentials: async () => {
+    try {
+      const response = await api.post('/admin/verify-credentials');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Logout
+  logout: async () => {
+    try {
+      const response = await api.post('/admin/logout');
+      
+      // Clear stored credentials and user info
+      localStorage.removeItem('adminUsername');
+      localStorage.removeItem('adminPassword');
+      localStorage.removeItem('adminUser');
+      
+      return response.data;
+    } catch (error) {
+      // Still clear local storage even if server request fails
+      localStorage.removeItem('adminUsername');
+      localStorage.removeItem('adminPassword');
+      localStorage.removeItem('adminUser');
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    const username = localStorage.getItem('adminUsername');
+    const password = localStorage.getItem('adminPassword');
+    const user = localStorage.getItem('adminUser');
+    return !!(username && password && user);
+  },
+
+  // Get current user info
+  getCurrentUser: () => {
+    const user = localStorage.getItem('adminUser');
+    return user ? JSON.parse(user) : null;
+  },
+
+  // Get Basic Auth header for manual use
+  getAuthHeader: () => {
+    const username = localStorage.getItem('adminUsername');
+    const password = localStorage.getItem('adminPassword');
+    if (username && password) {
+      return `Basic ${btoa(`${username}:${password}`)}`;
+    }
+    return null;
+  }
 };
 
 export default api;

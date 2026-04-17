@@ -106,7 +106,7 @@ Start the server:
 npm run dev
 ```
 
-The API will be available at `http://localhost:5000`
+The API will be available at `http://localhost:5001`
 
 ### 4. Frontend Setup
 
@@ -117,7 +117,7 @@ npm install
 
 Create a `.env` file in the `client` directory:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5001/api
 ```
 
 Start the development server:
@@ -291,7 +291,7 @@ npm run db:migrate  # Run database migrations
 
 ### Client (.env)
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5001/api
 ```
 
 ### Server (.env)

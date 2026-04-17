@@ -131,7 +131,17 @@ const ChecklistPage = () => {
   ];
 
   const documents = visaData?.required_documents || defaultDocuments;
-  const serviceFee = visaData?.service_fee || 133.00;
+
+  // Helper to calculate total fee from breakdown
+  const calculateTotalFee = (serviceFee) => {
+    if (typeof serviceFee === 'object' && serviceFee !== null) {
+      return (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
+    }
+    return parseFloat(serviceFee) || 133.00;
+  };
+
+  const serviceFeeBreakdown = visaData?.service_fee || { admin_fee: 68, service_fee: 45, express_fee: 20 };
+  const totalServiceFee = calculateTotalFee(serviceFeeBreakdown);
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-24">
@@ -201,20 +211,25 @@ const ChecklistPage = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {Array.isArray(documents) ? documents.map((doc, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`bg-surface-container-lowest p-8 rounded-lg shadow-sm border-b-4 ${doc.border || 'border-primary'} transition-transform hover:-translate-y-2`}
-                    >
-                      <span className={`material-symbols-outlined ${doc.color || 'text-primary'} text-4xl mb-4`}>
-                        {doc.icon || 'description'}
-                      </span>
-                      <h3 className="font-headline text-xl font-bold mb-2">{doc.title || doc}</h3>
-                      <p className="text-on-surface-variant text-sm leading-relaxed">
-                        {doc.desc || 'Required document for visa application'}
-                      </p>
-                    </div>
-                  )) : (
+                  {Array.isArray(documents) ? documents.map((doc, idx) => {
+                    // Handle both new API format (name, description, icon) and old default format (title, desc)
+                    const docName = doc.name || doc.title || doc;
+                    const docDesc = doc.description || doc.desc || 'Required document for visa application';
+                    return (
+                      <div
+                        key={idx}
+                        className={`bg-surface-container-lowest p-8 rounded-lg shadow-sm border-b-4 ${doc.border || 'border-primary'} transition-transform hover:-translate-y-2`}
+                      >
+                        <span className={`material-symbols-outlined ${doc.color || 'text-primary'} text-4xl mb-4`}>
+                          {doc.icon || 'description'}
+                        </span>
+                        <h3 className="font-headline text-xl font-bold mb-2">{docName}</h3>
+                        <p className="text-on-surface-variant text-sm leading-relaxed">
+                          {docDesc}
+                        </p>
+                      </div>
+                    );
+                  }) : (
                     <p className="col-span-2 text-on-surface-variant">No documents information available</p>
                   )}
                 </div>
@@ -224,22 +239,31 @@ const ChecklistPage = () => {
                 <div>
                   <h2 className="font-headline text-2xl font-bold mb-6">Service Fees</h2>
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-on-surface-variant">Embassy Fee</span>
-                      <span className="font-semibold">£{(serviceFee * 0.51).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-on-surface-variant">Processing</span>
-                      <span className="font-semibold">£{(serviceFee * 0.34).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-on-surface-variant">Express Service</span>
-                      <span className="font-semibold text-secondary">+ £{(serviceFee * 0.15).toFixed(2)}</span>
-                    </div>
+                    {/* Admin Fee - only show if added */}
+                    {(serviceFeeBreakdown.admin_fee > 0) && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-on-surface-variant">Admin Fee</span>
+                        <span className="font-semibold">£{(serviceFeeBreakdown.admin_fee || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {/* Service Fee - only show if added */}
+                    {(serviceFeeBreakdown.service_fee > 0) && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-on-surface-variant">Processing Fee</span>
+                        <span className="font-semibold">£{(serviceFeeBreakdown.service_fee || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {/* Express Fee - only show if added */}
+                    {(serviceFeeBreakdown.express_fee > 0) && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-on-surface-variant">Express Service</span>
+                        <span className="font-semibold text-secondary">+ £{(serviceFeeBreakdown.express_fee || 0).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="pt-4 mt-4 border-t border-outline-variant flex justify-between items-center">
                       <span className="font-bold">Total Cost</span>
                       <span className="text-2xl font-headline font-black text-primary">
-                        £{serviceFee.toFixed(2)}
+                        £{totalServiceFee.toFixed(2)}
                       </span>
                     </div>
                   </div>
