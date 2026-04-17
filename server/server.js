@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const { sequelize } = require('./models');
 
 // Import routes
@@ -25,37 +26,66 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Determine client dist path (local dev vs Vercel)
-const clientDistPath = path.join(__dirname, '../client/dist');
+// Determine client dist path (try multiple locations for local dev vs Vercel)
+const possiblePaths = [
+  path.join(__dirname, '../client/dist'),
+  path.join(__dirname, '../../client/dist'),
+  path.join(process.cwd(), 'client/dist'),
+  '/var/task/client/dist'
+];
 
-// Serve React client static files
-app.use(express.static(clientDistPath));
+let clientDistPath = null;
+for (const p of possiblePaths) {
+  if (fs.existsSync(p)) {
+    clientDistPath = p;
+    console.log('Found client dist at:', p);
+    break;
+  }
+}
+
+// Serve React client static files if found
+if (clientDistPath) {
+  app.use(express.static(clientDistPath));
+  
+  // SPA catch-all: serve index.html for any non-API routes
+  app.get('*', (req, res) => {
+    const indexPath = path.join(clientDistPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: 'index.html not found' });
+    }
+  });
+} else {
+  console.warn('Client dist not found, serving API only');
+  app.get('*', (req, res) => {
+    res.status(404).json({ error: 'Client not built. Run npm run build in client folder.' });
+  });
+}
 
 // Health check endpoint (API only)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Visa Booking Platform API is running!' });
 });
 
-// SPA catch-all: serve index.html for any non-API routes (handles client-side routing)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientDistPath, 'index.html'));
-});
+// Start the server (local dev only, not for Vercel serverless)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const startServer = async () => {
+    try {
+      await sequelize.authenticate();
+      console.log('Database connection has been established successfully.');
+      
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error('Unable to connect to the database or start server:', error);
+      process.exit(1);
+    }
+  };
+  
+  startServer();
+}
 
-// Start the server
-const startServer = async () => {
-  try {
-    // Authenticate database connection
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-
-    // Listen on PORT
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Unable to connect to the database or start server:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+// Export for Vercel serverless
+module.exports = app;
