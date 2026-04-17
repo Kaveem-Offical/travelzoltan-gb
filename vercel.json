@@ -1,6 +1,7 @@
 {
   "version": 2,
   "buildCommand": "cd client && npm install && npm run build && cd ../server && npm install",
+  "outputDirectory": "client/dist",
   "framework": null,
   "rewrites": [
     {
@@ -9,7 +10,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/api"
+      "destination": "/index.html"
     }
   ]
 }
