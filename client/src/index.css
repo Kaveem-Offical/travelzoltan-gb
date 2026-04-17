@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@theme {
+  /* Custom Colors from sample.html */
+  --color-surface-tint: #004ced;
+  --color-secondary: #b60e3d;
+  --color-on-secondary-container: #fffbff;
+  --color-on-surface-variant: #434656;
+  --color-outline: #737688;
+  --color-inverse-primary: #b7c4ff;
+  --color-tertiary-container: #516692;
+  --color-on-tertiary: #ffffff;
+  --color-secondary-fixed-dim: #ffb2b8;
+  --color-surface-container-highest: #e0e3e5;
+  --color-surface-container: #eceef0;
+  --color-tertiary-fixed: #d8e2ff;
+  --color-background: #f7f9fb;
+  --color-surface-container-low: #f2f4f6;
+  --color-on-background: #191c1e;
+  --color-inverse-surface: #2d3133;
+  --color-on-primary-fixed: #001452;
+  --color-surface-dim: #d8dadc;
+  --color-on-tertiary-container: #dce5ff;
+  --color-on-surface: #191c1e;
+  --color-surface-bright: #f7f9fb;
+  --color-tertiary: #394e79;
+  --color-surface-variant: #e0e3e5;
+  --color-surface-container-high: #e6e8ea;
+  --color-on-tertiary-fixed: #001a42;
+  --color-secondary-container: #da3054;
+  --color-on-primary-container: #dfe3ff;
+  --color-error: #ba1a1a;
+  --color-on-error-container: #93000a;
+  --color-primary-container: #ff6699;
+  --color-on-secondary-fixed-variant: #91002d;
+  --color-primary: #ff3366;
+  --color-inverse-on-surface: #eff1f3;
+  --color-secondary-fixed: #ffdadb;
+  --color-error-container: #ffdad6;
+  --color-primary-fixed: #ffd9e5;
+  --color-on-tertiary-fixed-variant: #314671;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-error: #ffffff;
+  --color-on-primary-fixed-variant: #8a0030;
+  --color-on-primary: #ffffff;
+  --color-tertiary-fixed-dim: #b1c6f9;
+  --color-on-secondary-fixed: #40000f;
+  --color-surface: #f7f9fb;
+  --color-outline-variant: #c3c5d9;
+  --color-on-secondary: #ffffff;
+  --color-primary-fixed-dim: #ffb3c9;
+
+  /* Custom Border Radius */
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+
+  /* Custom Fonts */
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+/* Custom CSS Classes from sample.html */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.editorial-shadow {
+  box-shadow: 0 40px 60px -20px rgba(25, 28, 30, 0.08);
+}
+
+.asymmetric-image {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}

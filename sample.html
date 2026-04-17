@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ZoltanVisa | Worldwide Visa Assistance Simplified</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- React & Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#004ced",
+                        "secondary": "#b60e3d",
+                        "on-secondary-container": "#fffbff",
+                        "on-surface-variant": "#434656",
+                        "outline": "#737688",
+                        "inverse-primary": "#b7c4ff",
+                        "tertiary-container": "#516692",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb2b8",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container": "#eceef0",
+                        "tertiary-fixed": "#d8e2ff",
+                        "background": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-background": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-fixed": "#001452",
+                        "surface-dim": "#d8dadc",
+                        "on-tertiary-container": "#dce5ff",
+                        "on-surface": "#191c1e",
+                        "surface-bright": "#f7f9fb",
+                        "tertiary": "#394e79",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#001a42",
+                        "secondary-container": "#da3054",
+                        "on-primary-container": "#dfe3ff",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#0052ff",
+                        "on-secondary-fixed-variant": "#91002d",
+                        "primary": "#003ec7",
+                        "inverse-on-surface": "#eff1f3",
+                        "secondary-fixed": "#ffdadb",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#dde1ff",
+                        "on-tertiary-fixed-variant": "#314671",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#0038b6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#b1c6f9",
+                        "on-secondary-fixed": "#40000f",
+                        "surface": "#f7f9fb",
+                        "outline-variant": "#c3c5d9",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#b7c4ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-shadow {
+            box-shadow: 0 40px 60px -20px rgba(25, 28, 30, 0.08);
+        }
+        .asymmetric-image {
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const TopNavBar = () => {
+            const location = useLocation();
+            const isZoltan = location.pathname === '/checklist';
+            
+            return (
+                <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+                    <div className="flex justify-between items-center px-6 md:px-12 py-4 max-w-screen-2xl mx-auto">
+                        <Link to="/" className="text-2xl font-black text-blue-700 dark:text-blue-500 tracking-tighter font-headline">
+                            {isZoltan ? 'Zoltan Visa' : 'VisaCurator'}
+                        </Link>
+                        
+                        <div className="hidden md:flex items-center gap-8">
+                            <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Destinations</a>
+                            <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">How it Works</a>
+                            <Link to="/checklist" className={`font-headline font-semibold tracking-tight transition-colors ${isZoltan ? 'text-blue-700 dark:text-blue-400 border-b-2 border-blue-700' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}>
+                                Pricing
+                            </Link>
+                            <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Support</a>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                            <button className="hidden md:block font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 px-4 py-2">Login</button>
+                            <button className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95">Sign Up</button>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
+
+        const Footer = () => {
+            const location = useLocation();
+            const isZoltan = location.pathname === '/checklist';
+            const brand = isZoltan ? 'Zoltan Visa' : 'VisaCurator';
+
+            return (
+                <footer className="w-full rounded-t-[3rem] mt-20 bg-slate-50 dark:bg-slate-950 px-6 md:px-12 py-16">
+                    <div className="max-w-screen-2xl mx-auto">
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
+                            <div className="space-y-6 max-w-sm">
+                                <div className="text-xl font-black text-blue-700 dark:text-blue-500 font-headline">{brand}</div>
+                                <p className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm leading-relaxed">
+                                    {isZoltan ? 'Redefining the travel experience through premium digital curatorship and unrivaled visa expertise.' : 'The premier destination for discerning travelers seeking seamless visa assistance and luxury travel curation globally.'}
+                                </p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
+                                <div className="space-y-4">
+                                    <p className="font-headline font-bold text-on-surface">Company</p>
+                                    <ul className="space-y-2">
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">About Us</a></li>
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">FAQ</a></li>
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">Contact Us</a></li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-4">
+                                    <p className="font-headline font-bold text-on-surface">Legal</p>
+                                    <ul className="space-y-2">
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">Privacy Policy</a></li>
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">Terms of Service</a></li>
+                                        <li><a className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm hover:text-blue-700 dark:hover:text-blue-300 underline underline-offset-4 transition-all" href="#">Cookie Policy</a></li>
+                                    </ul>
+                                </div>
+                                <div className="hidden md:block space-y-4">
+                                    <p className="font-headline font-bold text-on-surface">Social</p>
+                                    <div className="flex gap-4">
+                                        <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#"><span className="material-symbols-outlined text-sm">public</span></a>
+                                        <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#"><span className="material-symbols-outlined text-sm">share</span></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <p className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm">© 2024 {brand}. All rights reserved.</p>
+                            <div className="flex items-center gap-4">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <p className="text-xs font-bold text-on-surface uppercase tracking-widest">Global Status: All Systems Operational</p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            );
+        };
+
+        // --- Pages ---
+
+        const HomePage = () => {
+            const navigate = useNavigate();
+
+            return (
+                <main className="pt-24">
+                    {/* Hero Section */}
+                    <section className="relative min-h-[870px] flex items-center overflow-hidden px-6 md:px-12">
+                        <div className="max-w-screen-2xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                            <div className="lg:col-span-7 z-10">
+                                <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-primary-fixed text-on-primary-fixed font-headline font-bold text-sm tracking-wide">THE DIGITAL CURATOR</span>
+                                <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
+                                    Worldwide Visa Assistance. <span className="text-primary">Simplified.</span>
+                                </h1>
+                                <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+                                    Apply for visas, book flights, hotels, and airport transfers all in one place. Experience travel logistics reimagined for the modern explorer.
+                                </p>
+                                
+                                {/* Interactive Selector Box */}
+                                <div className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-end">
+                                    <div className="flex-1 w-full space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">Citizenship</label>
+                                        <div className="relative group">
+                                            <select className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer">
+                                                <option>United Kingdom</option>
+                                                <option>Europe Nationals</option>
+                                                <option>Other Nationals</option>
+                                            </select>
+                                            <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 w-full space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">Destination</label>
+                                        <div className="relative group">
+                                            <select className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer">
+                                                <option>Europe (Schengen States)</option>
+                                                <option>USA</option>
+                                                <option>Canada</option>
+                                                <option>Australia</option>
+                                                <option>Dubai</option>
+                                                <option>New Zealand</option>
+                                                <option>India</option>
+                                                <option>Japan</option>
+                                                <option>Other Countries</option>
+                                            </select>
+                                            <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => navigate('/checklist')}
+                                        className="w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all active:scale-[0.98]">
+                                        Check Details
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="lg:col-span-5 relative hidden lg:block h-full min-h-[600px]">
+                                <div className="absolute top-0 right-0 w-4/5 h-[80%] rounded-[4rem] overflow-hidden rotate-3 z-0">
+                                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVJW-9gq3wH3Ia5Uyw7X4TBcLC4HoPqvN_dYGpmZxuaPtYGb_97Cvb4-BLZvGWfDB6hxpepqq_sjSJTnNWb0sxr-AelQxzKosIb3ZH38qec4R4f1VXm_EvoKGXI2mey3HcWWmdAmTxjqD7n-y9PiDCCsGY1zthOhsM5_5AX3AWmDgUtXj4zqV0-3x1BOBe9BWLefNuJacpxsDZLjfw3svthEv4jC6CNLMekLCP44ZevEBjq_V7q43SVU3Cc1kEEZsF3cb2kz5I8Ow" alt="Beach"/>
+                                </div>
+                                <div className="absolute bottom-0 left-0 w-3/4 h-[70%] rounded-[3rem] overflow-hidden -rotate-6 z-10 border-[12px] border-surface shadow-2xl">
+                                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKFg_DSCTKa5yS6Rp31rz6UPLmuv9swCtbJj8L_ffR5T6cIiwBtYvso6PGzhWagsLk6PKu90pXrYtLcSOz918akgE2myc2AWIjNrF0uv6gDnt6PKzbXJu7bAxuLJEfRUhB8jNWZ39z34QLlOWhhg_BVJOlbd-mPeKLeS7g8t5rD0fMqSpWnm0jFCBO8YNm7gwMJY9J0uLZxolVLLcIKDAqSTiLbf7cVSSBb35_A-cscC-65n__pQ-1UCmBKMjHhCNpYDZs3ittPTA" alt="European Facade"/>
+                                </div>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-surface-container-lowest p-5 rounded-lg editorial-shadow flex items-center gap-4 animate-bounce">
+                                    <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center text-green-600">
+                                        <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-outline">Visa Approved</p>
+                                        <p className="font-headline font-bold">Schengen Area</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="py-12 px-6 md:px-12 bg-white border-y border-slate-100">
+                        <div className="max-w-screen-2xl mx-auto">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
+                                <div className="shrink-0">
+                                    <h2 className="font-headline text-sm font-bold uppercase tracking-[0.2em] text-outline">Trusted & Certified</h2>
+                                </div>
+                                <div className="w-full flex-1 flex justify-center md:justify-end overflow-hidden">
+                                    <img alt="Industry Certifications" className="max-h-12 w-auto grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default" src="https://lh3.googleusercontent.com/aida/ADBb0ugbTZTgDQCiMuYAtxnuV1GY6uJlotn7EbJqnMQejmPbxIhKigZt5cbrcolQ-1uj8htJAeWJ3yXNKsmhLen7auj6-PvG7-23D4RF_dV2HbGIE9T55yddl4Rm4pj1h0GZIMYEuz783B4Kdu3J542L1U75SYvZWWJSKbPki0kJKRSgspMsZkOyb-zXGT5lxY5IMHkLqBcrbmlG4TstZcviisThQH4t_7yoVoyWNwwcgF2SrBbhFT3KmaNElZhIWQRysKJoqbahMAPPmA"/>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Services Section */}
+                    <section className="py-24 px-6 md:px-12 bg-surface-container-low">
+                        <div className="max-w-screen-2xl mx-auto">
+                            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                                <div className="max-w-2xl">
+                                    <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-6">Complete Travel Concierge</h2>
+                                    <p className="text-on-surface-variant text-lg">We handle the complexity so you can focus on the experience. Our end-to-end services ensure your journey is seamless from takeoff to landing.</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container-high text-on-surface hover:bg-primary hover:text-white transition-colors">
+                                        <span className="material-symbols-outlined">west</span>
+                                    </button>
+                                    <button className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container-high text-on-surface hover:bg-primary hover:text-white transition-colors">
+                                        <span className="material-symbols-outlined">east</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {[
+                                    { icon: 'flight_takeoff', title: 'Global Flights', desc: 'Curated routes with premium airlines at competitive institutional rates.' },
+                                    { icon: 'hotel', title: 'Luxury Stays', desc: 'Verified accommodations ranging from boutique gems to 5-star legends.' },
+                                    { icon: 'airport_shuttle', title: 'Elite Transfers', desc: 'Private, punctual airport transfers with professional multilingual chauffeurs.' },
+                                    { icon: 'explore', title: 'Tour Packages', desc: 'Hand-crafted itineraries that blend popular sites with local secrets.' },
+                                ].map((service, idx) => (
+                                    <div key={idx} className="bg-surface-container-lowest p-8 rounded-lg group hover:bg-primary transition-all duration-500 editorial-shadow">
+                                        <div className="w-14 h-14 bg-surface-container-high rounded-2xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
+                                            <span className="material-symbols-outlined text-primary group-hover:text-white text-3xl">{service.icon}</span>
+                                        </div>
+                                        <h3 className="font-headline text-2xl font-bold mb-4 group-hover:text-white transition-colors">{service.title}</h3>
+                                        <p className="text-on-surface-variant group-hover:text-white/80 mb-6 transition-colors">{service.desc}</p>
+                                        <a className="inline-flex items-center gap-2 font-bold text-primary group-hover:text-white transition-colors" href="#">
+                                            Explore <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Bento Grid */}
+                    <section className="py-24 px-6 md:px-12 bg-surface">
+                        <div className="max-w-screen-2xl mx-auto">
+                            <div className="text-center mb-16">
+                                <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-4">Upcoming Tours & Destinations</h2>
+                                <p className="text-on-surface-variant text-lg max-w-2xl mx-auto">Limited-availability curated experiences for the discerning traveler.</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto lg:h-[700px]">
+                                <div className="md:col-span-8 group relative rounded-lg overflow-hidden editorial-shadow">
+                                    <img className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOxpazC96qQP_mlFIYn-uQcqHjT8b8-wLuoIuPfCYslWfU6ba6I6bR92JNxPGchi1AMMzaoxsBi8IoGFAi0N2eUQg-vuV1RhBvd8euKxmaotekCrZyBuNBWqaATWmRufNkw3MUFBt6flUQeqdhKntqOF67v5xdwi2veP_xH_4j8PrXngw_r7SrW8axesaKF1De2dIbweEEJtsxt8t6i-OCUhZLLl4YV04gnn8iuUrSX0B7QGk0r8hLkVfh0kAgZTu00hkugwuLsOs" alt="Swiss Alps"/>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                    <div className="absolute bottom-0 left-0 p-10 w-full">
+                                        <span className="bg-secondary text-white px-4 py-1 rounded-full text-xs font-bold tracking-widest mb-4 inline-block uppercase">Bestseller</span>
+                                        <h3 className="font-headline text-4xl md:text-5xl font-extrabold text-white mb-4">European Alpine Odyssey</h3>
+                                        <p className="text-white/80 text-lg mb-8 max-w-xl">A 12-day journey through the heart of Switzerland, France, and Italy.</p>
+                                        <button className="bg-white text-on-surface font-bold px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-3">
+                                            Contact Us <span className="material-symbols-outlined text-sm">mail</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="md:col-span-4 flex flex-col gap-8">
+                                    <div className="flex-1 group relative rounded-lg overflow-hidden editorial-shadow min-h-[300px]">
+                                        <img className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALlVcI0IFI1lLhFlT_0DUkJ2TVuqM1TPAZ_XV6STj1phg-olPxQQ9-mOFGDMIphhM2CVYL4l1IV0N2r2oEXNhn_HB6SclzHnPtrLKFXDupGhLpzBsYXjqkiVbg9VOd7Pv36rVPsyVBYI5kkaiSW4Dk9BwrBFJd3-WPfUgGIBtMZbWQTGVhvGkxcocWSGHTOSzEid2DGJd1NCCJ1XMUXGCf3_ubBP_x0iq3UfLsfIS7nZQvx24MzbYdXS_cLTREAtqFF_T5iJm-pXc" alt="Australia"/>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                        <div className="absolute bottom-0 left-0 p-8">
+                                            <h4 className="font-headline text-2xl font-bold text-white mb-2">Australian Coastlines</h4>
+                                            <button className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all">Enquire Now <span className="material-symbols-outlined text-xs">arrow_forward</span></button>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 group relative rounded-lg overflow-hidden editorial-shadow min-h-[300px]">
+                                        <img className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDewKR3T_tlcmqOsPc0UYoZFhNpFiSX6zxvIdbYoJW6MgpuqPDf9N4Va5JoxzTK-fYGT0g5zvO4artj_QFwTFjIsDL9poaGT5FPBIV-HCi1N8MsddzOXF_aQ2KSrrfDvhkFkwNWRRABvQUmxs9uhnwBGyVO6_TXM0A-LtFzzDT_g6zrImV6LUeSu6Kl6oyMk3oH9EOYo94F9x7hONogrJf2Xn6dNDWY7WsoLGmjbjZphE0YJU7BxrbYnGed-tsgeGA82_23RZ__hqY" alt="Japan"/>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                        <div className="absolute bottom-0 left-0 p-8">
+                                            <h4 className="font-headline text-2xl font-bold text-white mb-2">Japanese Heritage</h4>
+                                            <button className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all">Enquire Now <span className="material-symbols-outlined text-xs">arrow_forward</span></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            );
+        };
+
+        const ChecklistPage = () => {
+            const [submitted, setSubmitted] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setSubmitted(true);
+                setTimeout(() => setSubmitted(false), 3000);
+            };
+
+            return (
+                <main className="max-w-7xl mx-auto px-6 py-24">
+                    {/* Hero Header */}
+                    <header className="relative mb-24">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                            <div className="z-10">
+                                <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-secondary-container/10 text-secondary border border-secondary-container/20 rounded-full">Digital Curator</span>
+                                <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface mb-6 leading-[1.1]">
+                                    Document Checklist for <span className="text-primary">UK Nationals</span>
+                                </h1>
+                                <p className="text-xl text-on-surface-variant font-light max-w-lg leading-relaxed">
+                                    Traveling to Europe has changed. Our premium concierge service ensures your visa application is seamless, fast, and 100% compliant.
+                                </p>
+                            </div>
+                            <div className="relative">
+                                <div className="asymmetric-image w-full h-[500px] rounded-xl overflow-hidden shadow-2xl">
+                                    <img alt="Scenic European street" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKXCM9V-3SsznvDL4hkhuUV9pOZbJq7Vxo9umALts_UVYD6RKukyU112yP1b8rD6KFOKjhj4_1GSVRcVLkqTMX_wLddormFkHLG5u5tGxdsk6RxVKmpso_KKlaC_mh-1fLFvHjo8Ja_v7fMrjrdyBee9CN0YrPeE0JRXeKbmNCFIk_ni2AVfyObKiznMyvtG-Yb2QhBiacNW1eMR3gxRaYeWI5dLIrofMJcscE8msncL9aBfjUYD5flLz0rHZPlNL1dOE4MwXnCDI" />
+                                </div>
+                                <div className="absolute -bottom-8 -left-8 glass p-8 rounded-lg shadow-xl border border-white/40 hidden md:block">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-white">
+                                            <span className="material-symbols-outlined">verified</span>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold font-headline">99.8% Success Rate</div>
+                                            <div className="text-xs text-on-surface-variant">Verified by 5,000+ travelers</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Requirements & Cost */}
+                    <section className="mb-24">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            <div className="flex-1 space-y-6">
+                                <div className="flex items-end justify-between mb-8">
+                                    <h2 className="font-headline text-3xl font-bold tracking-tight">Documents Required</h2>
+                                    <span className="text-primary font-bold text-sm">4 Items Total</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    {[
+                                        { icon: 'travel', color: 'text-primary', border: 'border-primary', title: 'Original Passport', desc: 'Must be valid for 6 months beyond departure date.' },
+                                        { icon: 'photo_camera', color: 'text-secondary', border: 'border-secondary', title: 'Biometric Photos', desc: 'Two recent color photos (3.5 x 4.5 cm) on white background.' },
+                                        { icon: 'description', color: 'text-tertiary', border: 'border-tertiary', title: 'Travel Insurance', desc: 'Proof of medical insurance covering €30,000 min.' },
+                                        { icon: 'home_work', color: 'text-primary-container', border: 'border-primary-container', title: 'Proof of Residency', desc: 'Valid UK residence permit (BRP) or equivalent.' },
+                                    ].map((doc, idx) => (
+                                        <div key={idx} className={`bg-surface-container-lowest p-8 rounded-lg shadow-sm border-b-4 ${doc.border} transition-transform hover:-translate-y-2`}>
+                                            <span className={`material-symbols-outlined ${doc.color} text-4xl mb-4`}>{doc.icon}</span>
+                                            <h3 className="font-headline text-xl font-bold mb-2">{doc.title}</h3>
+                                            <p className="text-on-surface-variant text-sm leading-relaxed">{doc.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="w-full md:w-80 bg-surface-container-high rounded-xl p-8 flex flex-col justify-between self-start sticky top-28">
+                                <div>
+                                    <h2 className="font-headline text-2xl font-bold mb-6">Service Fees</h2>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center"><span className="text-on-surface-variant">Embassy Fee</span><span className="font-semibold">£68.00</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-on-surface-variant">Processing</span><span className="font-semibold">£45.00</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-on-surface-variant">Express Service</span><span className="font-semibold text-secondary">+ £20.00</span></div>
+                                        <div className="pt-4 mt-4 border-t border-outline-variant flex justify-between items-center">
+                                            <span className="font-bold">Total Cost</span>
+                                            <span className="text-2xl font-headline font-black text-primary">£133.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-8 text-xs text-on-surface-variant italic">*Fees may vary based on destination.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Form Section */}
+                    <section className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        <div className="lg:col-span-2">
+                            <div className="bg-surface-container-lowest rounded-lg p-10 shadow-sm">
+                                <h2 className="font-headline text-3xl font-bold mb-8">Start Your Application</h2>
+                                {submitted ? (
+                                    <div className="py-20 text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                                        <span className="material-symbols-outlined text-green-500 text-7xl">check_circle</span>
+                                        <h3 className="text-2xl font-bold">Application Submitted!</h3>
+                                        <p className="text-on-surface-variant">Our team will review your documents and contact you within 24 hours.</p>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleSubmit} className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-on-surface ml-1">Full Name</label>
+                                                <input required className="w-full bg-surface-container-low border-none rounded-DEFAULT p-4" placeholder="John Doe" type="text"/>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold text-on-surface ml-1">Email Address</label>
+                                                <input required className="w-full bg-surface-container-low border-none rounded-DEFAULT p-4" placeholder="john@example.com" type="email"/>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="text-sm font-semibold text-on-surface ml-1">Upload Documents (PDF, JPG)</label>
+                                            <div className="border-2 border-dashed border-outline-variant rounded-lg p-12 text-center bg-surface-container-low hover:bg-surface-container transition-colors group cursor-pointer">
+                                                <span className="material-symbols-outlined text-4xl text-outline mb-4 group-hover:text-primary transition-colors">cloud_upload</span>
+                                                <p className="text-on-surface-variant">Drag and drop scans here</p>
+                                                <button className="mt-4 text-primary font-bold hover:underline" type="button">Or browse files</button>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8">
+                                            <div className="bg-surface-container px-6 py-4 rounded-lg flex items-center gap-4">
+                                                <input type="checkbox" required className="rounded border-primary text-primary focus:ring-primary" />
+                                                <span className="text-sm text-on-surface-variant">I am not a robot</span>
+                                            </div>
+                                            <button className="w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline text-lg font-bold px-12 py-5 rounded-full shadow-lg hover:opacity-90 transition-all active:scale-95" type="submit">
+                                                Submit Application
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Sidebar Support */}
+                        <div className="space-y-8">
+                            <div className="bg-primary text-on-primary p-10 rounded-lg shadow-xl relative overflow-hidden">
+                                <div className="relative z-10">
+                                    <h3 className="font-headline text-2xl font-bold mb-4">Need Expert Advice?</h3>
+                                    <p className="text-on-primary-container/80 mb-8 font-light">Available 24/7 to guide you.</p>
+                                    <div className="space-y-4">
+                                        <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="#">
+                                            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-white">chat</span></div>
+                                            <div><div className="font-bold text-sm">WhatsApp</div><div className="text-xs opacity-70">Instant response</div></div>
+                                        </a>
+                                        <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="#">
+                                            <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-white">call</span></div>
+                                            <div><div className="font-bold text-sm">Priority Phone</div><div className="text-xs opacity-70">+44 20 1234 5678</div></div>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+                            </div>
+                            <div className="p-8 rounded-lg bg-surface-container-low border border-outline-variant/30">
+                                <h4 className="font-headline font-bold mb-4">Why choose us?</h4>
+                                <ul className="space-y-4 text-sm text-on-surface-variant">
+                                    <li className="flex gap-3"><span className="material-symbols-outlined text-primary text-lg">done_all</span>Official Embassy partner</li>
+                                    <li className="flex gap-3"><span className="material-symbols-outlined text-primary text-lg">done_all</span>End-to-end verification</li>
+                                    <li className="flex gap-3"><span className="material-symbols-outlined text-primary text-lg">done_all</span>Premium courier included</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            );
+        };
+
+        const App = () => {
+            const ScrollToTop = () => {
+                const { pathname } = useLocation();
+                useEffect(() => {
+                    window.scrollTo(0, 0);
+                }, [pathname]);
+                return null;
+            };
+
+            return (
+                <MemoryRouter>
+                    <ScrollToTop />
+                    <TopNavBar />
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/checklist" element={<ChecklistPage />} />
+                    </Routes>
+                    <Footer />
+                </MemoryRouter>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
