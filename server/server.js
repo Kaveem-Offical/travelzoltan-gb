@@ -25,17 +25,20 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Serve React client static files
-app.use(express.static(path.join(__dirname, '../client/dist')));
+// Determine client dist path (local dev vs Vercel)
+const clientDistPath = path.join(__dirname, '../client/dist');
 
-// Health check endpoint (API only - not for root when serving client)
+// Serve React client static files
+app.use(express.static(clientDistPath));
+
+// Health check endpoint (API only)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Visa Booking Platform API is running!' });
 });
 
 // SPA catch-all: serve index.html for any non-API routes (handles client-side routing)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 // Start the server
