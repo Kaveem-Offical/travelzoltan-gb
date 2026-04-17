@@ -1,10 +1,9 @@
 {
   "development": {
-    "use_env_variable": "DATABASE_URL",
-    "username": "root",
-    "password": "",
-    "database": "visa_db",
-    "host": "127.0.0.1",
+    "username": "zoltangroup_greatbritain",
+    "password": "Zoltan@123",
+    "database": "zoltangroup_greatbritain",
+    "host": "mysql.us.cloudlogin.co",
     "dialect": "mysql"
   },
   "test": {
