@@ -4,11 +4,15 @@
   "outputDirectory": "dist",
   "routes": [
     {
+      "src": "^/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "^/api/(.*)",
       "dest": "https://travelzoltan-gb.onrender.com/api/$1"
     },
     {
-      "src": "^(.*)$",
+      "src": "^(?!.*\\.(js|css|png|jpg|jpeg|svg|ico|json)$).*",
       "dest": "/index.html"
     }
   ]
