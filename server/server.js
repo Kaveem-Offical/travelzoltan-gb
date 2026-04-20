@@ -8,6 +8,7 @@ const { sequelize } = require('./models');
 // Import routes
 const publicRoutes = require('./routes/publicRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const documentRoutes = require('./routes/documentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Register API Routes
 app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/document', documentRoutes);
 
 // Determine client dist path (try multiple locations for local dev vs Vercel)
 const possiblePaths = [

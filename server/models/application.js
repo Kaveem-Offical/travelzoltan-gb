@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'configuration_id',
         as: 'visaConfiguration'
       });
+      Application.hasMany(models.Document, {
+        foreignKey: 'application_id',
+        as: 'documents'
+      });
     }
   }
   Application.init({

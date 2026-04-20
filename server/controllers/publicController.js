@@ -1,4 +1,5 @@
-const { VisaConfiguration, Application } = require('../models');
+const { VisaConfiguration, Application, Document } = require('../models');
+const uploadService = require('../services/uploadService');
 
 // GET /api/visa-requirements?citizenship=X&destination=Y
 const getVisaRequirements = async (req, res) => {
@@ -32,19 +33,10 @@ const getVisaRequirements = async (req, res) => {
 // POST /api/applications
 const createApplication = async (req, res) => {
   try {
-    const { configuration_id, user_data } = req.body;
+    const { configuration_id, user_data, document_types } = req.body;
 
     if (!configuration_id) {
       return res.status(400).json({ message: 'configuration_id is required.' });
-    }
-
-    // Process file uploads from multer
-    const documentUrls = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        // Storing the relative path
-        documentUrls.push(`/uploads/${file.filename}`);
-      });
     }
 
     let parsedUserData = {};
@@ -56,20 +48,85 @@ const createApplication = async (req, res) => {
       }
     }
 
+    // Parse document types if provided
+    let parsedDocumentTypes = [];
+    if (document_types) {
+      try {
+        parsedDocumentTypes = typeof document_types === 'string' ? JSON.parse(document_types) : document_types;
+      } catch (e) {
+        console.warn('Invalid document_types format, using defaults');
+      }
+    }
+
+    // Create application first
     const newApplication = await Application.create({
       configuration_id,
       user_data: parsedUserData,
-      document_urls: documentUrls,
-      payment_status: 'pending' // Default status
+      document_urls: [], // Deprecated field, keeping for backward compatibility
+      payment_status: 'pending'
     });
+
+    // Upload documents if provided
+    const uploadedDocuments = [];
+    if (req.files && req.files.length > 0) {
+      try {
+        console.log(`[Application] Uploading ${req.files.length} documents...`);
+        
+        // Upload each file with its document type
+        for (let i = 0; i < req.files.length; i++) {
+          const file = req.files[i];
+          const documentType = parsedDocumentTypes[i] || `document_${i + 1}`;
+          
+          try {
+            // Upload with fallback logic
+            const uploadResult = await uploadService.uploadDocument(file, documentType);
+            
+            // Save document record to database
+            const document = await Document.create({
+              application_id: newApplication.id,
+              document_type: documentType,
+              file_url: uploadResult.file_url,
+              storage_type: uploadResult.storage_type,
+              file_name: uploadResult.file_name,
+              mime_type: uploadResult.mime_type,
+              file_size: uploadResult.file_size,
+              drive_file_id: uploadResult.drive_file_id || null,
+              cloudinary_public_id: uploadResult.cloudinary_public_id || null
+            });
+            
+            uploadedDocuments.push({
+              id: document.id,
+              document_type: documentType,
+              file_name: uploadResult.file_name,
+              storage_type: uploadResult.storage_type
+            });
+            
+            console.log(`[Application] Document ${i + 1} uploaded: ${uploadResult.storage_type}`);
+          } catch (uploadError) {
+            console.error(`[Application] Failed to upload document ${i + 1}:`, uploadError.message);
+            // Continue with other files even if one fails
+          }
+        }
+        
+        console.log(`[Application] Successfully uploaded ${uploadedDocuments.length}/${req.files.length} documents`);
+      } catch (error) {
+        console.error('[Application] Document upload error:', error);
+        // Don't fail the entire application if document upload fails
+      }
+    }
 
     return res.status(201).json({
       message: 'Application created successfully',
-      applicationId: newApplication.id
+      applicationId: newApplication.id,
+      documentsUploaded: uploadedDocuments.length,
+      documents: uploadedDocuments
     });
   } catch (error) {
     console.error('Error creating application:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message 
+    });
   }
 };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { visaAPI } from '../services/api';
+import DocumentUpload from '../components/DocumentUpload';
 
 const ChecklistPage = () => {
   const location = useLocation();
@@ -14,7 +15,7 @@ const ChecklistPage = () => {
     phone: '',
     passportNumber: '',
   });
-  const [files, setFiles] = useState([]);
+  const [documentFiles, setDocumentFiles] = useState({});
 
   const citizenship = location.state?.citizenship || 'United Kingdom';
   const destination = location.state?.destination || 'Europe (Schengen States)';
@@ -45,9 +46,8 @@ const ChecklistPage = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(selectedFiles);
+  const handleDocumentFilesChange = (files) => {
+    setDocumentFiles(files);
   };
 
   const handleSubmit = async (e) => {
@@ -55,6 +55,15 @@ const ChecklistPage = () => {
     
     if (!visaData) {
       alert('Visa configuration not loaded');
+      return;
+    }
+
+    // Check if all required documents are uploaded
+    const requiredDocs = visaData.required_documents || [];
+    const uploadedCount = Object.keys(documentFiles).length;
+    
+    if (requiredDocs.length > 0 && uploadedCount < requiredDocs.length) {
+      alert(`Please upload all ${requiredDocs.length} required documents before submitting`);
       return;
     }
 
@@ -66,12 +75,21 @@ const ChecklistPage = () => {
       submitData.append('configuration_id', visaData.configuration_id);
       submitData.append('user_data', JSON.stringify(formData));
       
-      // Append files
-      files.forEach(file => {
+      // Append files and document types
+      const documentTypes = [];
+      Object.entries(documentFiles).forEach(([docType, file]) => {
         submitData.append('documents', file);
+        documentTypes.push(docType);
       });
+      
+      // Add document types array
+      if (documentTypes.length > 0) {
+        submitData.append('document_types', JSON.stringify(documentTypes));
+      }
 
       const response = await visaAPI.createApplication(submitData);
+      
+      console.log('Application created:', response);
       
       // Process payment
       if (response.applicationId) {
@@ -88,7 +106,7 @@ const ChecklistPage = () => {
           phone: '',
           passportNumber: '',
         });
-        setFiles([]);
+        setDocumentFiles({});
       }, 3000);
     } catch (err) {
       alert(err.message || 'Failed to submit application');
@@ -342,33 +360,10 @@ const ChecklistPage = () => {
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <label className="text-sm font-semibold text-on-surface ml-1">
-                        Upload Documents (PDF, JPG)
-                      </label>
-                      <div className="border-2 border-dashed border-outline-variant rounded-lg p-12 text-center bg-surface-container-low hover:bg-surface-container transition-colors group cursor-pointer">
-                        <span className="material-symbols-outlined text-4xl text-outline mb-4 group-hover:text-primary transition-colors">
-                          cloud_upload
-                        </span>
-                        <p className="text-on-surface-variant mb-2">
-                          {files.length > 0 ? `${files.length} file(s) selected` : 'Drag and drop scans here'}
-                        </p>
-                        <input
-                          type="file"
-                          multiple
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={handleFileChange}
-                          className="hidden"
-                          id="file-upload"
-                        />
-                        <label 
-                          htmlFor="file-upload"
-                          className="mt-4 text-primary font-bold hover:underline cursor-pointer inline-block"
-                        >
-                          Or browse files
-                        </label>
-                      </div>
-                    </div>
+                    <DocumentUpload
+                      requiredDocuments={documents}
+                      onFilesChange={handleDocumentFilesChange}
+                    />
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8">
                       <div className="bg-surface-container px-6 py-4 rounded-lg flex items-center gap-4">
                         <input 

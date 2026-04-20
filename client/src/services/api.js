@@ -206,6 +206,40 @@ export const adminAPI = {
   },
 };
 
+// Document API endpoints
+export const documentAPI = {
+  // Get document info
+  getDocumentInfo: async (id) => {
+    try {
+      const response = await api.get(`/document/${id}/info`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Get document download URL
+  getDocumentDownloadUrl: (id) => {
+    return `${API_BASE_URL}/document/${id}`;
+  },
+
+  // Download document (opens in new tab or triggers download)
+  downloadDocument: (id) => {
+    const url = `${API_BASE_URL}/document/${id}`;
+    window.open(url, '_blank');
+  },
+
+  // Delete document (admin only)
+  deleteDocument: async (id) => {
+    try {
+      const response = await api.delete(`/document/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+};
+
 // Auth API endpoints
 export const authAPI = {
   // Admin login - stores credentials for Basic Auth

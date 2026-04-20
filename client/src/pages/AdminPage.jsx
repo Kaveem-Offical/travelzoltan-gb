@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../services/api';
+import DocumentViewer from '../components/DocumentViewer';
 
 // Format currency helper
 const formatCurrency = (amount) => {
@@ -1298,9 +1299,18 @@ const AdminPage = () => {
               </div>
 
               {/* Documents */}
-              {selectedApplication.document_urls && selectedApplication.document_urls.length > 0 && (
+              {selectedApplication.documents && selectedApplication.documents.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-on-surface mb-3">Uploaded Documents ({selectedApplication.documents.length})</p>
+                  <DocumentViewer documents={selectedApplication.documents} />
+                </div>
+              )}
+
+              {/* Legacy document_urls support (backward compatibility) */}
+              {(!selectedApplication.documents || selectedApplication.documents.length === 0) && 
+               selectedApplication.document_urls && selectedApplication.document_urls.length > 0 && (
                 <div className="p-4 bg-surface-container-low rounded-lg">
-                  <p className="text-sm text-outline mb-2">Uploaded Documents</p>
+                  <p className="text-sm text-outline mb-2">Uploaded Documents (Legacy)</p>
                   <div className="space-y-2">
                     {selectedApplication.document_urls.map((url, i) => (
                       <div key={i} className="flex items-center gap-2 text-primary">

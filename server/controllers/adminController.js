@@ -1,4 +1,4 @@
-const { VisaConfiguration, Application, sequelize } = require('../models');
+const { VisaConfiguration, Application, Document, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper function to calculate total fee from breakdown
@@ -118,6 +118,11 @@ const getApplicationById = async (req, res) => {
         {
           model: VisaConfiguration,
           as: 'visaConfiguration'
+        },
+        {
+          model: Document,
+          as: 'documents',
+          attributes: ['id', 'document_type', 'file_name', 'storage_type', 'mime_type', 'file_size', 'created_at']
         }
       ]
     });

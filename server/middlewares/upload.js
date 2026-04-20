@@ -22,7 +22,20 @@ const storage = multer.diskStorage({
 // Configure upload middleware
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { 
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+    files: 10 // Max 10 files per request
+  },
+  fileFilter: function (req, file, cb) {
+    // Allowed file types
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} not allowed. Only PDF, JPG, and PNG are accepted.`));
+    }
+  }
 });
 
 module.exports = upload;
