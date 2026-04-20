@@ -1232,7 +1232,7 @@ const AdminPage = () => {
 
   // Show admin panel if authenticated
   return (
-    <div className="min-h-screen flex pt-20 bg-surface">
+    <div className="min-h-screen flex bg-surface">
       {/* Notification Toast */}
       {notification && (
         <div className={`fixed top-24 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all ${

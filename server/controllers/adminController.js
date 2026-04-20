@@ -320,7 +320,8 @@ const getAnalytics = async (req, res) => {
     }
     
     weeklyApps.forEach(app => {
-      const date = app.created_at.toISOString().split('T')[0];
+      if (!app.created_at) return;
+      const date = new Date(app.created_at).toISOString().split('T')[0];
       dailyStats[date] = (dailyStats[date] || 0) + 1;
     });
 

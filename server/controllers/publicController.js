@@ -141,23 +141,29 @@ const createApplication = async (req, res) => {
 const createPaymentOrder = async (req, res) => {
   try {
     const { applicationId } = req.body;
+    console.log('[createPaymentOrder] Received applicationId:', applicationId);
 
     if (!applicationId) {
       return res.status(400).json({ message: 'applicationId is required.' });
     }
 
+    console.log('[createPaymentOrder] Looking up application with ID:', applicationId);
     const application = await Application.findByPk(applicationId, {
-      include: [{ model: VisaConfiguration, as: 'configuration' }]
+      include: [{ model: VisaConfiguration, as: 'visaConfiguration' }]
     });
 
     if (!application) {
+      console.log('[createPaymentOrder] Application not found for ID:', applicationId);
       return res.status(404).json({ message: 'Application not found.' });
     }
 
+    console.log('[createPaymentOrder] Found application:', application.id);
+
     // Calculate amount from configuration (convert to paise for INR)
-    const config = application.configuration;
+    const config = application.visaConfiguration;
+    console.log('[createPaymentOrder] Visa config:', config ? 'found' : 'not found');
     let amount = 50000; // Default 500 INR in paise
-    
+
     if (config && config.service_fee) {
       const fee = config.service_fee;
       if (typeof fee === 'object') {
@@ -167,6 +173,13 @@ const createPaymentOrder = async (req, res) => {
         amount = Math.round(parseFloat(fee) * 100);
       }
     }
+
+    console.log('[createPaymentOrder] Calculated amount (paise):', amount);
+
+    // Check Razorpay credentials
+    const hasKeyId = !!process.env.RAZORPAY_KEY_ID;
+    const hasKeySecret = !!process.env.RAZORPAY_KEY_SECRET;
+    console.log('[createPaymentOrder] Razorpay credentials - key_id exists:', hasKeyId, 'key_secret exists:', hasKeySecret);
 
     // Create Razorpay order
     const orderOptions = {
@@ -179,7 +192,9 @@ const createPaymentOrder = async (req, res) => {
       }
     };
 
+    console.log('[createPaymentOrder] Creating Razorpay order with options:', JSON.stringify(orderOptions));
     const order = await razorpay.orders.create(orderOptions);
+    console.log('[createPaymentOrder] Razorpay order created:', order.id);
 
     return res.status(200).json({
       orderId: order.id,
@@ -190,7 +205,12 @@ const createPaymentOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating payment order:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({
+      message: 'Internal server error',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
