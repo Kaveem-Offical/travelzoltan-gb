@@ -2,18 +2,14 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/assets/(.*)",
-      "dest": "/assets/$1"
+      "source": "/api/:path*",
+      "destination": "https://travelzoltan-gb.onrender.com/api/:path*"
     },
     {
-      "src": "^/api/(.*)",
-      "dest": "https://travelzoltan-gb.onrender.com/api/$1"
-    },
-    {
-      "src": "^(?!.*\\.(js|css|png|jpg|jpeg|svg|ico|json)$).*",
-      "dest": "/index.html"
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
