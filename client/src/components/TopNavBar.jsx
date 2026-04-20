@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const TopNavBar = () => {
   const location = useLocation();
@@ -8,7 +9,7 @@ const TopNavBar = () => {
     <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center px-6 md:px-12 py-4 max-w-screen-2xl mx-auto">
         <Link to="/" className="text-2xl font-black text-primary dark:text-primary-light tracking-tighter font-headline">
-          ZoltanVisa
+          <img src={ logo } alt="ZoltanVisa" className="h-12" />
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
