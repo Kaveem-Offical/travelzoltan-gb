@@ -10,5 +10,7 @@ router.get('/visa-requirements', publicController.getVisaRequirements);
 router.post('/applications', upload.array('documents'), publicController.createApplication);
 
 router.post('/payments/create-intent', publicController.createPaymentIntent);
+router.post('/payments/create-order', publicController.createPaymentOrder);
+router.post('/payments/verify', publicController.verifyPayment);
 
 module.exports = router;

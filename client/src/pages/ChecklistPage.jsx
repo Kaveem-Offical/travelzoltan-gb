@@ -9,6 +9,8 @@ const ChecklistPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visaData, setVisaData] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'pending' | 'processing' | 'completed' | 'failed'
+  const [applicationId, setApplicationId] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -48,6 +50,51 @@ const ChecklistPage = () => {
 
   const handleDocumentFilesChange = (files) => {
     setDocumentFiles(files);
+  };
+
+  const handleRazorpayPayment = async (appId, orderData) => {
+    return new Promise((resolve, reject) => {
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'ZoltanVisa',
+        description: 'Visa Application Service Fee',
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            // Verify payment on server
+            const verifyData = {
+              applicationId: appId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            };
+            
+            await visaAPI.verifyPayment(verifyData);
+            resolve(response);
+          } catch (error) {
+            reject(error);
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone
+        },
+        theme: {
+          color: '#6366f1'
+        },
+        modal: {
+          ondismiss: function() {
+            reject(new Error('Payment cancelled by user'));
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -91,25 +138,44 @@ const ChecklistPage = () => {
       
       console.log('Application created:', response);
       
-      // Process payment
       if (response.applicationId) {
-        await visaAPI.createPaymentIntent(response.applicationId);
+        setApplicationId(response.applicationId);
+        setPaymentStatus('pending');
+        
+        // Create Razorpay order
+        const orderData = await visaAPI.createPaymentOrder(response.applicationId);
+        
+        setPaymentStatus('processing');
+        
+        // Open Razorpay checkout
+        await handleRazorpayPayment(response.applicationId, orderData);
+        
+        // Payment successful
+        setPaymentStatus('completed');
+        setSubmitted(true);
+        
+        // Reset after delay
+        setTimeout(() => {
+          setSubmitted(false);
+          setPaymentStatus('idle');
+          setApplicationId(null);
+          // Reset form
+          setFormData({
+            fullName: '',
+            email: '',
+            phone: '',
+            passportNumber: '',
+          });
+          setDocumentFiles({});
+        }, 5000);
       }
-
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
-        // Reset form
-        setFormData({
-          fullName: '',
-          email: '',
-          phone: '',
-          passportNumber: '',
-        });
-        setDocumentFiles({});
-      }, 3000);
     } catch (err) {
-      alert(err.message || 'Failed to submit application');
+      if (err.message === 'Payment cancelled by user') {
+        setPaymentStatus('failed');
+        alert('Payment was cancelled. Your application is saved but payment is pending.');
+      } else {
+        alert(err.message || 'Failed to submit application or process payment');
+      }
       console.error('Error submitting application:', err);
     } finally {
       setLoading(false);
@@ -301,9 +367,23 @@ const ChecklistPage = () => {
                 {submitted ? (
                   <div className="py-20 text-center space-y-4 animate-in fade-in zoom-in duration-500">
                     <span className="material-symbols-outlined text-green-500 text-7xl">check_circle</span>
-                    <h3 className="text-2xl font-bold">Application Submitted!</h3>
+                    <h3 className="text-2xl font-bold">Application Submitted & Paid!</h3>
                     <p className="text-on-surface-variant">
-                      Our team will review your documents and contact you within 24 hours.
+                      Your payment has been received. Our team will review your documents and contact you within 24 hours.
+                    </p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4 inline-block">
+                      <p className="text-green-700 text-sm font-medium">
+                        <span className="material-symbols-outlined inline-block mr-1 text-sm">payments</span>
+                        Payment Status: Completed
+                      </p>
+                    </div>
+                  </div>
+                ) : paymentStatus === 'processing' ? (
+                  <div className="py-20 text-center space-y-4">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <h3 className="text-xl font-bold">Processing Payment...</h3>
+                    <p className="text-on-surface-variant">
+                      Please complete the payment in the Razorpay window. Do not close this page.
                     </p>
                   </div>
                 ) : (
@@ -378,7 +458,11 @@ const ChecklistPage = () => {
                         type="submit"
                         disabled={loading}
                       >
-                        {loading ? 'Submitting...' : 'Submit Application'}
+                        {loading 
+                          ? (paymentStatus === 'processing' 
+                            ? 'Waiting for Payment...' 
+                            : 'Submitting...') 
+                          : 'Submit & Pay Now'}
                       </button>
                     </div>
                   </form>

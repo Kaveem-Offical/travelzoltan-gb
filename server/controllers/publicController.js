@@ -1,5 +1,12 @@
 const { VisaConfiguration, Application, Document } = require('../models');
 const uploadService = require('../services/uploadService');
+const Razorpay = require('razorpay');
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 // GET /api/visa-requirements?citizenship=X&destination=Y
 const getVisaRequirements = async (req, res) => {
@@ -130,13 +137,70 @@ const createApplication = async (req, res) => {
   }
 };
 
-// POST /api/payments/create-intent
-const createPaymentIntent = async (req, res) => {
+// POST /api/payments/create-order
+const createPaymentOrder = async (req, res) => {
   try {
     const { applicationId } = req.body;
 
     if (!applicationId) {
       return res.status(400).json({ message: 'applicationId is required.' });
+    }
+
+    const application = await Application.findByPk(applicationId, {
+      include: [{ model: VisaConfiguration, as: 'configuration' }]
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+
+    // Calculate amount from configuration (convert to paise for INR)
+    const config = application.configuration;
+    let amount = 50000; // Default 500 INR in paise
+    
+    if (config && config.service_fee) {
+      const fee = config.service_fee;
+      if (typeof fee === 'object') {
+        const total = (fee.admin_fee || 0) + (fee.service_fee || 0) + (fee.express_fee || 0);
+        amount = Math.round(total * 100); // Convert to paise (smallest currency unit)
+      } else {
+        amount = Math.round(parseFloat(fee) * 100);
+      }
+    }
+
+    // Create Razorpay order
+    const orderOptions = {
+      amount: amount,
+      currency: 'INR',
+      receipt: `app_${applicationId}`,
+      notes: {
+        application_id: applicationId,
+        user_email: application.user_data?.email || ''
+      }
+    };
+
+    const order = await razorpay.orders.create(orderOptions);
+
+    return res.status(200).json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      applicationId: application.id
+    });
+  } catch (error) {
+    console.error('Error creating payment order:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// POST /api/payments/verify
+const verifyPayment = async (req, res) => {
+  try {
+    const { applicationId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!applicationId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Missing required payment verification fields.' });
     }
 
     const application = await Application.findByPk(applicationId);
@@ -145,26 +209,52 @@ const createPaymentIntent = async (req, res) => {
       return res.status(404).json({ message: 'Application not found.' });
     }
 
-    // MOCK Payment Gateway logic
-    // In a real app, you'd call Stripe/Razorpay and send client secret
-    
-    // Simulating instant payment success for the mock
-    application.payment_status = 'completed';
-    await application.save();
+    // Verify signature
+    const crypto = require('crypto');
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest('hex');
 
-    return res.status(200).json({
-      message: 'Payment processed successfully',
-      applicationId: application.id,
-      status: 'completed'
-    });
+    const isAuthentic = expectedSignature === razorpay_signature;
+
+    if (isAuthentic) {
+      application.payment_status = 'completed';
+      application.payment_id = razorpay_payment_id;
+      application.order_id = razorpay_order_id;
+      await application.save();
+
+      return res.status(200).json({
+        message: 'Payment verified successfully',
+        applicationId: application.id,
+        paymentId: razorpay_payment_id,
+        status: 'completed'
+      });
+    } else {
+      application.payment_status = 'failed';
+      await application.save();
+
+      return res.status(400).json({
+        message: 'Payment verification failed',
+        status: 'failed'
+      });
+    }
   } catch (error) {
-    console.error('Error processing payment:', error);
+    console.error('Error verifying payment:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+// Legacy endpoint - redirects to create order
+const createPaymentIntent = async (req, res) => {
+  return createPaymentOrder(req, res);
 };
 
 module.exports = {
   getVisaRequirements,
   createApplication,
-  createPaymentIntent
+  createPaymentIntent,
+  createPaymentOrder,
+  verifyPayment
 };

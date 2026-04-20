@@ -97,6 +97,26 @@ export const visaAPI = {
       throw error.response?.data || error.message;
     }
   },
+
+  // Create Razorpay order
+  createPaymentOrder: async (applicationId) => {
+    try {
+      const response = await api.post('/payments/create-order', { applicationId });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Verify Razorpay payment
+  verifyPayment: async (paymentData) => {
+    try {
+      const response = await api.post('/payments/verify', paymentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 // Admin API endpoints
