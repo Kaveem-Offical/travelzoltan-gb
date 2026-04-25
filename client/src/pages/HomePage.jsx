@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import certificationImg from '../assets/certification.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -73,12 +74,12 @@ const HomePage = () => {
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
               Worldwide Visa Assistance. <span className="text-primary">Simplified.</span>
             </h1>
-            <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+            <p id="selector-box" className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
               Apply for visas, book flights, hotels, and airport transfers all in one place. Experience travel logistics reimagined for the modern explorer.
             </p>
             
             {/* Interactive Selector Box */}
-            <div className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
+    <div  className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center">
               <div className="flex-1 w-full space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">
                   Citizenship
@@ -219,7 +220,14 @@ const HomePage = () => {
                 Trusted & Certified
               </h2>
             </div>
-            <div className="w-full flex-1 flex justify-center md:justify-end overflow-hidden">
+            <div className="flex items-center gap-8">
+              <img
+                src={certificationImg}
+                alt="Official Certification"
+                className="h-16 w-auto object-contain rounded shadow-sm"
+              />
+            </div>
+            <div className="flex justify-center md:justify-end overflow-hidden">
               <div className="flex items-center gap-8">
                 <div className="text-center">
                   <p className="text-3xl font-bold text-primary">99.8%</p>

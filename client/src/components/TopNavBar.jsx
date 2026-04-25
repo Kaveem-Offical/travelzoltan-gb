@@ -4,6 +4,8 @@ import logo from '../assets/logo.png';
 const TopNavBar = () => {
   const location = useLocation();
   const isChecklistPage = location.pathname === '/checklist';
+  const isAboutPage = location.pathname === '/about-us';
+  const isContactPage = location.pathname === '/contact-us';
   
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80  backdrop-blur-md shadow-sm dark:shadow-none">
@@ -23,31 +25,38 @@ const TopNavBar = () => {
           >
             Home
           </Link>
-          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#destinations">
+          {/* <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#destinations">
             Destinations
           </a>
           <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#services">
             Services
-          </a>
+          </a> */}
           <Link 
-            to="/checklist" 
+            to="/about-us" 
             className={`font-headline font-semibold tracking-tight transition-colors ${
-              isChecklistPage 
+              isAboutPage 
                 ? 'text-primary dark:text-primary-light border-b-2 border-primary' 
-                : 'text-slate-600  hover:text-primary'
+                : 'text-slate-600 hover:text-primary dark:hover:text-primary-light'
             }`}
           >
-            Apply Now
+            About Us
           </Link>
-          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#support">
-            Support
-          </a>
+          <Link 
+            to="/contact-us" 
+            className={`font-headline font-semibold tracking-tight transition-colors ${
+              isContactPage 
+                ? 'text-primary dark:text-primary-light border-b-2 border-primary' 
+                : 'text-slate-600 hover:text-primary dark:hover:text-primary-light'
+            }`}
+          >
+            Contact Us
+          </Link>
         </div>
         
         <div className="flex items-center gap-4">
-          <button className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95">
+          <a href="#selector-box" className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95">
             Take Action
-          </button>
+          </a>
         </div>
       </div>
     </nav>

@@ -23,7 +23,7 @@ const Footer = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
             <div className="space-y-4">
-              <p className="font-headline font-bold text-on-surface">Company</p>
+              <p className="font-headline font-bold text-white text-on-surface">Company</p>
               <ul className="space-y-2">
                 <li>
                   <Link to="/payment-mode" className="text-slate-500  font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
@@ -48,7 +48,7 @@ const Footer = () => {
               </ul>
             </div>
             <div className="space-y-4">
-              <p className="font-headline font-bold text-on-surface">Legal</p>
+              <p className="font-headline font-bold text-white text-on-surface">Legal</p>
               <ul className="space-y-2">
                 <li>
                   <Link to="/privacy-policy" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
@@ -68,7 +68,7 @@ const Footer = () => {
               </ul>
             </div>
             <div className="hidden md:block space-y-4">
-              <p className="font-headline font-bold text-on-surface">Social</p>
+              <p className="font-headline text-white font-bold text-on-surface">Social</p>
               <div className="flex gap-4">
                 <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#">
                   <span className="material-symbols-outlined text-sm">public</span>
@@ -111,7 +111,7 @@ const Footer = () => {
             </p>
           <div className="flex items-center gap-4">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <p className="text-xs font-bold uppercase white tracking-widest">
+            <p className="text-xs text-white font-bold uppercase tracking-widest">
               Global Status: All Systems Operational
             </p>
           </div>

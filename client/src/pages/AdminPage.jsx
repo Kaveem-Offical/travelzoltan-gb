@@ -477,18 +477,25 @@ const AdminPage = () => {
     const checkAuth = async () => {
       console.log('[Auth] Checking authentication...');
       
+      // Debug: Log what's in localStorage
+      const storedUser = localStorage.getItem('adminUsername');
+      const storedPass = localStorage.getItem('adminPassword') ? '***' : 'null';
+      const storedUserObj = localStorage.getItem('adminUser');
+      console.log('[Auth] localStorage - username:', storedUser, 'password:', storedPass, 'user:', storedUserObj);
+      
       if (authAPI.isAuthenticated()) {
-        console.log('[Auth] Credentials found, verifying...');
+        console.log('[Auth] Credentials found in localStorage, verifying with server...');
         try {
           const result = await authAPI.verifyCredentials();
-          console.log('[Auth] Verify result:', result);
+          console.log('[Auth] Server verify result:', result);
           
           if (isMounted) {
             if (result.valid) {
+              console.log('[Auth] Credentials valid, logging in...');
               setIsAuthenticated(true);
               setCurrentUser(authAPI.getCurrentUser());
             } else {
-              console.log('[Auth] Credentials invalid, clearing...');
+              console.log('[Auth] Server rejected credentials (valid: false), clearing storage');
               localStorage.removeItem('adminUsername');
               localStorage.removeItem('adminPassword');
               localStorage.removeItem('adminUser');
@@ -496,16 +503,26 @@ const AdminPage = () => {
             setAuthChecking(false);
           }
         } catch (err) {
-          console.log('[Auth] Verify error:', err);
-          if (isMounted) {
+          console.log('[Auth] Verify request failed:', err.message || err);
+          // Check for 401 - axios puts status in err.response.status
+          const is401 = err.response?.status === 401;
+          console.log('[Auth] Error status:', err.response?.status, 'is401:', is401);
+          
+          // Only clear storage on actual 401 (unauthorized), not on network errors
+          if (is401) {
+            console.log('[Auth] Got 401 from server, clearing invalid credentials');
             localStorage.removeItem('adminUsername');
             localStorage.removeItem('adminPassword');
             localStorage.removeItem('adminUser');
+          } else {
+            console.log('[Auth] Network/server error (not 401), keeping stored credentials');
+          }
+          if (isMounted) {
             setAuthChecking(false);
           }
         }
       } else {
-        console.log('[Auth] No credentials found');
+        console.log('[Auth] No credentials in localStorage');
         if (isMounted) {
           setAuthChecking(false);
         }
@@ -1213,7 +1230,7 @@ const AdminPage = () => {
     </div>
   );
 
-  // Show loading while checking auth
+  // Show loading while checking stored credentials (prevents login form flash)
   if (authChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
@@ -1315,7 +1332,7 @@ const AdminPage = () => {
                     {selectedApplication.document_urls.map((url, i) => (
                       <div key={i} className="flex items-center gap-2 text-primary">
                         <span className="material-symbols-outlined">description</span>
-                        <a href={`http://localhost:5001${url}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        <a href={`${import.meta.env.VITE_API_URL}/${url}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
                           Document {i + 1}
                         </a>
                       </div>

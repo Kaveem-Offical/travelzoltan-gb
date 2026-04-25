@@ -17,6 +17,8 @@ import FlightBookingTermsPage from './pages/FlightBookingTermsPage';
 import HotelBookingTermsPage from './pages/HotelBookingTermsPage';
 import CarRentalTermsPage from './pages/CarRentalTermsPage';
 import HolidaysTermsPage from './pages/HolidaysTermsPage';
+import AboutUsPage from './pages/AboutUsPage';
+import ContactUsPage from './pages/ContactUsPage';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -53,6 +55,8 @@ function AppContent() {
           <Route path="/hotel-booking-terms" element={<HotelBookingTermsPage />} />
           <Route path="/car-rental-terms" element={<CarRentalTermsPage />} />
           <Route path="/holidays-terms" element={<HolidaysTermsPage />} />
+          <Route path="/about-us" element={<AboutUsPage />} />
+          <Route path="/contact-us" element={<ContactUsPage />} />
         </Routes>
       </div>
       {!isAdminPage && <Footer />}
