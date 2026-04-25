@@ -4,6 +4,7 @@ const publicController = require('../controllers/publicController');
 const upload = require('../middlewares/upload');
 
 // Public endpoints
+router.get('/visa-options', publicController.getVisaOptions);
 router.get('/visa-requirements', publicController.getVisaRequirements);
 
 // Form handling with multer - 'documents' is the field name for files

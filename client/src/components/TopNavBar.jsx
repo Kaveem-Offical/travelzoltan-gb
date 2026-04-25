@@ -6,7 +6,7 @@ const TopNavBar = () => {
   const isChecklistPage = location.pathname === '/checklist';
   
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+    <nav className="fixed top-0 w-full z-50 bg-white/80  backdrop-blur-md shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center px-6 md:px-12 py-4 max-w-screen-2xl mx-auto">
         <Link to="/" className="text-2xl font-black text-primary dark:text-primary-light tracking-tighter font-headline">
           <img src={ logo } alt="ZoltanVisa" className="h-12" />
@@ -18,15 +18,15 @@ const TopNavBar = () => {
             className={`font-headline font-semibold tracking-tight transition-colors ${
               location.pathname === '/' 
                 ? 'text-primary dark:text-primary-light border-b-2 border-primary' 
-                : 'text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light'
+                : 'text-slate-600  hover:text-primary dark:hover:text-primary-light'
             }`}
           >
             Home
           </Link>
-          <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#destinations">
+          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#destinations">
             Destinations
           </a>
-          <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#services">
+          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#services">
             Services
           </a>
           <Link 
@@ -34,12 +34,12 @@ const TopNavBar = () => {
             className={`font-headline font-semibold tracking-tight transition-colors ${
               isChecklistPage 
                 ? 'text-primary dark:text-primary-light border-b-2 border-primary' 
-                : 'text-slate-600 dark:text-slate-400 hover:text-primary'
+                : 'text-slate-600  hover:text-primary'
             }`}
           >
             Apply Now
           </Link>
-          <a className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#support">
+          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#support">
             Support
           </a>
         </div>

@@ -1088,7 +1088,7 @@ const AdminPage = () => {
       {/* Daily Trends */}
       <div className="bg-surface-container-lowest p-6 rounded-lg editorial-shadow">
         <h3 className="font-headline text-xl font-bold mb-4">Daily Applications (Last 7 Days)</h3>
-        <div className="flex items-end gap-2 h-48">
+        <div className="flex items-end gap-2 mt-15 h-48">
           {analytics.dailyTrends.map((day, idx) => (
             <div key={idx} className="flex-1 flex flex-col items-center gap-2">
               <div 
@@ -1363,7 +1363,7 @@ const AdminPage = () => {
       )}
 
       {/* Sidebar */}
-      <aside className="w-64 bg-surface-container-lowest border-r border-surface-container-high fixed left-0 top-20 bottom-0 overflow-y-auto">
+      <aside className="w-64 bg-surface-container-lowest border-r border-surface-container-high left-0 top-20 bottom-0 overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -1412,7 +1412,7 @@ const AdminPage = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">

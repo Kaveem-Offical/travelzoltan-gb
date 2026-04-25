@@ -1,4 +1,4 @@
-const { VisaConfiguration, Application, Document } = require('../models');
+const { VisaConfiguration, Application, Document, sequelize } = require('../models');
 const uploadService = require('../services/uploadService');
 const Razorpay = require('razorpay');
 
@@ -7,6 +7,74 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
+// GET /api/visa-options - Get unique citizenships and destinations
+const getVisaOptions = async (req, res) => {
+  try {
+    console.log('[getVisaOptions] Fetching unique citizenships and destinations...');
+
+    // Get all configurations and extract unique values
+    const allConfigs = await VisaConfiguration.findAll({
+      attributes: ['citizenship', 'destination'],
+      raw: true
+    });
+
+    console.log('[getVisaOptions] Total configs found:', allConfigs.length);
+    console.log('[getVisaOptions] First few configs:', allConfigs.slice(0, 3));
+
+    // Extract unique values using Set
+    const citizenshipsSet = new Set(allConfigs.map(c => c.citizenship).filter(Boolean));
+    const destinationsSet = new Set(allConfigs.map(c => c.destination).filter(Boolean));
+
+    const citizenships = Array.from(citizenshipsSet).sort();
+    const destinations = Array.from(destinationsSet).sort();
+
+    console.log('[getVisaOptions] Parsed citizenships:', citizenships);
+    console.log('[getVisaOptions] Parsed destinations:', destinations);
+
+    return res.status(200).json({
+      citizenships,
+      destinations
+    });
+  } catch (error) {
+    console.error('[getVisaOptions] Error fetching visa options:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+// Default visa requirements data
+const DEFAULT_VISA_REQUIREMENTS = {
+  service_fee: {
+    admin_fee: 30,
+    express_fee: 30,
+    service_fee: 90
+  },
+  required_documents: [
+    {
+      icon: "flight",
+      name: "Original Passport",
+      description: "Must be valid for at least 6 months beyond your departure date from the Schengen area."
+    },
+    {
+      icon: "photo_camera",
+      name: "Biometric Photos",
+      description: "Two recent color photographs (3.5 x 4.5 cm) taken against a plain white background."
+    },
+    {
+      icon: "description",
+      name: "Travel Insurance",
+      description: "Proof of medical insurance covering at least €30,000 for all Schengen member states."
+    },
+    {
+      icon: "hotel",
+      name: "Proof of Residency",
+      description: "A valid UK residence permit (BRP) or equivalent documentation of legal stay."
+    }
+  ],
+  form_schema: {},
+  configuration_id: 1,
+  is_default: true
+};
 
 // GET /api/visa-requirements?citizenship=X&destination=Y
 const getVisaRequirements = async (req, res) => {
@@ -22,18 +90,19 @@ const getVisaRequirements = async (req, res) => {
     });
 
     if (!config) {
-      return res.status(404).json({ message: 'Visa configuration not found for this route.' });
+      return res.status(200).json(DEFAULT_VISA_REQUIREMENTS);
     }
 
     return res.status(200).json({
       service_fee: config.service_fee,
       required_documents: config.required_documents,
       form_schema: config.form_schema,
-      configuration_id: config.id
+      configuration_id: config.id,
+      is_default: false
     });
   } catch (error) {
     console.error('Error fetching visa requirements:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(200).json(DEFAULT_VISA_REQUIREMENTS);
   }
 };
 
@@ -272,6 +341,7 @@ const createPaymentIntent = async (req, res) => {
 };
 
 module.exports = {
+  getVisaOptions,
   getVisaRequirements,
   createApplication,
   createPaymentIntent,

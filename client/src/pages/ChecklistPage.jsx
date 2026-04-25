@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
+import { DocumentCard } from '../components/DocumentCard';
 
 const ChecklistPage = () => {
   const location = useLocation();
@@ -296,64 +297,86 @@ const ChecklistPage = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {Array.isArray(documents) ? documents.map((doc, idx) => {
-                    // Handle both new API format (name, description, icon) and old default format (title, desc)
                     const docName = doc.name || doc.title || doc;
                     const docDesc = doc.description || doc.desc || 'Required document for visa application';
-                    return (
-                      <div
-                        key={idx}
-                        className={`bg-surface-container-lowest p-8 rounded-lg shadow-sm border-b-4 ${doc.border || 'border-primary'} transition-transform hover:-translate-y-2`}
-                      >
-                        <span className={`material-symbols-outlined ${doc.color || 'text-primary'} text-4xl mb-4`}>
-                          {doc.icon || 'description'}
-                        </span>
-                        <h3 className="font-headline text-xl font-bold mb-2">{docName}</h3>
-                        <p className="text-on-surface-variant text-sm leading-relaxed">
-                          {docDesc}
-                        </p>
-                      </div>
-                    );
+                    return <DocumentCard key={idx} title={docName} description={docDesc} doc={doc} />;
                   }) : (
                     <p className="col-span-2 text-on-surface-variant">No documents information available</p>
                   )}
                 </div>
               </div>
               
-              <div className="w-full md:w-80 bg-surface-container-high rounded-xl p-8 flex flex-col justify-between self-start sticky top-28">
-                <div>
-                  <h2 className="font-headline text-2xl font-bold mb-6">Service Fees</h2>
-                  <div className="space-y-4">
-                    {/* Admin Fee - only show if added */}
-                    {(serviceFeeBreakdown.admin_fee > 0) && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-on-surface-variant">Admin Fee</span>
-                        <span className="font-semibold">£{(serviceFeeBreakdown.admin_fee || 0).toFixed(2)}</span>
-                      </div>
-                    )}
-                    {/* Service Fee - only show if added */}
-                    {(serviceFeeBreakdown.service_fee > 0) && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-on-surface-variant">Processing Fee</span>
-                        <span className="font-semibold">£{(serviceFeeBreakdown.service_fee || 0).toFixed(2)}</span>
-                      </div>
-                    )}
-                    {/* Express Fee - only show if added */}
-                    {(serviceFeeBreakdown.express_fee > 0) && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-on-surface-variant">Express Service</span>
-                        <span className="font-semibold text-secondary">+ £{(serviceFeeBreakdown.express_fee || 0).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="pt-4 mt-4 border-t border-outline-variant flex justify-between items-center">
-                      <span className="font-bold">Total Cost</span>
-                      <span className="text-2xl font-headline font-black text-primary">
-                        £{totalServiceFee.toFixed(2)}
-                      </span>
+              <div className="w-full md:w-80 self-start sticky top-28">
+                <div className="rounded-2xl border border-outline-variant bg-surface-container-high shadow-sm bg-white overflow-hidden">
+                  {/* Header with gradient accent */}
+                  <div className="bg-gradient-to-r from-primary/10 to-primary-container/10 px-6 py-4 border-b border-outline-variant/50">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-xl">payments</span>
+                      <h2 className="font-headline text-lg font-bold text-on-surface">Service Fees</h2>
                     </div>
                   </div>
-                </div>
-                <div className="mt-8 text-xs text-on-surface-variant italic">
-                  *Fees may vary based on destination.
+
+                  {/* Fee breakdown */}
+                  <div className="p-6">
+                    <div className="space-y-3">
+                      {(serviceFeeBreakdown.admin_fee > 0) && (
+                        <div className="flex items-center justify-between group">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-on-surface-variant/60 text-sm">receipt</span>
+                            <span className="text-sm text-on-surface-variant">Administration</span>
+                          </div>
+                          <span className="text-sm font-medium text-on-surface">£{(serviceFeeBreakdown.admin_fee || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {(serviceFeeBreakdown.service_fee > 0) && (
+                        <div className="flex items-center justify-between group">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-on-surface-variant/60 text-sm">workspace_premium</span>
+                            <span className="text-sm text-on-surface-variant">Processing</span>
+                          </div>
+                          <span className="text-sm font-medium text-on-surface">£{(serviceFeeBreakdown.service_fee || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {(serviceFeeBreakdown.express_fee > 0) && (
+                        <div className="flex items-center justify-between group">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-secondary/80 text-sm">bolt</span>
+                            <span className="text-sm text-secondary font-medium">Express Service</span>
+                          </div>
+                          <span className="text-sm font-semibold text-secondary">+ £{(serviceFeeBreakdown.express_fee || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="my-4 border-t border-dashed border-outline-variant"></div>
+
+                    {/* Total */}
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-on-surface">Total Cost</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-headline font-black text-primary">
+                          £{totalServiceFee.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Note */}
+                    <div className="mt-4 flex items-start gap-2">
+                      <span className="material-symbols-outlined text-on-surface-variant/50 text-xs mt-0.5">info</span>
+                      <p className="text-xs text-on-surface-variant/70 leading-relaxed">
+                        Fees may vary based on destination and are subject to change without notice.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bottom trust badge */}
+                  <div className="bg-surface-container-low px-6 py-3 border-t border-outline-variant/50">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-primary/70 text-sm">verified</span>
+                      <span className="text-xs font-medium text-on-surface-variant">Secure Payment</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -477,7 +500,7 @@ const ChecklistPage = () => {
                   <h3 className="font-headline text-2xl font-bold mb-4">Need Expert Advice?</h3>
                   <p className="text-white/80 mb-8 font-light">Available 24/7 to guide you.</p>
                   <div className="space-y-4">
-                    <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="#">
+                    <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="https://wa.me/919502060511">
                       <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                         <span className="material-symbols-outlined text-white">chat</span>
                       </div>
@@ -486,7 +509,7 @@ const ChecklistPage = () => {
                         <div className="text-xs opacity-70">Instant response</div>
                       </div>
                     </a>
-                    <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="#">
+                    <a className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors group" href="tel://00442081911814">
                       <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center">
                         <span className="material-symbols-outlined text-white">call</span>
                       </div>

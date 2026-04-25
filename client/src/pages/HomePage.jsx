@@ -1,14 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [citizenship, setCitizenship] = useState('United Kingdom');
-  const [destination, setDestination] = useState('Europe (Schengen States)');
+  const [citizenship, setCitizenship] = useState('');
+  const [destination, setDestination] = useState('');
+  const [otherCitizenship, setOtherCitizenship] = useState('');
+  const [otherDestination, setOtherDestination] = useState('');
+  const [citizenshipOptions, setCitizenshipOptions] = useState([]);
+  const [destinationOptions, setDestinationOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch citizenship and destination options from API
+  useEffect(() => {
+    const fetchVisaOptions = async () => {
+      try {
+        console.log('[HomePage] Fetching from:', `${API_URL}/visa-options`);
+        const response = await fetch(`${API_URL}/visa-options`);
+        console.log('[HomePage] Response status:', response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[HomePage] Received data:', data);
+          setCitizenshipOptions(data.citizenships || []);
+          setDestinationOptions(data.destinations || []);
+        } else {
+          const errorText = await response.text();
+          console.error('[HomePage] Failed to fetch visa options:', errorText);
+          // Fallback to hardcoded options if API fails
+          setCitizenshipOptions(['United Kingdom', 'Europe Nationals']);
+          setDestinationOptions(['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan']);
+        }
+      } catch (error) {
+        console.error('[HomePage] Error fetching visa options:', error);
+        // Fallback to hardcoded options if API fails
+        setCitizenshipOptions(['United Kingdom', 'Europe Nationals']);
+        setDestinationOptions(['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan']);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisaOptions();
+  }, []);
 
   const handleCheckDetails = () => {
-    navigate('/checklist', { 
-      state: { citizenship, destination } 
+    if (!citizenship || citizenship === 'Select Citizenship') return;
+    if (!destination || destination === 'Select Destination') return;
+
+    const finalCitizenship = citizenship === 'Other Nationals' && otherCitizenship
+      ? otherCitizenship
+      : citizenship;
+    const finalDestination = destination === 'Other Countries' && otherDestination
+      ? otherDestination
+      : destination;
+    navigate('/checklist', {
+      state: { citizenship: finalCitizenship, destination: finalDestination }
     });
   };
 
@@ -29,52 +78,100 @@ const HomePage = () => {
             </p>
             
             {/* Interactive Selector Box */}
-            <div className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-end">
+            <div className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-1 w-full space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">
                   Citizenship
                 </label>
-                <div className="relative group">
-                  <select 
-                    value={citizenship}
-                    onChange={(e) => setCitizenship(e.target.value)}
-                    className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
-                  >
-                    <option>United Kingdom</option>
-                    <option>Europe Nationals</option>
-                    <option>Other Nationals</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                    expand_more
-                  </span>
+                <div className="relative">
+                  {citizenship === 'Other Nationals' ? (
+                    <input
+                      type="text"
+                      value={otherCitizenship}
+                      onChange={(e) => setOtherCitizenship(e.target.value)}
+                      placeholder="Enter your nationality"
+                      className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface focus:ring-2 focus:ring-primary/40 transition-all"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="relative group">
+                      <select
+                        value={citizenship}
+                        onChange={(e) => setCitizenship(e.target.value)}
+                        className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                        disabled={loading}
+                      >
+                        <option value="">{loading ? 'Loading...' : 'Select Citizenship'}</option>
+                        {citizenshipOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                        <option>Other Nationals</option>
+                      </select>
+                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
+                        expand_more
+                      </span>
+                    </div>
+                  )}
+                  {citizenship === 'Other Nationals' && (
+                    <button
+                      onClick={() => {
+                        setCitizenship('');
+                        setOtherCitizenship('');
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex-1 w-full space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">
                   Destination
                 </label>
-                <div className="relative group">
-                  <select 
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
-                  >
-                    <option>Europe (Schengen States)</option>
-                    <option>USA</option>
-                    <option>Canada</option>
-                    <option>Australia</option>
-                    <option>Dubai</option>
-                    <option>New Zealand</option>
-                    <option>India</option>
-                    <option>Japan</option>
-                    <option>Other Countries</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                    expand_more
-                  </span>
+                <div className="relative">
+                  {destination === 'Other Countries' ? (
+                    <input
+                      type="text"
+                      value={otherDestination}
+                      onChange={(e) => setOtherDestination(e.target.value)}
+                      placeholder="Enter destination country"
+                      className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface focus:ring-2 focus:ring-primary/40 transition-all"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="relative group">
+                      <select
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        className="w-full bg-surface-container-low border-none rounded-DEFAULT py-4 px-5 text-on-surface appearance-none focus:ring-2 focus:ring-primary/40 transition-all cursor-pointer"
+                        disabled={loading}
+                      >
+                        <option value="">{loading ? 'Loading...' : 'Select Destination'}</option>
+                        {destinationOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                        <option>Other Countries</option>
+                      </select>
+                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
+                        expand_more
+                      </span>
+                    </div>
+                  )}
+                  {destination === 'Other Countries' && (
+                    <button
+                      onClick={() => {
+                        setDestination('');
+                        setOtherDestination('');
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  )}
                 </div>
               </div>
-              <button 
+              <button
                 onClick={handleCheckDetails}
                 className="w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all active:scale-[0.98]"
               >
