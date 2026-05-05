@@ -102,11 +102,11 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <label className="text-sm font-semibold text-on-surface">
-          Upload Required Documents
+        <label className="text-sm font-bold text-on-surface uppercase tracking-wider">
+          Required Documents
         </label>
-        <span className="text-xs text-outline">
-          {Object.keys(selectedFiles).length} of {requiredDocuments.length} uploaded
+        <span className="text-xs font-semibold bg-surface-container-high px-2 py-1 rounded-full text-on-surface-variant">
+          {Object.keys(selectedFiles).length} / {requiredDocuments.length} Uploaded
         </span>
       </div>
 
@@ -121,22 +121,20 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
           return (
             <div
               key={index}
-              className={`border-2 rounded-lg p-4 transition-all ${
+              className={`relative overflow-hidden rounded-xl p-4 transition-all duration-300 shadow-sm ${
                 error
-                  ? 'border-error bg-error-container/10'
+                  ? 'bg-error/5 border border-error/50'
                   : file
-                  ? 'border-primary bg-primary/5'
-                  : 'border-dashed border-outline-variant bg-surface-container-low hover:bg-surface-container'
+                  ? 'bg-primary/5 border border-primary/30 shadow-[0_4px_12px_rgba(255,77,133,0.1)]'
+                  : 'bg-white border border-outline-variant/50 hover:border-primary/40 hover:shadow-md'
               }`}
             >
               <div className="flex items-start gap-4">
                 {/* Document Icon */}
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
-                  file ? 'bg-primary/10' : 'bg-surface-container-high'
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                  file ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface-container-lowest text-outline border border-outline-variant/30'
                 }`}>
-                  <span className={`material-symbols-outlined ${
-                    file ? 'text-primary' : 'text-outline'
-                  }`}>
+                  <span className="material-symbols-outlined text-2xl">
                     {file ? getFileIcon(file) : docIcon}
                   </span>
                 </div>
@@ -173,10 +171,10 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
                     <div className="mt-2">
                       <label
                         htmlFor={`file-${index}`}
-                        className="inline-flex items-center gap-2 text-sm text-primary font-semibold cursor-pointer hover:underline"
+                        className="inline-flex items-center gap-2 text-sm text-primary font-bold cursor-pointer hover:text-[#ff758c] transition-colors"
                       >
-                        <span className="material-symbols-outlined text-base">upload</span>
-                        Choose file
+                        <span className="material-symbols-outlined text-base">cloud_upload</span>
+                        Click to browse
                       </label>
                       <input
                         type="file"
@@ -207,15 +205,21 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
 
       {/* Summary */}
       {requiredDocuments.length > 0 && (
-        <div className="bg-surface-container-low rounded-lg p-4 mt-4">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="material-symbols-outlined text-outline">info</span>
-            <span className="text-on-surface-variant">
+        <div className={`rounded-xl p-4 mt-6 transition-colors duration-300 border ${
+          Object.keys(selectedFiles).length === requiredDocuments.length 
+            ? 'bg-green-500/10 border-green-500/20' 
+            : 'bg-surface-container-low border-outline-variant/30'
+        }`}>
+          <div className="flex items-center gap-3 text-sm">
+            <span className={`material-symbols-outlined ${Object.keys(selectedFiles).length === requiredDocuments.length ? 'text-green-500' : 'text-outline'}`}>
+              {Object.keys(selectedFiles).length === requiredDocuments.length ? 'check_circle' : 'info'}
+            </span>
+            <span className="text-on-surface-variant font-medium">
               {Object.keys(selectedFiles).length === requiredDocuments.length ? (
-                <span className="text-primary font-semibold">All documents uploaded ✓</span>
+                <span className="text-green-600 font-bold">All documents uploaded perfectly!</span>
               ) : (
                 <>
-                  Please upload all {requiredDocuments.length} required documents before submitting
+                  Please upload all <span className="font-bold">{requiredDocuments.length}</span> required documents to proceed.
                 </>
               )}
             </span>

@@ -36,7 +36,40 @@ const DOCUMENT_ICONS = [
   { value: 'receipt', label: 'Receipt' }
 ];
 
-// Configurations Tab Component
+const getTotalDocsCount = (docs) => {
+  if (Array.isArray(docs)) return docs.length;
+  if (!docs) return 0;
+  let count = (docs.core_documents || []).length;
+  if (docs.category_specific) {
+    Object.values(docs.category_specific).forEach(arr => {
+      if (Array.isArray(arr)) count += arr.length;
+    });
+  }
+  return count;
+};
+
+const getFlatDocsArray = (docs) => {
+  if (Array.isArray(docs)) return docs;
+  if (!docs) return [];
+  let allDocs = [...(docs.core_documents || [])];
+  if (docs.category_specific) {
+    Object.values(docs.category_specific).forEach(arr => {
+      if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
+    });
+  }
+  return allDocs;
+};
+
+const defaultRequiredDocs = {
+  core_documents: [],
+  category_specific: {
+    student: [],
+    employed: [],
+    visiting: [],
+    sponsored: []
+  }
+};
+
 const ConfigurationsTab = ({ showNotification }) => {
   const [configs, setConfigs] = useState([]);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -45,8 +78,9 @@ const ConfigurationsTab = ({ showNotification }) => {
     citizenship: '',
     destination: '',
     service_fee: { admin_fee: 0, service_fee: 0, express_fee: 0 },
-    required_documents: []
+    required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
   });
+  const [activeDocCategory, setActiveDocCategory] = useState('core_documents');
   const [newDoc, setNewDoc] = useState({ name: '', description: '', icon: 'description' });
 
   useEffect(() => {
@@ -106,24 +140,32 @@ const ConfigurationsTab = ({ showNotification }) => {
     }
 
     // Normalize required_documents to object format
-    let docs = config.required_documents || [];
+    let docs = config.required_documents;
+    let normalizedDocs = JSON.parse(JSON.stringify(defaultRequiredDocs));
+
     if (Array.isArray(docs)) {
-      docs = docs.map(doc => {
+      normalizedDocs.core_documents = docs.map(doc => {
         if (typeof doc === 'string') {
           return { name: doc, description: '', icon: 'description' };
         }
         return doc;
       });
-    } else {
-      docs = [];
+    } else if (docs && typeof docs === 'object') {
+      normalizedDocs.core_documents = Array.isArray(docs.core_documents) ? docs.core_documents : [];
+      if (docs.category_specific) {
+        ['student', 'employed', 'visiting', 'sponsored'].forEach(cat => {
+          normalizedDocs.category_specific[cat] = Array.isArray(docs.category_specific[cat]) ? docs.category_specific[cat] : [];
+        });
+      }
     }
 
     setConfigForm({
       citizenship: config.citizenship,
       destination: config.destination,
       service_fee: feeData,
-      required_documents: docs
+      required_documents: normalizedDocs
     });
+    setActiveDocCategory('core_documents');
     setShowConfigModal(true);
   };
 
@@ -133,27 +175,44 @@ const ConfigurationsTab = ({ showNotification }) => {
       citizenship: '',
       destination: '',
       service_fee: { admin_fee: 0, service_fee: 0, express_fee: 0 },
-      required_documents: []
+      required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
     });
     setNewDoc({ name: '', description: '', icon: 'description' });
+    setActiveDocCategory('core_documents');
     setShowConfigModal(true);
+  };
+
+  const getActiveDocArray = () => {
+    if (activeDocCategory === 'core_documents') {
+      return configForm.required_documents.core_documents;
+    }
+    return configForm.required_documents.category_specific[activeDocCategory] || [];
   };
 
   const addDocument = () => {
     if (newDoc.name.trim()) {
-      setConfigForm({
-        ...configForm,
-        required_documents: [...configForm.required_documents, { ...newDoc }]
-      });
+      const updatedDocs = { ...configForm.required_documents };
+      if (activeDocCategory === 'core_documents') {
+        updatedDocs.core_documents = [...updatedDocs.core_documents, { ...newDoc }];
+      } else {
+        updatedDocs.category_specific[activeDocCategory] = [
+          ...updatedDocs.category_specific[activeDocCategory],
+          { ...newDoc }
+        ];
+      }
+      setConfigForm({ ...configForm, required_documents: updatedDocs });
       setNewDoc({ name: '', description: '', icon: 'description' });
     }
   };
 
   const removeDocument = (idx) => {
-    setConfigForm({
-      ...configForm,
-      required_documents: configForm.required_documents.filter((_, i) => i !== idx)
-    });
+    const updatedDocs = { ...configForm.required_documents };
+    if (activeDocCategory === 'core_documents') {
+      updatedDocs.core_documents = updatedDocs.core_documents.filter((_, i) => i !== idx);
+    } else {
+      updatedDocs.category_specific[activeDocCategory] = updatedDocs.category_specific[activeDocCategory].filter((_, i) => i !== idx);
+    }
+    setConfigForm({ ...configForm, required_documents: updatedDocs });
   };
 
   const updateFeeBreakdown = (field, value) => {
@@ -199,14 +258,14 @@ const ConfigurationsTab = ({ showNotification }) => {
                   <td className="p-4 font-bold">{formatCurrency(calculateTotalFee(config.service_fee))}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
-                      {(config.required_documents || []).slice(0, 3).map((doc, i) => (
+                      {getFlatDocsArray(config.required_documents).slice(0, 3).map((doc, i) => (
                         <span key={i} className="px-2 py-1 bg-surface-container-high rounded text-xs flex items-center gap-1">
                           <span className="material-symbols-outlined text-xs">{doc.icon || 'description'}</span>
                           {doc.name || doc}
                         </span>
                       ))}
-                      {(config.required_documents || []).length > 3 && (
-                        <span className="px-2 py-1 text-xs text-outline">+{(config.required_documents || []).length - 3} more</span>
+                      {getTotalDocsCount(config.required_documents) > 3 && (
+                        <span className="px-2 py-1 text-xs text-outline">+{getTotalDocsCount(config.required_documents) - 3} more</span>
                       )}
                     </div>
                   </td>
@@ -326,10 +385,38 @@ const ConfigurationsTab = ({ showNotification }) => {
 
               {/* Required Documents */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Required Documents</label>
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-sm font-semibold">Required Documents</label>
+                </div>
+                
+                {/* Category Tabs */}
+                <div className="flex overflow-x-auto gap-2 mb-4 pb-2 no-scrollbar">
+                  {[
+                    { id: 'core_documents', label: 'Core Documents' },
+                    { id: 'student', label: 'Student' },
+                    { id: 'employed', label: 'Employed' },
+                    { id: 'visiting', label: 'Tourist' },
+                    { id: 'sponsored', label: 'Sponsored' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={(e) => { e.preventDefault(); setActiveDocCategory(tab.id); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                        activeDocCategory === tab.id 
+                          ? 'bg-primary text-white shadow-md' 
+                          : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
 
                 {/* Add Document Form */}
-                <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4">
+                <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4 border border-outline-variant/30">
+                  <h4 className="text-sm font-semibold text-primary mb-2">
+                    Add {activeDocCategory === 'core_documents' ? 'Core Document' : `${activeDocCategory.charAt(0).toUpperCase() + activeDocCategory.slice(1)} Category Document`}
+                  </h4>
                   <div>
                     <label className="block text-xs text-outline mb-1">Document Name</label>
                     <input
@@ -379,8 +466,8 @@ const ConfigurationsTab = ({ showNotification }) => {
 
                 {/* Document List */}
                 <div className="space-y-2">
-                  {configForm.required_documents.map((doc, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg">
+                  {getActiveDocArray().map((doc, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
                       <span className="material-symbols-outlined text-primary">
                         {doc.icon || 'description'}
                       </span>
@@ -398,9 +485,9 @@ const ConfigurationsTab = ({ showNotification }) => {
                       </button>
                     </div>
                   ))}
-                  {configForm.required_documents.length === 0 && (
-                    <div className="text-center py-4 text-outline text-sm">
-                      No documents added yet. Use the form above to add required documents.
+                  {getActiveDocArray().length === 0 && (
+                    <div className="text-center py-4 text-outline text-sm bg-surface-container-low rounded-lg border border-dashed border-outline-variant">
+                      No documents added yet for this category.
                     </div>
                   )}
                 </div>

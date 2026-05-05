@@ -1,185 +1,73 @@
 const { VisaConfiguration } = require('../models');
 
+const required_documents_structure = {
+  core_documents: [
+    { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+    { icon: "badge", name: "Biometric Residence Permit", description: "If applicable, from your current country of residence." },
+    { icon: "account_balance", name: "Bank Statement latest (of atleast 3 months)", description: "Showing sufficient funds for your stay." }
+  ],
+  category_specific: {
+    student: [
+      { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+      { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+      { icon: "event_note", name: "Term/Holiday Letter", description: "Letter from your institution." }
+    ],
+    employed: [
+      { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+      { icon: "work", name: "Employment Contract Letter/ Offer Letter", description: "Valid contract from your employer." },
+      { icon: "payments", name: "3 Months Pay Slips", description: "Recent salary slips." },
+      { icon: "description", name: "Employment Statement", description: "Statement from your employer." }
+    ],
+    visiting: [
+      { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
+      { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
+      { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
+    ],
+    sponsored: [
+      { icon: "handshake", name: "Sponsorship letter", description: "Letter from your sponsor." },
+      { icon: "badge", name: "Sponsor's national ID proof", description: "Passport or Resident permit." },
+      { icon: "account_balance", name: "Updated bank statement of last 6 months", description: "Sponsor's bank statement." }
+    ]
+  }
+};
+
+const form_schema_default = {
+  fields: [
+    { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
+    { name: 'email', type: 'email', required: true, label: 'Email Address' },
+    { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
+    { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' }
+  ]
+};
+
 const sampleConfigurations = [
   {
     citizenship: 'United Kingdom',
     destination: 'Europe (Schengen States)',
     service_fee: 133.00,
-    required_documents: [
-      { 
-        title: 'Original Passport', 
-        icon: 'travel', 
-        color: 'text-primary', 
-        border: 'border-primary', 
-        desc: 'Must be valid for 6 months beyond departure date.' 
-      },
-      { 
-        title: 'Biometric Photos', 
-        icon: 'photo_camera', 
-        color: 'text-secondary', 
-        border: 'border-secondary', 
-        desc: 'Two recent color photos (3.5 x 4.5 cm) on white background.' 
-      },
-      { 
-        title: 'Travel Insurance', 
-        icon: 'description', 
-        color: 'text-tertiary', 
-        border: 'border-tertiary', 
-        desc: 'Proof of medical insurance covering €30,000 min.' 
-      },
-      { 
-        title: 'Proof of Residency', 
-        icon: 'home_work', 
-        color: 'text-primary-container', 
-        border: 'border-primary-container', 
-        desc: 'Valid UK residence permit (BRP) or equivalent.' 
-      }
-    ],
-    form_schema: {
-      fields: [
-        { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
-        { name: 'email', type: 'email', required: true, label: 'Email Address' },
-        { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
-        { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' }
-      ]
-    }
+    required_documents: required_documents_structure,
+    form_schema: form_schema_default
   },
   {
     citizenship: 'United Kingdom',
     destination: 'USA',
     service_fee: 185.00,
-    required_documents: [
-      { 
-        title: 'Valid Passport', 
-        icon: 'travel', 
-        color: 'text-primary', 
-        border: 'border-primary', 
-        desc: 'Must be valid for at least 6 months beyond your planned stay.' 
-      },
-      { 
-        title: 'DS-160 Form', 
-        icon: 'description', 
-        color: 'text-secondary', 
-        border: 'border-secondary', 
-        desc: 'Completed online nonimmigrant visa application.' 
-      },
-      { 
-        title: 'Passport Photo', 
-        icon: 'photo_camera', 
-        color: 'text-tertiary', 
-        border: 'border-tertiary', 
-        desc: 'Recent photograph meeting US visa photo requirements.' 
-      },
-      { 
-        title: 'Interview Appointment', 
-        icon: 'event', 
-        color: 'text-primary-container', 
-        border: 'border-primary-container', 
-        desc: 'Confirmation of visa interview appointment.' 
-      },
-      { 
-        title: 'Financial Proof', 
-        icon: 'account_balance', 
-        color: 'text-secondary', 
-        border: 'border-secondary', 
-        desc: 'Bank statements or proof of financial support.' 
-      }
-    ],
-    form_schema: {
-      fields: [
-        { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
-        { name: 'email', type: 'email', required: true, label: 'Email Address' },
-        { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
-        { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' },
-        { name: 'travelPurpose', type: 'select', required: true, label: 'Purpose of Travel', options: ['Tourism', 'Business', 'Education', 'Other'] }
-      ]
-    }
+    required_documents: required_documents_structure,
+    form_schema: form_schema_default
   },
   {
     citizenship: 'United Kingdom',
     destination: 'Canada',
     service_fee: 150.00,
-    required_documents: [
-      { 
-        title: 'Valid Passport', 
-        icon: 'travel', 
-        color: 'text-primary', 
-        border: 'border-primary', 
-        desc: 'Must be valid for the duration of your stay.' 
-      },
-      { 
-        title: 'Biometric Photos', 
-        icon: 'photo_camera', 
-        color: 'text-secondary', 
-        border: 'border-secondary', 
-        desc: 'Two identical photos meeting Canadian specifications.' 
-      },
-      { 
-        title: 'Travel History', 
-        icon: 'flight_takeoff', 
-        color: 'text-tertiary', 
-        border: 'border-tertiary', 
-        desc: 'Documentation of previous international travel.' 
-      },
-      { 
-        title: 'Financial Documents', 
-        icon: 'account_balance', 
-        color: 'text-primary-container', 
-        border: 'border-primary-container', 
-        desc: 'Proof of sufficient funds for your stay.' 
-      }
-    ],
-    form_schema: {
-      fields: [
-        { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
-        { name: 'email', type: 'email', required: true, label: 'Email Address' },
-        { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
-        { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' }
-      ]
-    }
+    required_documents: required_documents_structure,
+    form_schema: form_schema_default
   },
   {
     citizenship: 'United Kingdom',
     destination: 'Australia',
     service_fee: 165.00,
-    required_documents: [
-      { 
-        title: 'Valid Passport', 
-        icon: 'travel', 
-        color: 'text-primary', 
-        border: 'border-primary', 
-        desc: 'Must be valid for at least 6 months.' 
-      },
-      { 
-        title: 'Passport Photo', 
-        icon: 'photo_camera', 
-        color: 'text-secondary', 
-        border: 'border-secondary', 
-        desc: 'Recent passport-sized photograph.' 
-      },
-      { 
-        title: 'Health Insurance', 
-        icon: 'health_and_safety', 
-        color: 'text-tertiary', 
-        border: 'border-tertiary', 
-        desc: 'Proof of adequate health insurance coverage.' 
-      },
-      { 
-        title: 'Character Documents', 
-        icon: 'verified_user', 
-        color: 'text-primary-container', 
-        border: 'border-primary-container', 
-        desc: 'Police clearance certificate if required.' 
-      }
-    ],
-    form_schema: {
-      fields: [
-        { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
-        { name: 'email', type: 'email', required: true, label: 'Email Address' },
-        { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
-        { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' }
-      ]
-    }
+    required_documents: required_documents_structure,
+    form_schema: form_schema_default
   }
 ];
 

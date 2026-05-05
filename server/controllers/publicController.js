@@ -42,35 +42,54 @@ const getVisaOptions = async (req, res) => {
   }
 };
 
-// Default visa requirements data
 const DEFAULT_VISA_REQUIREMENTS = {
   service_fee: {
     admin_fee: 30,
     express_fee: 30,
     service_fee: 90
   },
-  required_documents: [
-    {
-      icon: "flight",
-      name: "Original Passport",
-      description: "Must be valid for at least 6 months beyond your departure date from the Schengen area."
-    },
-    {
-      icon: "photo_camera",
-      name: "Biometric Photos",
-      description: "Two recent color photographs (3.5 x 4.5 cm) taken against a plain white background."
-    },
-    {
-      icon: "description",
-      name: "Travel Insurance",
-      description: "Proof of medical insurance covering at least €30,000 for all Schengen member states."
-    },
-    {
-      icon: "hotel",
-      name: "Proof of Residency",
-      description: "A valid UK residence permit (BRP) or equivalent documentation of legal stay."
+  required_documents: {
+    core_documents: [
+      {
+        icon: "travel",
+        name: "Passport Front and Back",
+        description: "Valid for at least 6 months beyond intended stay."
+      },
+      {
+        icon: "badge",
+        name: "Biometric Residence Permit",
+        description: "If applicable, from your current country of residence."
+      },
+      {
+        icon: "account_balance",
+        name: "Bank Statement latest (of atleast 3 months)",
+        description: "Showing sufficient funds for your stay."
+      }
+    ],
+    category_specific: {
+      student: [
+        { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+        { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+        { icon: "event_note", name: "Term/Holiday Letter", description: "Letter from your institution." }
+      ],
+      employed: [
+        { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+        { icon: "work", name: "Employment Contract Letter/ Offer Letter", description: "Valid contract from your employer." },
+        { icon: "payments", name: "3 Months Pay Slips", description: "Recent salary slips." },
+        { icon: "description", name: "Employment Statement", description: "Statement from your employer." }
+      ],
+      visiting: [
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
+        { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
+        { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
+      ],
+      sponsored: [
+        { icon: "handshake", name: "Sponsorship letter", description: "Letter from your sponsor." },
+        { icon: "badge", name: "Sponsor's national ID proof", description: "Passport or Resident permit." },
+        { icon: "account_balance", name: "Updated bank statement of last 6 months", description: "Sponsor's bank statement." }
+      ]
     }
-  ],
+  },
   form_schema: {},
   configuration_id: 1,
   is_default: true

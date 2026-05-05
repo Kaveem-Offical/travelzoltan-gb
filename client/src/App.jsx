@@ -4,6 +4,7 @@ import TopNavBar from './components/TopNavBar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ChecklistPage from './pages/ChecklistPage';
+import ApplicationProgressPage from './pages/ApplicationProgressPage';
 import AdminPage from './pages/AdminPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import PrivacyStatementPage from './pages/PrivacyStatementPage';
@@ -42,6 +43,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/checklist" element={<ChecklistPage />} />
+          <Route path="/apply" element={<ApplicationProgressPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy-statement" element={<PrivacyStatementPage />} />
