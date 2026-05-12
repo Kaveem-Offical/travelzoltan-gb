@@ -8,7 +8,10 @@ const ChecklistPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [visaData, setVisaData] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  
+  const [selectedCategory, setSelectedCategory] = useState('employed');
+  const [selectedVisaCategory, setSelectedVisaCategory] = useState('tourist');
+  const [activeTab, setActiveTab] = useState('now');
 
   const citizenship = location.state?.citizenship || 'United Kingdom';
   const destination = location.state?.destination || 'Europe (Schengen States)';
@@ -36,33 +39,38 @@ const ChecklistPage = () => {
       state: { 
         citizenship, 
         destination, 
-        visaData 
+        visaData,
+        selectedCategory,
+        selectedVisaCategory
       } 
     });
   };
 
-  const coreDocs = visaData?.required_documents?.core_documents || [
-    { name: 'Passport Front and Back', description: 'Valid for at least 6 months beyond intended stay.' },
-    { name: 'Biometric Residence Permit', description: 'If applicable, from your current country of residence.' },
-    { name: 'Bank Statement', description: 'Last 3-6 months showing sufficient funds for your stay.' }
+  const docsRequiredNow = visaData?.required_documents?.documents_required_now || [
+    { name: 'Passport Front and Back', description: 'Valid for at least 6 months beyond intended stay.', icon: 'travel' },
+    { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
   ];
 
-  const categoryDocs = visaData?.required_documents?.category_specific || {};
+  const applicantDocs = visaData?.required_documents?.required_later?.applicant_category || {};
+  const visaDocs = visaData?.required_documents?.required_later?.visa_category || {};
+
+  const docsRequiredLater = [
+    ...(applicantDocs[selectedCategory] || []),
+    ...(visaDocs[selectedVisaCategory] || [])
+  ];
 
   const categories = [
     { key: 'student', label: 'Student', icon: 'school' },
     { key: 'employed', label: 'Employed', icon: 'work' },
-    { key: 'sponsored', label: 'Sponsored', icon: 'handshake' },
-    { key: 'visiting', label: 'Tourist', icon: 'flight_takeoff' }
+    { key: 'self_employed', label: 'Self-Employed', icon: 'handshake' },
+    { key: 'unemployed', label: 'Unemployed', icon: 'person_off' },
+    { key: 'other', label: 'Other / Query', icon: 'more_horiz' }
   ];
 
-  const handleCategoryClick = (categoryKey) => {
-    setSelectedCategory(categoryKey);
-  };
-
-  const handleBackToCategories = () => {
-    setSelectedCategory(null);
-  };
+  const visaCategories = [
+    { key: 'tourist', label: 'Tourist', icon: 'flight_takeoff' },
+    { key: 'visiting', label: 'Visit (Family/Friend)', icon: 'family_restroom' }
+  ];
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-24 bg-surface-lowest">
@@ -110,96 +118,206 @@ const ChecklistPage = () => {
         </div>
       ) : (
         <div className="space-y-16">
-          <div className="text-center">
-            <h2 className="font-headline text-4xl font-bold tracking-tight text-on-surface mb-2">Application Requirements</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Core Documents Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-outline-variant/30 flex flex-col">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-error">description</span>
+          
+          {/* Section 1: Pricing Breakdown */}
+          <section className="flex flex-col gap-6 mb-12">
+            <div className="text-center mb-8">
+              <h2 className="font-headline text-4xl font-bold text-on-surface">Application Requirements & Pricing</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+              {/* Pay Now */}
+              <div className="bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-3xl">payments</span>
                 </div>
-                <h3 className="font-headline text-xl font-bold text-on-surface">Core Documents</h3>
+                <h3 className="font-bold text-xl text-on-surface mb-2">Pay Now</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-on-surface">£65</span>
+                  <span className="text-sm text-on-surface-variant"> today</span>
+                </div>
+                <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
+                  <span className="font-bold text-on-surface mb-1 text-base">Total: £130</span>
+                  <span className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span>£65 due today to start process</span>
+                  </span>
+                  <span className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span>Remaining amount paid upon call with executive</span>
+                  </span>
+                </div>
               </div>
-              <p className="text-on-surface-variant text-sm mb-6">
-                These essential documents are required for all applicants, regardless of your specific visa category.
-              </p>
-              <div className="space-y-3 flex-1">
-                {coreDocs.map((doc, idx) => (
-                  <div key={idx} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/20 flex gap-4">
-                    <span className="material-symbols-outlined text-primary mt-0.5">check_circle</span>
-                    <div>
-                      <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider">{doc.name}</h4>
-                      <p className="text-xs text-on-surface-variant mt-1">{doc.description}</p>
-                    </div>
-                  </div>
+
+              {/* Pay in Full */}
+              <div className="bg-primary/5 rounded-2xl p-8 border-2 border-primary shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
+                <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                  30% Discount
+                </div>
+                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center mb-4 mt-2">
+                  <span className="material-symbols-outlined text-3xl">workspace_premium</span>
+                </div>
+                <h3 className="font-bold text-xl text-primary mb-2">Pay in Full</h3>
+                <div className="mb-4 flex items-end justify-center gap-2">
+                  <span className="text-xl text-primary/60 line-through mb-1">£130</span>
+                  <span className="text-4xl font-bold text-primary">£91</span>
+                </div>
+                <div className="text-sm text-primary mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-white/60 rounded-xl p-5 border border-primary/20">
+                  <span className="font-bold mb-1 text-base">Total: £91</span>
+                  <span className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span>Pay entire amount upfront</span>
+                  </span>
+                  <span className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span>Premium concierge service included</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="w-full h-px bg-outline-variant/30 my-8"></div>
+
+          {/* Section 2: Applicant Category & Documents */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined">category</span>
+                </div>
+                <h2 className="font-headline text-2xl font-bold text-on-surface">Applicant Category</h2>
+              </div>
+              <p className="text-on-surface-variant">Select your category to view specific document requirements.</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {categories.map(cat => (
+                  <button 
+                    key={cat.key}
+                    onClick={() => setSelectedCategory(cat.key)}
+                    className={`col-span-${cat.key === 'other' ? '2' : '1'} rounded-xl p-4 flex flex-col items-center gap-2 transition-all shadow-sm focus:outline-none ${selectedCategory === cat.key ? 'bg-primary/10 border-2 border-primary text-primary' : 'bg-white border border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface-variant'}`}
+                  >
+                    <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
+                    <span className="font-bold text-sm uppercase tracking-wider">{cat.label}</span>
+                  </button>
                 ))}
               </div>
-            </div>
 
-            {/* Category Specific Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-outline-variant/30 flex flex-col">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-secondary">category</span>
-                </div>
-                <h3 className="font-headline text-xl font-bold text-on-surface">Category Specific</h3>
-              </div>
-              <p className="text-on-surface-variant text-sm mb-6">
-                Additional documentation is required based on your primary purpose of travel to {destination}.
-              </p>
-              
-              {!selectedCategory ? (
-                <div className="grid grid-cols-2 gap-4 flex-1 content-start">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.key}
-                      onClick={() => handleCategoryClick(cat.key)}
-                      className="flex flex-col items-center justify-center p-4 border border-outline-variant/20 rounded-xl bg-surface-lowest shadow-sm hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-on-surface-variant mb-2">{cat.icon}</span>
-                      <span className="text-xs font-bold uppercase tracking-wider text-on-surface">{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex-1">
-                  <button
-                    onClick={handleBackToCategories}
-                    className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 mb-4 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-sm">arrow_back</span>
-                    Back to categories
-                  </button>
-                  <h4 className="font-bold text-on-surface mb-4 capitalize">{categories.find(c => c.key === selectedCategory)?.label} Documents</h4>
-                  <div className="space-y-3">
-                    {(categoryDocs[selectedCategory] || []).map((doc, idx) => (
-                      <div key={idx} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/20 flex gap-4">
-                        <span className="material-symbols-outlined text-secondary mt-0.5">check_circle</span>
-                        <div>
-                          <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider">{doc.name}</h4>
-                          <p className="text-xs text-on-surface-variant mt-1">{doc.description}</p>
-                        </div>
-                      </div>
+              {selectedCategory && selectedCategory !== 'other' && (
+                <div className="mt-4 bg-white rounded-xl p-6 border border-outline-variant/30 shadow-sm">
+                  <h4 className="font-bold text-on-surface mb-4">Select Visa Category</h4>
+                  <div className="flex flex-col gap-3">
+                    {visaCategories.map(vc => (
+                      <label key={vc.key} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedVisaCategory === vc.key ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:border-primary/50'}`}>
+                        <input 
+                          type="radio" 
+                          name="visa_cat" 
+                          className="text-primary focus:ring-primary h-5 w-5 accent-primary" 
+                          checked={selectedVisaCategory === vc.key}
+                          onChange={() => setSelectedVisaCategory(vc.key)}
+                        />
+                        <span className="font-bold text-on-surface">{vc.label}</span>
+                        <span className={`material-symbols-outlined ml-auto ${selectedVisaCategory === vc.key ? 'text-primary' : 'text-on-surface-variant'}`}>{vc.icon}</span>
+                      </label>
                     ))}
-                    {(categoryDocs[selectedCategory] || []).length === 0 && (
-                      <p className="text-on-surface-variant text-sm">No specific documents required for this category.</p>
-                    )}
                   </div>
                 </div>
               )}
+            </div>
 
-              {!selectedCategory && (
-                <div className="mt-6 bg-primary/5 p-4 rounded-xl text-center">
-                  <p className="text-sm text-on-surface-variant">
-                    Click a category above to see required documents.
-                  </p>
+            <div className="lg:col-span-7 bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm flex flex-col h-full">
+              {selectedCategory === 'other' ? (
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                      <span className="material-symbols-outlined">help_center</span>
+                    </div>
+                    <h2 className="font-headline text-2xl font-bold text-on-surface">Special Category Query</h2>
+                  </div>
+                  <p className="text-on-surface-variant">Please provide details about your situation (e.g., minor, group member, special visa type) and our team will guide you.</p>
+                  
+                  <form className="flex flex-col gap-4 mt-4" onSubmit={(e) => e.preventDefault()}>
+                    <div>
+                      <label className="block text-sm font-bold text-on-surface mb-2">Query Type</label>
+                      <select className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest">
+                        <option>Group Member Application</option>
+                        <option>Application for a Minor</option>
+                        <option>Other Special Category</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-on-surface mb-2">Message / Details</label>
+                      <textarea rows="4" className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest" placeholder="Explain your requirements..."></textarea>
+                    </div>
+                    <button className="bg-primary text-white font-bold py-3 rounded-xl mt-2 hover:opacity-90 transition-opacity">Submit Query</button>
+                  </form>
                 </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface">
+                      <span className="material-symbols-outlined">description</span>
+                    </div>
+                    <h2 className="font-headline text-2xl font-bold text-on-surface">Documents Required</h2>
+                  </div>
+
+                  <div className="flex border-b border-outline-variant/30 mb-6">
+                    <button 
+                      className={`px-6 py-3 font-bold transition-colors relative ${activeTab === 'now' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                      onClick={() => setActiveTab('now')}
+                    >
+                      Required Now
+                      {activeTab === 'now' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+                    </button>
+                    <button 
+                      className={`px-6 py-3 font-bold transition-colors relative ${activeTab === 'later' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                      onClick={() => setActiveTab('later')}
+                    >
+                      Required Later
+                      {activeTab === 'later' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-4 flex-grow">
+                    {activeTab === 'now' ? (
+                      docsRequiredNow.map((doc, idx) => (
+                        <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+                          <div className="mt-1 flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary">{doc.icon || 'check_circle'}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider mb-1">{doc.name}</h4>
+                            <p className="text-xs text-on-surface-variant">{doc.description}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                       (!selectedCategory) ? (
+                         <div className="text-center py-10 bg-surface-container-lowest rounded-xl border border-outline-variant/30 border-dashed">
+                           <p className="text-on-surface-variant text-sm">Select an applicant category to view documents required later.</p>
+                         </div>
+                       ) : docsRequiredLater.length > 0 ? (
+                         docsRequiredLater.map((doc, idx) => (
+                           <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+                            <div className="mt-1 flex-shrink-0">
+                              <span className="material-symbols-outlined text-secondary">{doc.icon || 'description'}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider mb-1">{doc.name}</h4>
+                              <p className="text-xs text-on-surface-variant">{doc.description}</p>
+                            </div>
+                          </div>
+                         ))
+                       ) : (
+                         <div className="text-center py-10 bg-surface-container-lowest rounded-xl border border-outline-variant/30 border-dashed">
+                           <p className="text-on-surface-variant text-sm">No specific documents required for this combination.</p>
+                         </div>
+                       )
+                    )}
+                  </div>
+                </>
               )}
             </div>
-          </div>
+          </section>
 
           <div className="border-t border-outline-variant/30 pt-16 text-center max-w-2xl mx-auto space-y-6">
             <h2 className="font-headline text-3xl font-bold text-on-surface">Ready to begin your journey?</h2>

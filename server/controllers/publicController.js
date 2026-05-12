@@ -49,7 +49,7 @@ const DEFAULT_VISA_REQUIREMENTS = {
     service_fee: 90
   },
   required_documents: {
-    core_documents: [
+    documents_required_now: [
       {
         icon: "travel",
         name: "Passport Front and Back",
@@ -57,37 +57,45 @@ const DEFAULT_VISA_REQUIREMENTS = {
       },
       {
         icon: "badge",
-        name: "Biometric Residence Permit",
-        description: "If applicable, from your current country of residence."
-      },
-      {
-        icon: "account_balance",
-        name: "Bank Statement latest (of atleast 3 months)",
-        description: "Showing sufficient funds for your stay."
+        name: "UK Valid Status (Online Status)",
+        description: "Proof of current legal status or residency requirement."
       }
     ],
-    category_specific: {
-      student: [
-        { icon: "badge", name: "Student ID card", description: "Valid student identification." },
-        { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
-        { icon: "event_note", name: "Term/Holiday Letter", description: "Letter from your institution." }
-      ],
-      employed: [
-        { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
-        { icon: "work", name: "Employment Contract Letter/ Offer Letter", description: "Valid contract from your employer." },
-        { icon: "payments", name: "3 Months Pay Slips", description: "Recent salary slips." },
-        { icon: "description", name: "Employment Statement", description: "Statement from your employer." }
-      ],
-      visiting: [
-        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
-        { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
-        { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
-      ],
-      sponsored: [
-        { icon: "handshake", name: "Sponsorship letter", description: "Letter from your sponsor." },
-        { icon: "badge", name: "Sponsor's national ID proof", description: "Passport or Resident permit." },
-        { icon: "account_balance", name: "Updated bank statement of last 6 months", description: "Sponsor's bank statement." }
-      ]
+    required_later: {
+      applicant_category: {
+        student: [
+          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+          { icon: "event_note", name: "Term/Holiday Letter", description: "Letter from your institution." }
+        ],
+        employed: [
+          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+          { icon: "work", name: "Employment Contract Letter/ Offer Letter", description: "Valid contract from your employer." },
+          { icon: "payments", name: "3 Months Pay Slips", description: "Recent salary slips." },
+          { icon: "description", name: "Employment Statement", description: "Statement from your employer." }
+        ],
+        self_employed: [
+          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
+          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+          { icon: "receipt", name: "Tax Returns", description: "Recent tax return documents." }
+        ],
+        unemployed: [
+          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
+          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+          { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 6 months bank statement." }
+        ]
+      },
+      visa_category: {
+        tourist: [
+          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+        ],
+        visiting: [
+          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
+          { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
+          { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
+        ]
+      }
     }
   },
   form_schema: {},
@@ -108,7 +116,8 @@ const getVisaRequirements = async (req, res) => {
       where: { citizenship, destination }
     });
 
-    if (!config) {
+    if (!config || !config.required_documents?.documents_required_now) {
+      // If config doesn't exist or uses old structure (missing documents_required_now), return default
       return res.status(200).json(DEFAULT_VISA_REQUIREMENTS);
     }
 

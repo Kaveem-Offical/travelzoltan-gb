@@ -39,11 +39,18 @@ const DOCUMENT_ICONS = [
 const getTotalDocsCount = (docs) => {
   if (Array.isArray(docs)) return docs.length;
   if (!docs) return 0;
-  let count = (docs.core_documents || []).length;
-  if (docs.category_specific) {
-    Object.values(docs.category_specific).forEach(arr => {
-      if (Array.isArray(arr)) count += arr.length;
-    });
+  let count = (docs.documents_required_now || []).length;
+  if (docs.required_later) {
+    if (docs.required_later.applicant_category) {
+      Object.values(docs.required_later.applicant_category).forEach(arr => {
+        if (Array.isArray(arr)) count += arr.length;
+      });
+    }
+    if (docs.required_later.visa_category) {
+      Object.values(docs.required_later.visa_category).forEach(arr => {
+        if (Array.isArray(arr)) count += arr.length;
+      });
+    }
   }
   return count;
 };
@@ -51,11 +58,18 @@ const getTotalDocsCount = (docs) => {
 const getFlatDocsArray = (docs) => {
   if (Array.isArray(docs)) return docs;
   if (!docs) return [];
-  let allDocs = [...(docs.core_documents || [])];
-  if (docs.category_specific) {
-    Object.values(docs.category_specific).forEach(arr => {
-      if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
-    });
+  let allDocs = [...(docs.documents_required_now || [])];
+  if (docs.required_later) {
+    if (docs.required_later.applicant_category) {
+      Object.values(docs.required_later.applicant_category).forEach(arr => {
+        if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
+      });
+    }
+    if (docs.required_later.visa_category) {
+      Object.values(docs.required_later.visa_category).forEach(arr => {
+        if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
+      });
+    }
   }
   return allDocs;
 };
@@ -337,10 +351,10 @@ const ConfigurationsTab = ({ showNotification }) => {
               </div>
               {/* Fee Breakdown */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Service Fee Breakdown</label>
+                <label className="block text-sm font-semibold mb-2">Commercials</label>
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
+                    {/* <div>
                       <label className="block text-xs text-outline mb-1">Admin Fee (£)</label>
                       <input
                         type="number"
@@ -350,7 +364,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                         className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
                         placeholder="0.00"
                       />
-                    </div>
+                    </div> */}
                     <div>
                       <label className="block text-xs text-outline mb-1">Service Fee (£)</label>
                       <input
@@ -362,7 +376,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                         placeholder="0.00"
                       />
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="block text-xs text-outline mb-1">Express Fee (£)</label>
                       <input
                         type="number"
@@ -372,7 +386,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                         className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
                         placeholder="0.00"
                       />
-                    </div>
+                    </div> */}
                   </div>
                   <div className="pt-2 border-t border-outline-variant flex justify-between items-center">
                     <span className="text-sm text-outline">Total Service Fee:</span>
