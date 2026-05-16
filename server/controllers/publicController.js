@@ -62,38 +62,80 @@ const DEFAULT_VISA_REQUIREMENTS = {
       }
     ],
     required_later: {
-      applicant_category: {
-        student: [
+      student: {
+        tourist: [
           { icon: "badge", name: "Student ID card", description: "Valid student identification." },
           { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
-          { icon: "event_note", name: "Term/Holiday Letter", description: "Letter from your institution." }
-        ],
-        employed: [
-          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
-          { icon: "work", name: "Employment Contract Letter/ Offer Letter", description: "Valid contract from your employer." },
-          { icon: "payments", name: "3 Months Pay Slips", description: "Recent salary slips." },
-          { icon: "description", name: "Employment Statement", description: "Statement from your employer." }
-        ],
-        self_employed: [
-          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
-          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
-          { icon: "receipt", name: "Tax Returns", description: "Recent tax return documents." }
-        ],
-        unemployed: [
-          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
-          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
-          { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 6 months bank statement." }
-        ]
-      },
-      visa_category: {
-        tourist: [
           { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
           { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
         ],
         visiting: [
-          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
-          { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
-          { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
+          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+        ],
+        business: [
+          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+          { icon: "receipt", name: "Conference / Event Registration", description: "Proof of registration for the business event or conference." }
+        ]
+      },
+      employed: {
+        tourist: [
+          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+          { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
+          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+        ],
+        visiting: [
+          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+          { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
+          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+        ],
+        business: [
+          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+          { icon: "work", name: "Employment Letter", description: "Letter from employer authorising business travel." },
+          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+          { icon: "account_balance", name: "Business Bank Statement", description: "Last 3 months bank statement showing financial solvency." }
+        ]
+      },
+      self_employed: {
+        tourist: [
+          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
+          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+        ],
+        visiting: [
+          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
+          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+        ],
+        business: [
+          { icon: "handshake", name: "Business Registration", description: "Proof of business registration or trade licence." },
+          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+          { icon: "receipt", name: "Company Profile / Letter", description: "Official company letterhead confirming the purpose of travel." }
+        ]
+      },
+      unemployed: {
+        tourist: [
+          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
+          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+        ],
+        visiting: [
+          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
+          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+        ],
+        business: [
+          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor authorising business travel." },
+          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+          { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 3 months bank statement from sponsor." }
         ]
       }
     }
@@ -175,16 +217,16 @@ const createApplication = async (req, res) => {
     if (req.files && req.files.length > 0) {
       try {
         console.log(`[Application] Uploading ${req.files.length} documents...`);
-        
+
         // Upload each file with its document type
         for (let i = 0; i < req.files.length; i++) {
           const file = req.files[i];
           const documentType = parsedDocumentTypes[i] || `document_${i + 1}`;
-          
+
           try {
             // Upload with fallback logic
             const uploadResult = await uploadService.uploadDocument(file, documentType);
-            
+
             // Save document record to database
             const document = await Document.create({
               application_id: newApplication.id,
@@ -197,21 +239,21 @@ const createApplication = async (req, res) => {
               drive_file_id: uploadResult.drive_file_id || null,
               cloudinary_public_id: uploadResult.cloudinary_public_id || null
             });
-            
+
             uploadedDocuments.push({
               id: document.id,
               document_type: documentType,
               file_name: uploadResult.file_name,
               storage_type: uploadResult.storage_type
             });
-            
+
             console.log(`[Application] Document ${i + 1} uploaded: ${uploadResult.storage_type}`);
           } catch (uploadError) {
             console.error(`[Application] Failed to upload document ${i + 1}:`, uploadError.message);
             // Continue with other files even if one fails
           }
         }
-        
+
         console.log(`[Application] Successfully uploaded ${uploadedDocuments.length}/${req.files.length} documents`);
       } catch (error) {
         console.error('[Application] Document upload error:', error);
@@ -227,9 +269,9 @@ const createApplication = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating application:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: 'Internal server error',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -264,7 +306,7 @@ const createPaymentOrder = async (req, res) => {
     if (config && config.service_fee) {
       const fee = config.service_fee;
       if (typeof fee === 'object') {
-        const total = (fee.admin_fee || 0) + (fee.service_fee || 0) + (fee.express_fee || 0);
+        const total = fee.pay_now_amount || fee.total_amount || (fee.admin_fee || 0) + (fee.service_fee || 0) + (fee.express_fee || 0);
         amount = Math.round(total * 100); // Convert to paise (smallest currency unit)
       } else {
         amount = Math.round(parseFloat(fee) * 100);

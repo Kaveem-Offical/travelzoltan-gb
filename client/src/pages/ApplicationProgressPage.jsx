@@ -38,6 +38,22 @@ const ApplicationProgressPage = () => {
     { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
   ];
 
+  const serviceFee = visaData?.service_fee || { total_amount: 130, pay_now_amount: 65, pay_in_full_amount: 91 };
+  
+  const totalAmount = typeof serviceFee === 'object' && serviceFee !== null 
+    ? (serviceFee.total_amount || (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0)) 
+    : parseFloat(serviceFee) || 130;
+
+  const payNowAmount = typeof serviceFee === 'object' && serviceFee !== null && serviceFee.pay_now_amount 
+    ? serviceFee.pay_now_amount 
+    : totalAmount / 2;
+
+  const payInFullAmount = typeof serviceFee === 'object' && serviceFee !== null && serviceFee.pay_in_full_amount
+    ? serviceFee.pay_in_full_amount
+    : totalAmount * 0.7;
+
+  const discountPercentage = totalAmount > 0 ? Math.round(((totalAmount - payInFullAmount) / totalAmount) * 100) : 0;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -151,9 +167,9 @@ const ApplicationProgressPage = () => {
         
         // If frontend overrides amount for Razorpay just for demo (not secure, but fits the prompt request if backend isn't changed yet)
         if (paymentOption === 'partial') {
-          orderData.amount = 6500; // £65.00 in pence
+          orderData.amount = Math.round(payNowAmount * 100);
         } else {
-          orderData.amount = 9100; // £91.00 in pence
+          orderData.amount = Math.round(payInFullAmount * 100);
         }
 
         setPaymentStatus('processing');
@@ -310,10 +326,10 @@ const ApplicationProgressPage = () => {
                     </div>
                     <h3 className="font-bold text-lg text-on-surface mb-1">Pay Now</h3>
                     <div className="mb-4">
-                      <span className="text-3xl font-bold text-on-surface">£65</span>
+                      <span className="text-3xl font-bold text-on-surface">£{payNowAmount}</span>
                       <span className="text-sm text-on-surface-variant"> today</span>
                     </div>
-                    <p className="text-sm text-on-surface-variant">£65 due today. Remaining amount will be paid when a call with our executive is scheduled.</p>
+                    <p className="text-sm text-on-surface-variant">£{payNowAmount} due today. Remaining amount will be paid when a call with our executive is scheduled.</p>
                   </div>
 
                   {/* Pay in Full */}
@@ -322,7 +338,7 @@ const ApplicationProgressPage = () => {
                     className={`cursor-pointer rounded-2xl p-6 border-2 transition-all relative overflow-hidden ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-md' : 'border-outline-variant/30 bg-white hover:border-primary/50'}`}
                   >
                     <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
-                      30% Discount
+                      {discountPercentage}% Discount
                     </div>
                     <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center">
@@ -334,8 +350,8 @@ const ApplicationProgressPage = () => {
                     </div>
                     <h3 className="font-bold text-lg text-on-surface mb-1">Pay in Full</h3>
                     <div className="mb-4 flex items-end gap-2">
-                      <span className="text-sm text-on-surface-variant line-through mb-1">£130</span>
-                      <span className="text-3xl font-bold text-primary">£91</span>
+                      <span className="text-sm text-on-surface-variant line-through mb-1">£{totalAmount}</span>
+                      <span className="text-3xl font-bold text-primary">£{payInFullAmount}</span>
                     </div>
                     <p className="text-sm text-on-surface-variant">Pay the entire amount upfront for our premium concierge service with a 30% discount.</p>
                   </div>
@@ -413,7 +429,7 @@ const ApplicationProgressPage = () => {
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-full" />
                   <span className="relative z-10 flex items-center gap-2">
-                    {loading ? 'Processing...' : `Pay £${paymentOption === 'partial' ? '65' : '91'} & Submit`} 
+                    {loading ? 'Processing...' : `Pay £${paymentOption === 'partial' ? payNowAmount : payInFullAmount} & Submit`} 
                     <span className="material-symbols-outlined text-sm">{loading ? 'hourglass_empty' : 'lock'}</span>
                   </span>
                 </button>

@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 // Helper function to calculate total fee from breakdown
 const calculateTotalFee = (serviceFee) => {
   if (typeof serviceFee === 'object' && serviceFee !== null) {
-    return (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
+    return serviceFee.total_amount || (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
   }
   return parseFloat(serviceFee) || 0;
 };

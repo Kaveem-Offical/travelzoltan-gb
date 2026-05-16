@@ -51,12 +51,38 @@ const ChecklistPage = () => {
     { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
   ];
 
-  const applicantDocs = visaData?.required_documents?.required_later?.applicant_category || {};
-  const visaDocs = visaData?.required_documents?.required_later?.visa_category || {};
+  // --- Dynamic pricing from backend ---
+  const serviceFee = visaData?.service_fee;
 
+  const totalAmount = (() => {
+    if (!serviceFee) return 0;
+    if (typeof serviceFee === 'object' && serviceFee !== null) {
+      return serviceFee.total_amount
+        || ((serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0));
+    }
+    return parseFloat(serviceFee) || 0;
+  })();
+
+  const payNowAmount = (() => {
+    if (!serviceFee || typeof serviceFee !== 'object') return totalAmount / 2;
+    return serviceFee.pay_now_amount || totalAmount / 2;
+  })();
+
+  const payInFullAmount = (() => {
+    if (!serviceFee || typeof serviceFee !== 'object') return totalAmount;
+    return serviceFee.pay_in_full_amount || totalAmount;
+  })();
+
+  // Discount = absolute price difference between total and pay-in-full
+  const discountAmount = Math.max(0, totalAmount - payInFullAmount);
+  const discountPercentage = totalAmount > 0 ? Math.round((discountAmount / totalAmount) * 100) : 0;
+
+  // --- Dynamic documents from backend ---
+  const requiredLaterRoot = visaData?.required_documents?.required_later || {};
+  const categoryDocs = requiredLaterRoot[selectedCategory] || {};
+  
   const docsRequiredLater = [
-    ...(applicantDocs[selectedCategory] || []),
-    ...(visaDocs[selectedVisaCategory] || [])
+    ...(categoryDocs[selectedVisaCategory] || [])
   ];
 
   const categories = [
@@ -69,7 +95,8 @@ const ChecklistPage = () => {
 
   const visaCategories = [
     { key: 'tourist', label: 'Tourist', icon: 'flight_takeoff' },
-    { key: 'visiting', label: 'Visit (Family/Friend)', icon: 'family_restroom' }
+    { key: 'visiting', label: 'Visit (Family/Friend)', icon: 'family_restroom' },
+    { key: 'business', label: 'Business Visa', icon: 'business_center' }
   ];
 
   return (
@@ -132,14 +159,14 @@ const ChecklistPage = () => {
                 </div>
                 <h3 className="font-bold text-xl text-on-surface mb-2">Pay Now</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-on-surface">£65</span>
+                  <span className="text-4xl font-bold text-on-surface">£{payNowAmount}</span>
                   <span className="text-sm text-on-surface-variant"> today</span>
                 </div>
                 <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
-                  <span className="font-bold text-on-surface mb-1 text-base">Total: £130</span>
+                  <span className="font-bold text-on-surface mb-1 text-base">Total: £{totalAmount}</span>
                   <span className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
-                    <span>£65 due today to start process</span>
+                    <span>£{payNowAmount} due today to start process</span>
                   </span>
                   <span className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
@@ -151,18 +178,18 @@ const ChecklistPage = () => {
               {/* Pay in Full */}
               <div className="bg-primary/5 rounded-2xl p-8 border-2 border-primary shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                  30% Discount
+                  {discountAmount > 0 ? `Save £${discountAmount.toFixed(0)}` : `${discountPercentage}% Off`}
                 </div>
                 <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center mb-4 mt-2">
                   <span className="material-symbols-outlined text-3xl">workspace_premium</span>
                 </div>
                 <h3 className="font-bold text-xl text-primary mb-2">Pay in Full</h3>
                 <div className="mb-4 flex items-end justify-center gap-2">
-                  <span className="text-xl text-primary/60 line-through mb-1">£130</span>
-                  <span className="text-4xl font-bold text-primary">£91</span>
+                  <span className="text-xl text-primary/60 line-through mb-1">£{totalAmount}</span>
+                  <span className="text-4xl font-bold text-primary">£{payInFullAmount}</span>
                 </div>
                 <div className="text-sm text-primary mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-white/60 rounded-xl p-5 border border-primary/20">
-                  <span className="font-bold mb-1 text-base">Total: £91</span>
+                  <span className="font-bold mb-1 text-base">Total: £{payInFullAmount}</span>
                   <span className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
                     <span>Pay entire amount upfront</span>

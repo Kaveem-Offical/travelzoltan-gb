@@ -38,6 +38,11 @@ const required_documents_structure = {
         { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
         { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
         { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
+      ],
+      business: [
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." },
+        { icon: "badge", name: "Inviter's ID Proof", description: "Passport or Resident Permit of inviter." },
+        { icon: "home", name: "Address proof", description: "Electricity bill, Utility bill, etc." }
       ]
     }
   }
@@ -86,20 +91,20 @@ const sampleConfigurations = [
 const seedVisaConfigurations = async () => {
   try {
     console.log('Starting to seed visa configurations...');
-    
+
     // Clear existing data (optional - comment out if you want to keep existing data)
     await VisaConfiguration.destroy({ where: {} });
     console.log('Cleared existing configurations');
-    
+
     // Insert sample data
     await VisaConfiguration.bulkCreate(sampleConfigurations);
-    
+
     console.log('✅ Successfully seeded', sampleConfigurations.length, 'visa configurations!');
     console.log('\nSeeded configurations:');
     sampleConfigurations.forEach((config, index) => {
       console.log(`${index + 1}. ${config.citizenship} → ${config.destination} (£${config.service_fee})`);
     });
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding visa configurations:', error);

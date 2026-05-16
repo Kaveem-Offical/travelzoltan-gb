@@ -12,7 +12,7 @@ const formatCurrency = (amount) => {
 // Calculate total fee from breakdown
 const calculateTotalFee = (serviceFee) => {
   if (typeof serviceFee === 'object' && serviceFee !== null) {
-    return (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
+    return serviceFee.total_amount || (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
   }
   return parseFloat(serviceFee) || 0;
 };
@@ -41,16 +41,13 @@ const getTotalDocsCount = (docs) => {
   if (!docs) return 0;
   let count = (docs.documents_required_now || []).length;
   if (docs.required_later) {
-    if (docs.required_later.applicant_category) {
-      Object.values(docs.required_later.applicant_category).forEach(arr => {
-        if (Array.isArray(arr)) count += arr.length;
-      });
-    }
-    if (docs.required_later.visa_category) {
-      Object.values(docs.required_later.visa_category).forEach(arr => {
-        if (Array.isArray(arr)) count += arr.length;
-      });
-    }
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
+      if (docs.required_later[cat]) {
+        if (Array.isArray(docs.required_later[cat].tourist)) count += docs.required_later[cat].tourist.length;
+        if (Array.isArray(docs.required_later[cat].visiting)) count += docs.required_later[cat].visiting.length;
+        if (Array.isArray(docs.required_later[cat].business)) count += docs.required_later[cat].business.length;
+      }
+    });
   }
   return count;
 };
@@ -60,27 +57,40 @@ const getFlatDocsArray = (docs) => {
   if (!docs) return [];
   let allDocs = [...(docs.documents_required_now || [])];
   if (docs.required_later) {
-    if (docs.required_later.applicant_category) {
-      Object.values(docs.required_later.applicant_category).forEach(arr => {
-        if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
-      });
-    }
-    if (docs.required_later.visa_category) {
-      Object.values(docs.required_later.visa_category).forEach(arr => {
-        if (Array.isArray(arr)) allDocs = [...allDocs, ...arr];
-      });
-    }
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
+      if (docs.required_later[cat]) {
+        if (Array.isArray(docs.required_later[cat].tourist)) allDocs = [...allDocs, ...docs.required_later[cat].tourist];
+        if (Array.isArray(docs.required_later[cat].visiting)) allDocs = [...allDocs, ...docs.required_later[cat].visiting];
+        if (Array.isArray(docs.required_later[cat].business)) allDocs = [...allDocs, ...docs.required_later[cat].business];
+      }
+    });
   }
   return allDocs;
 };
 
 const defaultRequiredDocs = {
-  core_documents: [],
-  category_specific: {
-    student: [],
-    employed: [],
-    visiting: [],
-    sponsored: []
+  documents_required_now: [],
+  required_later: {
+    student: {
+      tourist: [],
+      visiting: [],
+      business: []
+    },
+    employed: {
+      tourist: [],
+      visiting: [],
+      business: []
+    },
+    self_employed: {
+      tourist: [],
+      visiting: [],
+      business: []
+    },
+    unemployed: {
+      tourist: [],
+      visiting: [],
+      business: []
+    }
   }
 };
 
@@ -91,10 +101,11 @@ const ConfigurationsTab = ({ showNotification }) => {
   const [configForm, setConfigForm] = useState({
     citizenship: '',
     destination: '',
-    service_fee: { admin_fee: 0, service_fee: 0, express_fee: 0 },
+    service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
     required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
   });
-  const [activeDocCategory, setActiveDocCategory] = useState('core_documents');
+  const [activeDocCategory, setActiveDocCategory] = useState('documents_required_now');
+  const [activeSubTab, setActiveSubTab] = useState('tourist');
   const [newDoc, setNewDoc] = useState({ name: '', description: '', icon: 'description' });
 
   useEffect(() => {
@@ -145,30 +156,41 @@ const ConfigurationsTab = ({ showNotification }) => {
     if (typeof feeData === 'number' || typeof feeData === 'string') {
       const total = parseFloat(feeData) || 0;
       feeData = {
-        admin_fee: parseFloat((total * 0.2).toFixed(2)),
-        service_fee: parseFloat((total * 0.6).toFixed(2)),
-        express_fee: parseFloat((total * 0.2).toFixed(2))
+        pay_now_amount: total / 2,
+        total_amount: total,
+        pay_in_full_amount: total * 0.7
       };
     } else if (!feeData || typeof feeData !== 'object') {
-      feeData = { admin_fee: 0, service_fee: 0, express_fee: 0 };
+      feeData = { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 };
+    } else {
+      if (feeData.service_fee !== undefined && feeData.pay_now_amount === undefined) {
+          const total = (feeData.admin_fee || 0) + (feeData.service_fee || 0) + (feeData.express_fee || 0);
+          feeData = {
+              pay_now_amount: total / 2,
+              total_amount: total,
+              pay_in_full_amount: total * 0.7
+          };
+      }
     }
 
     // Normalize required_documents to object format
     let docs = config.required_documents;
     let normalizedDocs = JSON.parse(JSON.stringify(defaultRequiredDocs));
 
-    if (Array.isArray(docs)) {
-      normalizedDocs.core_documents = docs.map(doc => {
-        if (typeof doc === 'string') {
-          return { name: doc, description: '', icon: 'description' };
-        }
-        return doc;
-      });
-    } else if (docs && typeof docs === 'object') {
-      normalizedDocs.core_documents = Array.isArray(docs.core_documents) ? docs.core_documents : [];
-      if (docs.category_specific) {
-        ['student', 'employed', 'visiting', 'sponsored'].forEach(cat => {
-          normalizedDocs.category_specific[cat] = Array.isArray(docs.category_specific[cat]) ? docs.category_specific[cat] : [];
+    if (docs && typeof docs === 'object') {
+      if (docs.documents_required_now) {
+        normalizedDocs.documents_required_now = docs.documents_required_now;
+      } else if (docs.core_documents) {
+        normalizedDocs.documents_required_now = docs.core_documents;
+      }
+      
+      if (docs.required_later) {
+        ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
+            if (docs.required_later[cat]) {
+               normalizedDocs.required_later[cat] = { ...normalizedDocs.required_later[cat], ...docs.required_later[cat] };
+            } else if (docs.required_later.applicant_category && docs.required_later.applicant_category[cat]) {
+               normalizedDocs.required_later[cat].tourist = docs.required_later.applicant_category[cat] || [];
+            }
         });
       }
     }
@@ -179,7 +201,7 @@ const ConfigurationsTab = ({ showNotification }) => {
       service_fee: feeData,
       required_documents: normalizedDocs
     });
-    setActiveDocCategory('core_documents');
+    setActiveDocCategory('documents_required_now');
     setShowConfigModal(true);
   };
 
@@ -188,44 +210,58 @@ const ConfigurationsTab = ({ showNotification }) => {
     setConfigForm({
       citizenship: '',
       destination: '',
-      service_fee: { admin_fee: 0, service_fee: 0, express_fee: 0 },
+      service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
       required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
     });
     setNewDoc({ name: '', description: '', icon: 'description' });
-    setActiveDocCategory('core_documents');
+    setActiveDocCategory('documents_required_now');
     setShowConfigModal(true);
   };
 
   const getActiveDocArray = () => {
-    if (activeDocCategory === 'core_documents') {
-      return configForm.required_documents.core_documents;
+    if (activeDocCategory === 'documents_required_now') {
+      return configForm.required_documents.documents_required_now || [];
     }
-    return configForm.required_documents.category_specific[activeDocCategory] || [];
+    if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
+      if (configForm.required_documents.required_later[activeDocCategory]) {
+        return configForm.required_documents.required_later[activeDocCategory][activeSubTab] || [];
+      }
+    }
+    return [];
   };
 
   const addDocument = () => {
     if (newDoc.name.trim()) {
-      const updatedDocs = { ...configForm.required_documents };
-      if (activeDocCategory === 'core_documents') {
-        updatedDocs.core_documents = [...updatedDocs.core_documents, { ...newDoc }];
-      } else {
-        updatedDocs.category_specific[activeDocCategory] = [
-          ...updatedDocs.category_specific[activeDocCategory],
-          { ...newDoc }
-        ];
+      const updatedDocs = JSON.parse(JSON.stringify(configForm.required_documents));
+      
+      if (activeDocCategory === 'documents_required_now') {
+        updatedDocs.documents_required_now.push({ ...newDoc });
+      } else if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
+        if (!updatedDocs.required_later[activeDocCategory]) {
+          updatedDocs.required_later[activeDocCategory] = { tourist: [], visiting: [], business: [] };
+        }
+        if (!updatedDocs.required_later[activeDocCategory][activeSubTab]) {
+          updatedDocs.required_later[activeDocCategory][activeSubTab] = [];
+        }
+        updatedDocs.required_later[activeDocCategory][activeSubTab].push({ ...newDoc });
       }
+      
       setConfigForm({ ...configForm, required_documents: updatedDocs });
       setNewDoc({ name: '', description: '', icon: 'description' });
     }
   };
 
   const removeDocument = (idx) => {
-    const updatedDocs = { ...configForm.required_documents };
-    if (activeDocCategory === 'core_documents') {
-      updatedDocs.core_documents = updatedDocs.core_documents.filter((_, i) => i !== idx);
-    } else {
-      updatedDocs.category_specific[activeDocCategory] = updatedDocs.category_specific[activeDocCategory].filter((_, i) => i !== idx);
+    const updatedDocs = JSON.parse(JSON.stringify(configForm.required_documents));
+    
+    if (activeDocCategory === 'documents_required_now') {
+      updatedDocs.documents_required_now.splice(idx, 1);
+    } else if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
+      if (updatedDocs.required_later[activeDocCategory] && updatedDocs.required_later[activeDocCategory][activeSubTab]) {
+         updatedDocs.required_later[activeDocCategory][activeSubTab].splice(idx, 1);
+      }
     }
+    
     setConfigForm({ ...configForm, required_documents: updatedDocs });
   };
 
@@ -354,39 +390,39 @@ const ConfigurationsTab = ({ showNotification }) => {
                 <label className="block text-sm font-semibold mb-2">Commercials</label>
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-3 gap-4">
-                    {/* <div>
-                      <label className="block text-xs text-outline mb-1">Admin Fee (£)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={configForm.service_fee.admin_fee || 0}
-                        onChange={(e) => updateFeeBreakdown('admin_fee', e.target.value)}
-                        className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                        placeholder="0.00"
-                      />
-                    </div> */}
                     <div>
-                      <label className="block text-xs text-outline mb-1">Service Fee (£)</label>
+                      <label className="block text-xs text-outline mb-1">Total Amount (£)</label>
                       <input
                         type="number"
                         step="0.01"
-                        value={configForm.service_fee.service_fee || 0}
-                        onChange={(e) => updateFeeBreakdown('service_fee', e.target.value)}
+                        value={configForm.service_fee.total_amount || 0}
+                        onChange={(e) => updateFeeBreakdown('total_amount', e.target.value)}
                         className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                        placeholder="0.00"
+                        placeholder="130.00"
                       />
                     </div>
-                    {/* <div>
-                      <label className="block text-xs text-outline mb-1">Express Fee (£)</label>
+                    <div>
+                      <label className="block text-xs text-outline mb-1">Pay Now Amount (£)</label>
                       <input
                         type="number"
                         step="0.01"
-                        value={configForm.service_fee.express_fee || 0}
-                        onChange={(e) => updateFeeBreakdown('express_fee', e.target.value)}
+                        value={configForm.service_fee.pay_now_amount || 0}
+                        onChange={(e) => updateFeeBreakdown('pay_now_amount', e.target.value)}
                         className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                        placeholder="0.00"
+                        placeholder="65.00"
                       />
-                    </div> */}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-outline mb-1">Pay in Full Discounted (£)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={configForm.service_fee.pay_in_full_amount || 0}
+                        onChange={(e) => updateFeeBreakdown('pay_in_full_amount', e.target.value)}
+                        className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
+                        placeholder="91.00"
+                      />
+                    </div>
                   </div>
                   <div className="pt-2 border-t border-outline-variant flex justify-between items-center">
                     <span className="text-sm text-outline">Total Service Fee:</span>
@@ -406,11 +442,11 @@ const ConfigurationsTab = ({ showNotification }) => {
                 {/* Category Tabs */}
                 <div className="flex overflow-x-auto gap-2 mb-4 pb-2 no-scrollbar">
                   {[
-                    { id: 'core_documents', label: 'Core Documents' },
+                    { id: 'documents_required_now', label: 'Required Now' },
                     { id: 'student', label: 'Student' },
                     { id: 'employed', label: 'Employed' },
-                    { id: 'visiting', label: 'Tourist' },
-                    { id: 'sponsored', label: 'Sponsored' }
+                    { id: 'self_employed', label: 'Self-Employed' },
+                    { id: 'unemployed', label: 'Unemployed' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -426,10 +462,33 @@ const ConfigurationsTab = ({ showNotification }) => {
                   ))}
                 </div>
 
+                {/* Sub Category Tabs for Specific Categories */}
+                {['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory) && (
+                  <div className="flex gap-2 mb-4">
+                    {[
+                      { id: 'tourist', label: 'Tourist' },
+                      { id: 'visiting', label: 'Visiting' },
+                      { id: 'business', label: 'Business' }
+                    ].map(subTab => (
+                      <button
+                        key={subTab.id}
+                        onClick={(e) => { e.preventDefault(); setActiveSubTab(subTab.id); }}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
+                          activeSubTab === subTab.id 
+                            ? 'border-primary bg-primary/10 text-primary' 
+                            : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                        }`}
+                      >
+                        {subTab.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Add Document Form */}
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4 border border-outline-variant/30">
                   <h4 className="text-sm font-semibold text-primary mb-2">
-                    Add {activeDocCategory === 'core_documents' ? 'Core Document' : `${activeDocCategory.charAt(0).toUpperCase() + activeDocCategory.slice(1)} Category Document`}
+                    Add {activeDocCategory === 'documents_required_now' ? 'Required Now Document' : `${activeDocCategory.charAt(0).toUpperCase() + activeDocCategory.slice(1).replace('_', ' ')} Category Document`}
                   </h4>
                   <div>
                     <label className="block text-xs text-outline mb-1">Document Name</label>
