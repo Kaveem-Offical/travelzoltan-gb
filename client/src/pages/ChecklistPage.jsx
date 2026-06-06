@@ -153,11 +153,11 @@ const ChecklistPage = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
               {/* Pay Now */}
-              <div className="bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4">
+              <div className="bg-red-50 rounded-2xl p-8 border border-red-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined text-3xl">payments</span>
                 </div>
-                <h3 className="font-bold text-xl text-on-surface mb-2">Pay Now</h3>
+                <h3 className="font-bold text-xl text-red-600 mb-2">Pay Now</h3>
                 <div className="mb-4">
                   <span className="text-4xl font-bold text-on-surface">£{payNowAmount}</span>
                   <span className="text-sm text-on-surface-variant"> today</span>
@@ -176,26 +176,26 @@ const ChecklistPage = () => {
               </div>
 
               {/* Pay in Full */}
-              <div className="bg-primary/5 rounded-2xl p-8 border-2 border-primary shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
+              <div className="bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                   {discountAmount > 0 ? `Save £${discountAmount.toFixed(0)}` : `${discountPercentage}% Off`}
                 </div>
-                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center mb-4 mt-2">
+                <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4 mt-2">
                   <span className="material-symbols-outlined text-3xl">workspace_premium</span>
                 </div>
-                <h3 className="font-bold text-xl text-primary mb-2">Pay in Full</h3>
+                <h3 className="font-bold text-xl text-on-surface mb-2">Pay in Full</h3>
                 <div className="mb-4 flex items-end justify-center gap-2">
-                  <span className="text-xl text-primary/60 line-through mb-1">£{totalAmount}</span>
-                  <span className="text-4xl font-bold text-primary">£{payInFullAmount}</span>
+                  <span className="text-xl text-on-surface-variant/60 line-through mb-1">£{totalAmount}</span>
+                  <span className="text-4xl font-bold text-on-surface">£{payInFullAmount}</span>
                 </div>
-                <div className="text-sm text-primary mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-white/60 rounded-xl p-5 border border-primary/20">
+                <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
                   <span className="font-bold mb-1 text-base">Total: £{payInFullAmount}</span>
                   <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">check_circle</span> 
                     <span>Pay entire amount upfront</span>
                   </span>
                   <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
+                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">check_circle</span> 
                     <span>Premium concierge service included</span>
                   </span>
                 </div>
