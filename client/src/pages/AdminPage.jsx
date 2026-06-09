@@ -222,6 +222,42 @@ const ConfigurationsTab = ({ showNotification }) => {
     }
   };
 
+  const handleDuplicateConfig = (config) => {
+    setEditingConfig(null);
+    // Normalize service_fee to object format (same logic as openEditModal)
+    let feeData = config.service_fee;
+    if (typeof feeData === 'number' || typeof feeData === 'string') {
+      const total = parseFloat(feeData) || 0;
+      feeData = {
+        pay_now_amount: total / 2,
+        total_amount: total,
+        pay_in_full_amount: total * 0.7
+      };
+    } else if (!feeData || typeof feeData !== 'object') {
+      feeData = { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 };
+    } else {
+      if (feeData.service_fee !== undefined && feeData.pay_now_amount === undefined) {
+        const total = (feeData.admin_fee || 0) + (feeData.service_fee || 0) + (feeData.express_fee || 0);
+        feeData = {
+          pay_now_amount: total / 2,
+          total_amount: total,
+          pay_in_full_amount: total * 0.7
+        };
+      }
+    }
+    setConfigForm({
+      citizenship: config.citizenship + ' (Copy)',
+      destination: config.destination,
+      service_fee: feeData,
+      required_documents: normalizeRequiredDocs(config.required_documents)
+    });
+    setNewDoc({ name: '', description: '', icon: 'description' });
+    setActiveVisaCategory('tourist');
+    setActiveApplicantCategory('employed');
+    setActiveDocsCategory('now');
+    setShowConfigModal(true);
+  };
+
   const openEditModal = (config) => {
     setEditingConfig(config);
     // Normalize service_fee to object format
@@ -370,18 +406,29 @@ const ConfigurationsTab = ({ showNotification }) => {
                     </div>
                   </td>
                   <td className="p-4">
-                    <button 
-                      onClick={() => openEditModal(config)}
-                      className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors mr-2"
-                    >
-                      <span className="material-symbols-outlined">edit</span>
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteConfig(config.id)}
-                      className="text-error hover:bg-error/10 p-2 rounded-lg transition-colors"
-                    >
-                      <span className="material-symbols-outlined">delete</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => openEditModal(config)}
+                        title="Edit configuration"
+                        className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined">edit</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDuplicateConfig(config)}
+                        title="Duplicate configuration"
+                        className="text-secondary hover:bg-secondary/10 p-2 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined">content_copy</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteConfig(config.id)}
+                        title="Delete configuration"
+                        className="text-error hover:bg-error/10 p-2 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined">delete</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
