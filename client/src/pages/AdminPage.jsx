@@ -36,62 +36,134 @@ const DOCUMENT_ICONS = [
   { value: 'receipt', label: 'Receipt' }
 ];
 
-const getTotalDocsCount = (docs) => {
-  if (Array.isArray(docs)) return docs.length;
-  if (!docs) return 0;
-  let count = (docs.documents_required_now || []).length;
-  if (docs.required_later) {
-    ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
-      if (docs.required_later[cat]) {
-        if (Array.isArray(docs.required_later[cat].tourist)) count += docs.required_later[cat].tourist.length;
-        if (Array.isArray(docs.required_later[cat].visiting)) count += docs.required_later[cat].visiting.length;
-        if (Array.isArray(docs.required_later[cat].business)) count += docs.required_later[cat].business.length;
+const defaultRequiredDocs = {
+  tourist: {
+    student: { now: [], later: [] },
+    employed: { now: [], later: [] },
+    self_employed: { now: [], later: [] },
+    unemployed: { now: [], later: [] }
+  },
+  visiting: {
+    student: { now: [], later: [] },
+    employed: { now: [], later: [] },
+    self_employed: { now: [], later: [] },
+    unemployed: { now: [], later: [] }
+  },
+  business: {
+    student: { now: [], later: [] },
+    employed: { now: [], later: [] },
+    self_employed: { now: [], later: [] },
+    unemployed: { now: [], later: [] }
+  }
+};
+
+const normalizeRequiredDocs = (docs) => {
+  const normalized = JSON.parse(JSON.stringify(defaultRequiredDocs));
+  if (!docs || typeof docs !== 'object') {
+    return normalized;
+  }
+  
+  const hasNewKeys = ['tourist', 'visiting', 'business'].some(vk => 
+    docs[vk] && typeof docs[vk] === 'object' && 
+    ['student', 'employed', 'self_employed', 'unemployed'].some(ac => docs[vk][ac])
+  );
+  
+  if (hasNewKeys) {
+    ['tourist', 'visiting', 'business'].forEach(vk => {
+      if (docs[vk] && typeof docs[vk] === 'object') {
+        ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+          if (docs[vk][ac] && typeof docs[vk][ac] === 'object') {
+            normalized[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
+            normalized[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
+          }
+        });
       }
     });
+    return normalized;
   }
-  return count;
+
+  let oldNow = [];
+  if (Array.isArray(docs.documents_required_now)) {
+    oldNow = docs.documents_required_now;
+  } else if (Array.isArray(docs.core_documents)) {
+    oldNow = docs.core_documents;
+  }
+  
+  ['tourist', 'visiting', 'business'].forEach(vk => {
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      normalized[vk][ac].now = JSON.parse(JSON.stringify(oldNow));
+    });
+  });
+
+  if (docs.required_later && typeof docs.required_later === 'object') {
+    const requiredLater = docs.required_later;
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      if (requiredLater[ac] && typeof requiredLater[ac] === 'object') {
+        ['tourist', 'visiting', 'business'].forEach(vk => {
+          if (Array.isArray(requiredLater[ac][vk])) {
+            normalized[vk][ac].later = requiredLater[ac][vk];
+          }
+        });
+      }
+    });
+
+    if (requiredLater.applicant_category && typeof requiredLater.applicant_category === 'object') {
+      const appCat = requiredLater.applicant_category;
+      ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+        if (Array.isArray(appCat[ac])) {
+          ['tourist', 'visiting', 'business'].forEach(vk => {
+            normalized[vk][ac].later = [...normalized[vk][ac].later, ...appCat[ac]];
+          });
+        }
+      });
+    }
+
+    if (requiredLater.visa_category && typeof requiredLater.visa_category === 'object') {
+      const visaCat = requiredLater.visa_category;
+      ['tourist', 'visiting', 'business'].forEach(vk => {
+        if (Array.isArray(visaCat[vk])) {
+          ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+            normalized[vk][ac].later = [...normalized[vk][ac].later, ...visaCat[vk]];
+          });
+        }
+      });
+    }
+  }
+
+  return normalized;
+};
+
+const getTotalDocsCount = (docs) => {
+  const norm = normalizeRequiredDocs(docs);
+  const uniqueNames = new Set();
+  ['tourist', 'visiting', 'business'].forEach(vk => {
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      if (norm[vk] && norm[vk][ac]) {
+        (norm[vk][ac].now || []).forEach(d => uniqueNames.add(d.name));
+        (norm[vk][ac].later || []).forEach(d => uniqueNames.add(d.name));
+      }
+    });
+  });
+  return uniqueNames.size;
 };
 
 const getFlatDocsArray = (docs) => {
-  if (Array.isArray(docs)) return docs;
-  if (!docs) return [];
-  let allDocs = [...(docs.documents_required_now || [])];
-  if (docs.required_later) {
-    ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
-      if (docs.required_later[cat]) {
-        if (Array.isArray(docs.required_later[cat].tourist)) allDocs = [...allDocs, ...docs.required_later[cat].tourist];
-        if (Array.isArray(docs.required_later[cat].visiting)) allDocs = [...allDocs, ...docs.required_later[cat].visiting];
-        if (Array.isArray(docs.required_later[cat].business)) allDocs = [...allDocs, ...docs.required_later[cat].business];
+  const norm = normalizeRequiredDocs(docs);
+  const uniqueDocs = [];
+  const uniqueNames = new Set();
+  ['tourist', 'visiting', 'business'].forEach(vk => {
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      if (norm[vk] && norm[vk][ac]) {
+        [...(norm[vk][ac].now || []), ...(norm[vk][ac].later || [])].forEach(d => {
+          if (!uniqueNames.has(d.name)) {
+            uniqueNames.add(d.name);
+            uniqueDocs.push(d);
+          }
+        });
       }
     });
-  }
-  return allDocs;
-};
-
-const defaultRequiredDocs = {
-  documents_required_now: [],
-  required_later: {
-    student: {
-      tourist: [],
-      visiting: [],
-      business: []
-    },
-    employed: {
-      tourist: [],
-      visiting: [],
-      business: []
-    },
-    self_employed: {
-      tourist: [],
-      visiting: [],
-      business: []
-    },
-    unemployed: {
-      tourist: [],
-      visiting: [],
-      business: []
-    }
-  }
+  });
+  return uniqueDocs;
 };
 
 const ConfigurationsTab = ({ showNotification }) => {
@@ -104,8 +176,9 @@ const ConfigurationsTab = ({ showNotification }) => {
     service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
     required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
   });
-  const [activeDocCategory, setActiveDocCategory] = useState('documents_required_now');
-  const [activeSubTab, setActiveSubTab] = useState('tourist');
+  const [activeVisaCategory, setActiveVisaCategory] = useState('tourist');
+  const [activeApplicantCategory, setActiveApplicantCategory] = useState('employed');
+  const [activeDocsCategory, setActiveDocsCategory] = useState('now');
   const [newDoc, setNewDoc] = useState({ name: '', description: '', icon: 'description' });
 
   useEffect(() => {
@@ -175,25 +248,7 @@ const ConfigurationsTab = ({ showNotification }) => {
 
     // Normalize required_documents to object format
     let docs = config.required_documents;
-    let normalizedDocs = JSON.parse(JSON.stringify(defaultRequiredDocs));
-
-    if (docs && typeof docs === 'object') {
-      if (docs.documents_required_now) {
-        normalizedDocs.documents_required_now = docs.documents_required_now;
-      } else if (docs.core_documents) {
-        normalizedDocs.documents_required_now = docs.core_documents;
-      }
-      
-      if (docs.required_later) {
-        ['student', 'employed', 'self_employed', 'unemployed'].forEach(cat => {
-            if (docs.required_later[cat]) {
-               normalizedDocs.required_later[cat] = { ...normalizedDocs.required_later[cat], ...docs.required_later[cat] };
-            } else if (docs.required_later.applicant_category && docs.required_later.applicant_category[cat]) {
-               normalizedDocs.required_later[cat].tourist = docs.required_later.applicant_category[cat] || [];
-            }
-        });
-      }
-    }
+    let normalizedDocs = normalizeRequiredDocs(docs);
 
     setConfigForm({
       citizenship: config.citizenship,
@@ -201,7 +256,9 @@ const ConfigurationsTab = ({ showNotification }) => {
       service_fee: feeData,
       required_documents: normalizedDocs
     });
-    setActiveDocCategory('documents_required_now');
+    setActiveVisaCategory('tourist');
+    setActiveApplicantCategory('employed');
+    setActiveDocsCategory('now');
     setShowConfigModal(true);
   };
 
@@ -214,18 +271,15 @@ const ConfigurationsTab = ({ showNotification }) => {
       required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
     });
     setNewDoc({ name: '', description: '', icon: 'description' });
-    setActiveDocCategory('documents_required_now');
+    setActiveVisaCategory('tourist');
+    setActiveApplicantCategory('employed');
+    setActiveDocsCategory('now');
     setShowConfigModal(true);
   };
 
   const getActiveDocArray = () => {
-    if (activeDocCategory === 'documents_required_now') {
-      return configForm.required_documents.documents_required_now || [];
-    }
-    if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
-      if (configForm.required_documents.required_later[activeDocCategory]) {
-        return configForm.required_documents.required_later[activeDocCategory][activeSubTab] || [];
-      }
+    if (configForm.required_documents?.[activeVisaCategory]?.[activeApplicantCategory]) {
+      return configForm.required_documents[activeVisaCategory][activeApplicantCategory][activeDocsCategory] || [];
     }
     return [];
   };
@@ -234,17 +288,17 @@ const ConfigurationsTab = ({ showNotification }) => {
     if (newDoc.name.trim()) {
       const updatedDocs = JSON.parse(JSON.stringify(configForm.required_documents));
       
-      if (activeDocCategory === 'documents_required_now') {
-        updatedDocs.documents_required_now.push({ ...newDoc });
-      } else if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
-        if (!updatedDocs.required_later[activeDocCategory]) {
-          updatedDocs.required_later[activeDocCategory] = { tourist: [], visiting: [], business: [] };
-        }
-        if (!updatedDocs.required_later[activeDocCategory][activeSubTab]) {
-          updatedDocs.required_later[activeDocCategory][activeSubTab] = [];
-        }
-        updatedDocs.required_later[activeDocCategory][activeSubTab].push({ ...newDoc });
+      if (!updatedDocs[activeVisaCategory]) {
+        updatedDocs[activeVisaCategory] = {};
       }
+      if (!updatedDocs[activeVisaCategory][activeApplicantCategory]) {
+        updatedDocs[activeVisaCategory][activeApplicantCategory] = { now: [], later: [] };
+      }
+      if (!updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory]) {
+        updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory] = [];
+      }
+      
+      updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory].push({ ...newDoc });
       
       setConfigForm({ ...configForm, required_documents: updatedDocs });
       setNewDoc({ name: '', description: '', icon: 'description' });
@@ -254,12 +308,8 @@ const ConfigurationsTab = ({ showNotification }) => {
   const removeDocument = (idx) => {
     const updatedDocs = JSON.parse(JSON.stringify(configForm.required_documents));
     
-    if (activeDocCategory === 'documents_required_now') {
-      updatedDocs.documents_required_now.splice(idx, 1);
-    } else if (['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory)) {
-      if (updatedDocs.required_later[activeDocCategory] && updatedDocs.required_later[activeDocCategory][activeSubTab]) {
-         updatedDocs.required_later[activeDocCategory][activeSubTab].splice(idx, 1);
-      }
+    if (updatedDocs[activeVisaCategory]?.[activeApplicantCategory]?.[activeDocsCategory]) {
+      updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory].splice(idx, 1);
     }
     
     setConfigForm({ ...configForm, required_documents: updatedDocs });
@@ -439,56 +489,82 @@ const ConfigurationsTab = ({ showNotification }) => {
                   <label className="block text-sm font-semibold">Required Documents</label>
                 </div>
                 
-                {/* Category Tabs */}
-                <div className="flex overflow-x-auto gap-2 mb-4 pb-2 no-scrollbar">
-                  {[
-                    { id: 'documents_required_now', label: 'Required Now' },
-                    { id: 'student', label: 'Student' },
-                    { id: 'employed', label: 'Employed' },
-                    { id: 'self_employed', label: 'Self-Employed' },
-                    { id: 'unemployed', label: 'Unemployed' }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={(e) => { e.preventDefault(); setActiveDocCategory(tab.id); }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                        activeDocCategory === tab.id 
-                          ? 'bg-primary text-white shadow-md' 
-                          : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Sub Category Tabs for Specific Categories */}
-                {['student', 'employed', 'self_employed', 'unemployed'].includes(activeDocCategory) && (
-                  <div className="flex gap-2 mb-4">
+                {/* 1. Select Visa Category */}
+                <div className="mb-4">
+                  <label className="block text-xs text-outline mb-2 uppercase font-bold tracking-wider">Select Visa Category</label>
+                  <div className="flex gap-2">
                     {[
                       { id: 'tourist', label: 'Tourist' },
                       { id: 'visiting', label: 'Visiting' },
                       { id: 'business', label: 'Business' }
-                    ].map(subTab => (
+                    ].map(tab => (
                       <button
-                        key={subTab.id}
-                        onClick={(e) => { e.preventDefault(); setActiveSubTab(subTab.id); }}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
-                          activeSubTab === subTab.id 
-                            ? 'border-primary bg-primary/10 text-primary' 
-                            : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                        key={tab.id}
+                        onClick={(e) => { e.preventDefault(); setActiveVisaCategory(tab.id); }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-1 text-center ${
+                          activeVisaCategory === tab.id 
+                            ? 'bg-primary text-white shadow-md' 
+                            : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
                         }`}
                       >
-                        {subTab.label}
+                        {tab.label}
                       </button>
                     ))}
                   </div>
-                )}
+                </div>
+
+                {/* 2. Applicant Category */}
+                <div className="mb-4">
+                  <label className="block text-xs text-outline mb-2 uppercase font-bold tracking-wider">Applicant Category</label>
+                  <div className="flex overflow-x-auto gap-2 pb-1 no-scrollbar">
+                    {[
+                      { id: 'student', label: 'Student' },
+                      { id: 'employed', label: 'Employed' },
+                      { id: 'self_employed', label: 'Self-Employed' },
+                      { id: 'unemployed', label: 'Unemployed' }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={(e) => { e.preventDefault(); setActiveApplicantCategory(tab.id); }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-1 text-center ${
+                          activeApplicantCategory === tab.id 
+                            ? 'border-2 border-primary bg-primary/10 text-primary font-bold' 
+                            : 'border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-high'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Documents Category */}
+                <div className="mb-4">
+                  <label className="block text-xs text-outline mb-2 uppercase font-bold tracking-wider">Documents Category</label>
+                  <div className="flex gap-2">
+                    {[
+                      { id: 'now', label: 'Require Now' },
+                      { id: 'later', label: 'Required Later' }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={(e) => { e.preventDefault(); setActiveDocsCategory(tab.id); }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-1 text-center border ${
+                          activeDocsCategory === tab.id 
+                            ? 'border-secondary bg-secondary/10 text-secondary font-bold' 
+                            : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Add Document Form */}
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4 border border-outline-variant/30">
                   <h4 className="text-sm font-semibold text-primary mb-2">
-                    Add {activeDocCategory === 'documents_required_now' ? 'Required Now Document' : `${activeDocCategory.charAt(0).toUpperCase() + activeDocCategory.slice(1).replace('_', ' ')} Category Document`}
+                    Add {activeDocsCategory === 'now' ? 'Required Now' : 'Required Later'} Document for {activeVisaCategory.charAt(0).toUpperCase() + activeVisaCategory.slice(1)} ({activeApplicantCategory.charAt(0).toUpperCase() + activeApplicantCategory.slice(1).replace('_', ' ')})
                   </h4>
                   <div>
                     <label className="block text-xs text-outline mb-1">Document Name</label>

@@ -33,10 +33,7 @@ const ApplicationProgressPage = () => {
 
   if (!visaData) return null;
 
-  const coreDocsConfig = visaData.required_documents?.documents_required_now || [
-    { name: 'Passport Front and Back', description: 'Valid for at least 6 months beyond intended stay.', icon: 'travel' },
-    { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
-  ];
+  const coreDocsConfig = visaData.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.now || [];
 
   const serviceFee = visaData?.service_fee || { total_amount: 130, pay_now_amount: 65, pay_in_full_amount: 91 };
   

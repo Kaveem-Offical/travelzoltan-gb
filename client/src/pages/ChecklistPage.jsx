@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 
@@ -16,11 +16,8 @@ const ChecklistPage = () => {
   const citizenship = location.state?.citizenship || 'United Kingdom';
   const destination = location.state?.destination || 'Europe (Schengen States)';
 
-  useEffect(() => {
-    fetchVisaRequirements();
-  }, [citizenship, destination]);
-
-  const fetchVisaRequirements = async () => {
+  const fetchVisaRequirements = useCallback(async () => {
+    await Promise.resolve();
     try {
       setLoading(true);
       setError(null);
@@ -32,7 +29,12 @@ const ChecklistPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [citizenship, destination]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchVisaRequirements();
+  }, [fetchVisaRequirements]);
 
   const handleStartApplication = () => {
     navigate('/apply', { 
@@ -46,10 +48,7 @@ const ChecklistPage = () => {
     });
   };
 
-  const docsRequiredNow = visaData?.required_documents?.documents_required_now || [
-    { name: 'Passport Front and Back', description: 'Valid for at least 6 months beyond intended stay.', icon: 'travel' },
-    { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
-  ];
+  const docsRequiredNow = visaData?.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.now || [];
 
   // --- Dynamic pricing from backend ---
   const serviceFee = visaData?.service_fee;
@@ -78,12 +77,20 @@ const ChecklistPage = () => {
   const discountPercentage = totalAmount > 0 ? Math.round((discountAmount / totalAmount) * 100) : 0;
 
   // --- Dynamic documents from backend ---
-  const requiredLaterRoot = visaData?.required_documents?.required_later || {};
-  const categoryDocs = requiredLaterRoot[selectedCategory] || {};
-  
-  const docsRequiredLater = [
-    ...(categoryDocs[selectedVisaCategory] || [])
-  ];
+  const docsRequiredLater = visaData?.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.later || [];
+
+  const hasBackendNow = docsRequiredNow.length > 0;
+  const hasBackendLater = docsRequiredLater.length > 0;
+  const hasDocumentsFromBackend = hasBackendNow || hasBackendLater;
+  const showDocumentsSection = selectedCategory === 'other' || hasDocumentsFromBackend;
+
+  const currentTabToShow = (() => {
+    if (activeTab === 'now' && hasBackendNow) return 'now';
+    if (activeTab === 'later' && hasBackendLater) return 'later';
+    if (hasBackendNow) return 'now';
+    if (hasBackendLater) return 'later';
+    return 'now';
+  })();
 
   const categories = [
     { key: 'student', label: 'Student', icon: 'school' },
@@ -207,7 +214,7 @@ const ChecklistPage = () => {
 
           {/* Section 2: Applicant Category & Documents */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-            <div className="lg:col-span-5 flex flex-col gap-6">
+            <div className={`${showDocumentsSection ? 'lg:col-span-5' : 'lg:col-span-8 lg:col-start-3 mx-auto w-full'} flex flex-col gap-6`}>
                             {selectedCategory && selectedCategory !== 'other' && (
                 <div className="mt-4 bg-white rounded-xl p-6 border border-outline-variant/30 shadow-sm">
                   <h4 className="font-bold text-on-surface mb-4">Select Visa Category</h4>
@@ -251,61 +258,64 @@ const ChecklistPage = () => {
 
             </div>
 
-            <div className="lg:col-span-7 bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm flex flex-col h-full">
-              {selectedCategory === 'other' ? (
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
-                      <span className="material-symbols-outlined">help_center</span>
+            {showDocumentsSection && (
+              <div className="lg:col-span-7 bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm flex flex-col h-full">
+                {selectedCategory === 'other' ? (
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                        <span className="material-symbols-outlined">help_center</span>
+                      </div>
+                      <h2 className="font-headline text-2xl font-bold text-on-surface">Special Category Query</h2>
                     </div>
-                    <h2 className="font-headline text-2xl font-bold text-on-surface">Special Category Query</h2>
+                    <p className="text-on-surface-variant">Please provide details about your situation (e.g., minor, group member, special visa type) and our team will guide you.</p>
+                    
+                    <form className="flex flex-col gap-4 mt-4" onSubmit={(e) => e.preventDefault()}>
+                      <div>
+                        <label className="block text-sm font-bold text-on-surface mb-2">Query Type</label>
+                        <select className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest">
+                          <option>Group Member Application</option>
+                          <option>Application for a Minor</option>
+                          <option>Other Special Category</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-on-surface mb-2">Message / Details</label>
+                        <textarea rows="4" className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest" placeholder="Explain your requirements..."></textarea>
+                      </div>
+                      <button className="bg-primary text-white font-bold py-3 rounded-xl mt-2 hover:opacity-90 transition-opacity">Submit Query</button>
+                    </form>
                   </div>
-                  <p className="text-on-surface-variant">Please provide details about your situation (e.g., minor, group member, special visa type) and our team will guide you.</p>
-                  
-                  <form className="flex flex-col gap-4 mt-4" onSubmit={(e) => e.preventDefault()}>
-                    <div>
-                      <label className="block text-sm font-bold text-on-surface mb-2">Query Type</label>
-                      <select className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest">
-                        <option>Group Member Application</option>
-                        <option>Application for a Minor</option>
-                        <option>Other Special Category</option>
-                      </select>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface">
+                        <span className="material-symbols-outlined">description</span>
+                      </div>
+                      <h2 className="font-headline text-2xl font-bold text-on-surface">Documents Required</h2>
                     </div>
-                    <div>
-                      <label className="block text-sm font-bold text-on-surface mb-2">Message / Details</label>
-                      <textarea rows="4" className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest" placeholder="Explain your requirements..."></textarea>
-                    </div>
-                    <button className="bg-primary text-white font-bold py-3 rounded-xl mt-2 hover:opacity-90 transition-opacity">Submit Query</button>
-                  </form>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface">
-                      <span className="material-symbols-outlined">description</span>
-                    </div>
-                    <h2 className="font-headline text-2xl font-bold text-on-surface">Documents Required</h2>
-                  </div>
 
-                  <div className="flex border-b border-outline-variant/30 mb-6">
-                    <button 
-                      className={`px-6 py-3 font-bold transition-colors relative ${activeTab === 'now' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
-                      onClick={() => setActiveTab('now')}
-                    >
-                      Required Now
-                      {activeTab === 'now' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
-                    </button>
-                    <button 
-                      className={`px-6 py-3 font-bold transition-colors relative ${activeTab === 'later' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
-                      onClick={() => setActiveTab('later')}
-                    >
-                      Required Later
-                      {activeTab === 'later' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
-                    </button>
-                  </div>
+                    {hasBackendNow && hasBackendLater && (
+                      <div className="flex border-b border-outline-variant/30 mb-6">
+                        <button 
+                          className={`px-6 py-3 font-bold transition-colors relative ${currentTabToShow === 'now' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                          onClick={() => setActiveTab('now')}
+                        >
+                          Required Now
+                          {currentTabToShow === 'now' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+                        </button>
+                        <button 
+                          className={`px-6 py-3 font-bold transition-colors relative ${currentTabToShow === 'later' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                          onClick={() => setActiveTab('later')}
+                        >
+                          Required Later
+                          {currentTabToShow === 'later' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+                        </button>
+                      </div>
+                    )}
 
                   <div className="flex flex-col gap-4 flex-grow">
-                    {activeTab === 'now' ? (
+                    {currentTabToShow === 'now' ? (
                       docsRequiredNow.map((doc, idx) => (
                         <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
                           <div className="mt-1 flex-shrink-0">
@@ -342,8 +352,9 @@ const ChecklistPage = () => {
                     )}
                   </div>
                 </>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </section>
 
           <div className="border-t border-outline-variant/30 pt-16 text-center max-w-2xl mx-auto space-y-6">

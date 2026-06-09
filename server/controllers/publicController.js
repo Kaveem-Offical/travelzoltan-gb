@@ -42,104 +42,238 @@ const getVisaOptions = async (req, res) => {
   }
 };
 
+const defaultRequiredDocs = {
+  tourist: {
+    student: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+        { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+        { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+        { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+      ]
+    },
+    employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+        { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
+        { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+        { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+      ]
+    },
+    self_employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
+        { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+        { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+        { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+      ]
+    },
+    unemployed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
+        { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+        { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
+        { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
+      ]
+    }
+  },
+  visiting: {
+    student: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+        { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+      ]
+    },
+    employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+        { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+      ]
+    },
+    self_employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
+        { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+      ]
+    },
+    unemployed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
+        { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+        { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
+      ]
+    }
+  },
+  business: {
+    student: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Student ID card", description: "Valid student identification." },
+        { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
+        { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+        { icon: "receipt", name: "Conference / Event Registration", description: "Proof of registration for the business event or conference." }
+      ]
+    },
+    employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
+        { icon: "work", name: "Employment Letter", description: "Letter from employer authorising business travel." },
+        { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+        { icon: "account_balance", name: "Business Bank Statement", description: "Last 3 months bank statement showing financial solvency." }
+      ]
+    },
+    self_employed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "handshake", name: "Business Registration", description: "Proof of business registration or trade licence." },
+        { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
+        { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+        { icon: "receipt", name: "Company Profile / Letter", description: "Official company letterhead confirming the purpose of travel." }
+      ]
+    },
+    unemployed: {
+      now: [
+        { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+        { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+      ],
+      later: [
+        { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor authorising business travel." },
+        { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
+        { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
+        { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 3 months bank statement from sponsor." }
+      ]
+    }
+  }
+};
+
+const normalizeRequiredDocs = (docs) => {
+  const normalized = JSON.parse(JSON.stringify(defaultRequiredDocs));
+  if (!docs || typeof docs !== 'object') {
+    return normalized;
+  }
+  
+  const hasNewKeys = ['tourist', 'visiting', 'business'].some(vk => 
+    docs[vk] && typeof docs[vk] === 'object' && 
+    ['student', 'employed', 'self_employed', 'unemployed'].some(ac => docs[vk][ac])
+  );
+  
+  if (hasNewKeys) {
+    ['tourist', 'visiting', 'business'].forEach(vk => {
+      if (docs[vk] && typeof docs[vk] === 'object') {
+        ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+          if (docs[vk][ac] && typeof docs[vk][ac] === 'object') {
+            normalized[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
+            normalized[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
+          }
+        });
+      }
+    });
+    return normalized;
+  }
+
+  let oldNow = [];
+  if (Array.isArray(docs.documents_required_now)) {
+    oldNow = docs.documents_required_now;
+  } else if (Array.isArray(docs.core_documents)) {
+    oldNow = docs.core_documents;
+  }
+  
+  ['tourist', 'visiting', 'business'].forEach(vk => {
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      normalized[vk][ac].now = JSON.parse(JSON.stringify(oldNow));
+    });
+  });
+
+  if (docs.required_later && typeof docs.required_later === 'object') {
+    const requiredLater = docs.required_later;
+    ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+      if (requiredLater[ac] && typeof requiredLater[ac] === 'object') {
+        ['tourist', 'visiting', 'business'].forEach(vk => {
+          if (Array.isArray(requiredLater[ac][vk])) {
+            normalized[vk][ac].later = requiredLater[ac][vk];
+          }
+        });
+      }
+    });
+
+    if (requiredLater.applicant_category && typeof requiredLater.applicant_category === 'object') {
+      const appCat = requiredLater.applicant_category;
+      ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+        if (Array.isArray(appCat[ac])) {
+          ['tourist', 'visiting', 'business'].forEach(vk => {
+            normalized[vk][ac].later = [...normalized[vk][ac].later, ...appCat[ac]];
+          });
+        }
+      });
+    }
+
+    if (requiredLater.visa_category && typeof requiredLater.visa_category === 'object') {
+      const visaCat = requiredLater.visa_category;
+      ['tourist', 'visiting', 'business'].forEach(vk => {
+        if (Array.isArray(visaCat[vk])) {
+          ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
+            normalized[vk][ac].later = [...normalized[vk][ac].later, ...visaCat[vk]];
+          });
+        }
+      });
+    }
+  }
+
+  return normalized;
+};
+
 const DEFAULT_VISA_REQUIREMENTS = {
   service_fee: {
     admin_fee: 30,
     express_fee: 30,
     service_fee: 90
   },
-  required_documents: {
-    documents_required_now: [
-      {
-        icon: "travel",
-        name: "Passport Front and Back",
-        description: "Valid for at least 6 months beyond intended stay."
-      },
-      {
-        icon: "badge",
-        name: "UK Valid Status (Online Status)",
-        description: "Proof of current legal status or residency requirement."
-      }
-    ],
-    required_later: {
-      student: {
-        tourist: [
-          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
-          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
-          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
-          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-        ],
-        visiting: [
-          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
-          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
-          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-        ],
-        business: [
-          { icon: "badge", name: "Student ID card", description: "Valid student identification." },
-          { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
-          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
-          { icon: "receipt", name: "Conference / Event Registration", description: "Proof of registration for the business event or conference." }
-        ]
-      },
-      employed: {
-        tourist: [
-          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
-          { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
-          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
-          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-        ],
-        visiting: [
-          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
-          { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
-          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-        ],
-        business: [
-          { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
-          { icon: "work", name: "Employment Letter", description: "Letter from employer authorising business travel." },
-          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
-          { icon: "account_balance", name: "Business Bank Statement", description: "Last 3 months bank statement showing financial solvency." }
-        ]
-      },
-      self_employed: {
-        tourist: [
-          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
-          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
-          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
-          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-        ],
-        visiting: [
-          { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
-          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
-          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-        ],
-        business: [
-          { icon: "handshake", name: "Business Registration", description: "Proof of business registration or trade licence." },
-          { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
-          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
-          { icon: "receipt", name: "Company Profile / Letter", description: "Official company letterhead confirming the purpose of travel." }
-        ]
-      },
-      unemployed: {
-        tourist: [
-          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
-          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
-          { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
-          { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-        ],
-        visiting: [
-          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
-          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
-          { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-        ],
-        business: [
-          { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor authorising business travel." },
-          { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
-          { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
-          { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 3 months bank statement from sponsor." }
-        ]
-      }
-    }
-  },
+  required_documents: defaultRequiredDocs,
   form_schema: {},
   configuration_id: 1,
   is_default: true
@@ -158,14 +292,13 @@ const getVisaRequirements = async (req, res) => {
       where: { citizenship, destination }
     });
 
-    if (!config || !config.required_documents?.documents_required_now) {
-      // If config doesn't exist or uses old structure (missing documents_required_now), return default
+    if (!config || !config.required_documents) {
       return res.status(200).json(DEFAULT_VISA_REQUIREMENTS);
     }
 
     return res.status(200).json({
       service_fee: config.service_fee,
-      required_documents: config.required_documents,
+      required_documents: normalizeRequiredDocs(config.required_documents),
       form_schema: config.form_schema,
       configuration_id: config.id,
       is_default: false
