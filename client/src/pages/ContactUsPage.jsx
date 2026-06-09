@@ -40,8 +40,8 @@ const ContactUsPage = () => {
     },
     {
       country: 'India',
-      city: 'Mumbai',
-      address: 'Coming Soon',
+      city: 'Hyderabad',
+      address: 'Sarib Plaza, 16-1-24/B/5, Saidabad Colony Rd, beside MORE SUPERMARKET, New Farah Colony, Madhav Nagar, Saidabad, Hyderabad, Telangana 500059',
       phone: '+91 95020 60511',
       email: 'in@zoltanvisa.com',
       timezone: 'IST'
