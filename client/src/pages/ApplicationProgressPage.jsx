@@ -612,7 +612,7 @@ const ApplicationProgressPage = () => {
                       <span className="text-sm text-on-surface-variant line-through mb-1">{curr.symbol}{displayTotal}</span>
                       <span className="text-3xl font-bold text-primary">{curr.symbol}{displayPayInFull}</span>
                     </div>
-                    <p className="text-sm text-on-surface-variant">Pay the entire amount upfront for our premium concierge service with a 30% discount.</p>
+                    <p className="text-sm text-on-surface-variant">Pay the entire amount upfront for our premium concierge service with a {discountPercentage}% discount.</p>
                   </div>
                 </div>
 
