@@ -412,8 +412,8 @@ const createApplication = async (req, res) => {
 // POST /api/payments/create-order
 const createPaymentOrder = async (req, res) => {
   try {
-    const { applicationId } = req.body;
-    console.log('[createPaymentOrder] Received applicationId:', applicationId);
+    const { applicationId, currency = 'GBP', paymentOption = 'partial' } = req.body;
+    console.log('[createPaymentOrder] Received applicationId:', applicationId, 'currency:', currency, 'paymentOption:', paymentOption);
 
     if (!applicationId) {
       return res.status(400).json({ message: 'applicationId is required.' });
@@ -431,22 +431,38 @@ const createPaymentOrder = async (req, res) => {
 
     console.log('[createPaymentOrder] Found application:', application.id);
 
-    // Calculate amount from configuration (convert to paise for INR)
+    // Exchange rates relative to GBP (base configuration currency)
+    const EXCHANGE_RATES = {
+      GBP: 1.0,
+      USD: 1.30,
+      EUR: 1.18,
+      INR: 108.0
+    };
+
+    // Calculate amount from configuration
     const config = application.visaConfiguration;
     console.log('[createPaymentOrder] Visa config:', config ? 'found' : 'not found');
-    let amount = 50000; // Default 500 INR in paise
-
+    
+    let amountGBP = 130; // default total
     if (config && config.service_fee) {
       const fee = config.service_fee;
       if (typeof fee === 'object') {
-        const total = fee.pay_now_amount || fee.total_amount || (fee.admin_fee || 0) + (fee.service_fee || 0) + (fee.express_fee || 0);
-        amount = Math.round(total * 100); // Convert to paise (smallest currency unit)
+        if (paymentOption === 'partial') {
+          amountGBP = fee.pay_now_amount || (fee.total_amount ? fee.total_amount / 2 : 65);
+        } else {
+          amountGBP = fee.pay_in_full_amount || (fee.total_amount ? fee.total_amount * 0.7 : 91);
+        }
       } else {
-        amount = Math.round(parseFloat(fee) * 100);
+        const total = parseFloat(fee) || 130;
+        amountGBP = paymentOption === 'partial' ? total / 2 : total * 0.7;
       }
     }
 
-    console.log('[createPaymentOrder] Calculated amount (paise):', amount);
+    const rate = EXCHANGE_RATES[currency.toUpperCase()] || 1.0;
+    const amountConverted = amountGBP * rate;
+    const amountSmallestUnit = Math.round(amountConverted * 100);
+
+    console.log('[createPaymentOrder] Calculated amount in GBP:', amountGBP, 'Converted to:', currency, 'Amount:', amountConverted, 'Smallest Unit:', amountSmallestUnit);
 
     // Check Razorpay credentials
     const hasKeyId = !!process.env.RAZORPAY_KEY_ID;
@@ -455,12 +471,15 @@ const createPaymentOrder = async (req, res) => {
 
     // Create Razorpay order
     const orderOptions = {
-      amount: amount,
-      currency: 'INR',
+      amount: amountSmallestUnit,
+      currency: currency.toUpperCase(),
       receipt: `app_${applicationId}`,
       notes: {
         application_id: applicationId,
-        user_email: application.user_data?.email || ''
+        user_email: application.user_data?.email || '',
+        payment_option: paymentOption,
+        base_currency: 'GBP',
+        base_amount: amountGBP.toString()
       }
     };
 

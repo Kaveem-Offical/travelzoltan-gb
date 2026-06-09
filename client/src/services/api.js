@@ -99,9 +99,9 @@ export const visaAPI = {
   },
 
   // Create Razorpay order
-  createPaymentOrder: async (applicationId) => {
+  createPaymentOrder: async (applicationId, currency, paymentOption) => {
     try {
-      const response = await api.post('/payments/create-order', { applicationId });
+      const response = await api.post('/payments/create-order', { applicationId, currency, paymentOption });
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

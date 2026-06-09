@@ -3,6 +3,69 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
 
+// List of countries for nationality dropdown
+const countriesList = [
+  "United Kingdom", "India", "United States", "Canada", "Australia", 
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Austria", "Azerbaijan",
+  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+  "Cabo Verde", "Cambodia", "Cameroon", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia",
+  "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+  "Fiji", "Finland", "France",
+  "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana",
+  "Haiti", "Honduras", "Hungary",
+  "Iceland", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
+  "Jamaica", "Japan", "Jordan",
+  "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+  "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+  "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
+  "Oman",
+  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+  "Qatar",
+  "Romania", "Russia", "Rwanda",
+  "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+  "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+  "Uganda", "Ukraine", "United Arab Emirates", "Uruguay", "Uzbekistan",
+  "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Yemen",
+  "Zambia", "Zimbabwe"
+];
+
+// List of common country codes for phone number prefix dropdown
+const countryCodes = [
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+1', country: 'US/CA', flag: '🇺🇸' },
+  { code: '+91', country: 'IN', flag: '🇮🇳' },
+  { code: '+971', country: 'AE', flag: '🇦🇪' },
+  { code: '+61', country: 'AU', flag: '🇦🇺' },
+  { code: '+65', country: 'SG', flag: '🇸🇬' },
+  { code: '+33', country: 'FR', flag: '🇫🇷' },
+  { code: '+49', country: 'DE', flag: '🇩🇪' },
+  { code: '+34', country: 'ES', flag: '🇪🇸' },
+  { code: '+39', country: 'IT', flag: '🇮🇹' },
+  { code: '+31', country: 'NL', flag: '🇳🇱' },
+  { code: '+41', country: 'CH', flag: '🇨🇭' },
+  { code: '+353', country: 'IE', flag: '🇮🇪' },
+  { code: '+64', country: 'NZ', flag: '🇳🇿' },
+  { code: '+27', country: 'ZA', flag: '🇿🇦' },
+  { code: '+86', country: 'CN', flag: '🇨🇳' },
+  { code: '+81', country: 'JP', flag: '🇯🇵' },
+  { code: '+966', country: 'SA', flag: '🇸🇦' },
+  { code: '+92', country: 'PK', flag: '🇵🇰' },
+  { code: '+880', country: 'BD', flag: '🇧🇩' },
+  { code: '+94', country: 'LK', flag: '🇱🇰' },
+  { code: '+90', country: 'TR', flag: '🇹🇷' },
+  { code: '+7', country: 'RU', flag: '🇷🇺' }
+];
+
+const CURRENCIES = {
+  GBP: { symbol: '£', rate: 1.0, name: 'British Pound (GBP)' },
+  USD: { symbol: '$', rate: 1.30, name: 'US Dollar (USD)' },
+  EUR: { symbol: '€', rate: 1.18, name: 'Euro (EUR)' },
+  INR: { symbol: '₹', rate: 108.0, name: 'Indian Rupee (INR)' }
+};
+
 const ApplicationProgressPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -11,12 +74,22 @@ const ApplicationProgressPage = () => {
   
   const [currentStage, setCurrentStage] = useState(1);
   const [paymentOption, setPaymentOption] = useState('partial'); // 'partial' or 'full'
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   
   const [formData, setFormData] = useState({
+    name: '',
+    surname: '',
     fullName: '',
     email: '',
+    phoneCountryCode: '+44',
+    phoneLocal: '',
     phone: '',
+    alternativePhoneCountryCode: '+44',
+    alternativePhoneLocal: '',
+    alternativePhone: '',
     passportNumber: '',
+    nationality: '',
+    residentialAddress: '',
   });
   
   const [coreDocuments, setCoreDocuments] = useState({});
@@ -51,17 +124,43 @@ const ApplicationProgressPage = () => {
 
   const discountPercentage = totalAmount > 0 ? Math.round(((totalAmount - payInFullAmount) / totalAmount) * 100) : 0;
 
+  const curr = CURRENCIES[selectedCurrency] || CURRENCIES.GBP;
+  const displayTotal = (totalAmount * curr.rate).toFixed(2);
+  const displayPayNow = (payNowAmount * curr.rate).toFixed(2);
+  const displayPayInFull = (payInFullAmount * curr.rate).toFixed(2);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: value
+      };
+      
+      // Sync fullName
+      if (name === 'name' || name === 'surname') {
+        updated.fullName = `${updated.name || ''} ${updated.surname || ''}`.trim();
+      }
+      
+      // Sync phone
+      if (name === 'phoneLocal' || name === 'phoneCountryCode') {
+        updated.phone = `${updated.phoneCountryCode || '+44'} ${updated.phoneLocal || ''}`.trim();
+      }
+      
+      // Sync alternative phone
+      if (name === 'alternativePhoneLocal' || name === 'alternativePhoneCountryCode') {
+        updated.alternativePhone = updated.alternativePhoneLocal
+          ? `${updated.alternativePhoneCountryCode || '+44'} ${updated.alternativePhoneLocal || ''}`.trim()
+          : '';
+      }
+      
+      return updated;
+    });
   };
 
   const handleNext = () => {
     if (currentStage === 1) {
-      if (!formData.fullName || !formData.email || !formData.phone || !formData.passportNumber) {
+      if (!formData.name || !formData.surname || !formData.email || !formData.phoneLocal || !formData.passportNumber || !formData.nationality || !formData.residentialAddress) {
         alert('Please fill in all personal details.');
         return;
       }
@@ -136,7 +235,9 @@ const ApplicationProgressPage = () => {
         ...formData,
         applicantStatus: selectedCategory,
         visaCategory: selectedVisaCategory,
-        paymentOption
+        paymentOption,
+        paymentCurrency: selectedCurrency,
+        paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount
       }));
       
       const documentTypes = [];
@@ -150,24 +251,11 @@ const ApplicationProgressPage = () => {
         submitData.append('document_types', JSON.stringify(documentTypes));
       }
 
-      // If partial payment, adjust the amount logic in the backend
-      // But for now, we pass paymentOption so the backend could handle it.
-      // Assuming backend creates order based on full amount currently, we might need to alter it or handle it here.
-      // For UI demonstration, we will just proceed with creating application.
-      
       const response = await visaAPI.createApplication(submitData);
       
       if (response.applicationId) {
         setPaymentStatus('pending');
-        // Ideally pass paymentOption to createPaymentOrder if backend supports it.
-        const orderData = await visaAPI.createPaymentOrder(response.applicationId);
-        
-        // If frontend overrides amount for Razorpay just for demo (not secure, but fits the prompt request if backend isn't changed yet)
-        if (paymentOption === 'partial') {
-          orderData.amount = Math.round(payNowAmount * 100);
-        } else {
-          orderData.amount = Math.round(payInFullAmount * 100);
-        }
+        const orderData = await visaAPI.createPaymentOrder(response.applicationId, selectedCurrency, paymentOption);
 
         setPaymentStatus('processing');
         
@@ -205,22 +293,167 @@ const ApplicationProgressPage = () => {
               <div className="space-y-8 relative z-10">
                 <div className="bg-surface-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {['fullName', 'email', 'phone', 'passportNumber'].map((field) => (
-                      <div key={field} className="group relative">
-                        <input 
-                          required 
-                          name={field} 
-                          value={formData[field]} 
-                          onChange={handleInputChange} 
-                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                          placeholder={field} 
-                          type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'} 
-                        />
-                        <label className="absolute left-0 -top-3.5 text-xs text-on-surface-variant transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary font-medium">
-                          {field === 'fullName' ? 'Full Name' : field === 'email' ? 'Email Address' : field === 'phone' ? 'Phone Number' : 'Passport Number'}
-                        </label>
+                    {/* First Name */}
+                    <div className="group relative">
+                      <input 
+                        required 
+                        name="name" 
+                        value={formData.name || ''} 
+                        onChange={handleInputChange} 
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                        placeholder="First Name" 
+                        type="text" 
+                      />
+                      <label className={`absolute left-0 transition-all font-medium ${formData.name ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        First Name (given name)
+                      </label>
+                    </div>
+
+                    {/* Last Name */}
+                    <div className="group relative">
+                      <input 
+                        required 
+                        name="surname" 
+                        value={formData.surname || ''} 
+                        onChange={handleInputChange} 
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                        placeholder="Last Name" 
+                        type="text" 
+                      />
+                      <label className={`absolute left-0 transition-all font-medium ${formData.surname ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        Last Name (surname)
+                      </label>
+                    </div>
+
+                    {/* Email */}
+                    <div className="group relative">
+                      <input 
+                        required 
+                        name="email" 
+                        value={formData.email || ''} 
+                        onChange={handleInputChange} 
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                        placeholder="Email" 
+                        type="email" 
+                      />
+                      <label className={`absolute left-0 transition-all font-medium ${formData.email ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        Email Address
+                      </label>
+                    </div>
+
+                    {/* Phone Number */}
+                    <div className="group relative flex items-end">
+                      <div className="absolute left-0 bottom-3 z-20 flex items-center">
+                        <span className="text-on-surface-variant/60">+44</span>
                       </div>
-                    ))}
+                      <input 
+                        required 
+                        name="phoneLocal" 
+                        value={formData.phoneLocal || ''} 
+                        onChange={handleInputChange} 
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-11 pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                        placeholder="Phone Number" 
+                        type="tel" 
+                      />
+                      <label className={`absolute transition-all font-medium ${formData.phoneLocal ? '-top-3.5 text-xs text-primary left-0' : 'text-base text-on-surface-variant/60 top-3 left-12'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-placeholder-shown:left-12 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0`}>
+                        Phone Number
+                      </label>
+                    </div>
+
+                    {/* Alternative Phone Number */}
+  <div className="group relative flex items-end">
+  {/* Country code selector - fixed width container */}
+  <div className="absolute left-0 bottom-0 z-20 flex items-center h-[46px]">
+    <select
+      name="alternativePhoneCountryCode"
+      value={formData.alternativePhoneCountryCode || '+44'}
+      onChange={handleInputChange}
+      className="bg-transparent border-none text-on-surface focus:outline-none text-sm font-medium cursor-pointer max-w-[90px]"
+    >
+      {countryCodes.map(c => (
+        <option key={c.code} value={c.code} className="text-on-surface bg-surface-lowest">
+          {c.flag} {c.code}
+        </option>
+      ))}
+    </select>
+    <span className="h-4 w-[1px] bg-outline-variant/50 mx-2" />
+  </div>
+
+  <input
+    name="alternativePhoneLocal"
+    value={formData.alternativePhoneLocal || ''}
+    onChange={handleInputChange}
+    className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-[110px] pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors relative z-10"
+    placeholder="Alternative Phone Number"
+    type="tel"
+  />
+
+<label className={`absolute z-30 pointer-events-none transition-all duration-200 font-medium overflow-hidden text-ellipsis whitespace-nowrap
+    peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0
+    ${formData.alternativePhoneLocal
+      ? '-top-3.5 text-xs text-primary left-0 right-0'
+      : 'top-3 text-sm text-on-surface-variant/60 left-[110px] right-0'
+    }
+  `}>
+  Alternative Phone Number (whatsapp)
+</label>
+</div>
+
+                    {/* Passport Number */}
+                    <div className="group relative">
+                      <input 
+                        required 
+                        name="passportNumber" 
+                        value={formData.passportNumber || ''} 
+                        onChange={handleInputChange} 
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                        placeholder="Passport Number" 
+                        type="text" 
+                      />
+                      <label className={`absolute left-0 transition-all font-medium ${formData.passportNumber ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        Passport Number
+                      </label>
+                    </div>
+
+                    {/* Nationality */}
+                    <div className="group relative">
+                      <select 
+                        required 
+                        name="nationality" 
+                        value={formData.nationality || ''} 
+                        onChange={handleInputChange}
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface focus:outline-none focus:border-primary transition-colors z-10 relative appearance-none cursor-pointer text-left"
+                      >
+                        <option value="" disabled className="text-on-surface-variant/60">Select Nationality</option>
+                        {countriesList.map(country => (
+                          <option key={country} value={country} className="text-on-surface bg-surface-lowest">
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="material-symbols-outlined absolute right-0 bottom-3 text-on-surface-variant/60 pointer-events-none z-20">
+                        expand_more
+                      </span>
+                      <label className={`absolute left-0 transition-all font-medium ${formData.nationality ? '-top-3.5 text-xs text-primary' : 'text-base hidden text-on-surface-variant/60 top-3'} peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        Nationality
+                      </label>
+                    </div>
+
+                    {/* Residential Address */}
+                    <div className="group relative col-span-1 md:col-span-2">
+                      <textarea 
+                        required 
+                        name="residentialAddress" 
+                        value={formData.residentialAddress || ''} 
+                        onChange={handleInputChange} 
+                        rows="3"
+                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-2 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative resize-none" 
+                        placeholder="Residential Address" 
+                      />
+                      <label className={`absolute left-0 transition-all font-medium ${formData.residentialAddress ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-2'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        Residential Address (Street, City, Postcode, Country)
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -306,12 +539,41 @@ const ApplicationProgressPage = () => {
               </div>
             ) : (
               <div className="space-y-10 relative z-10">
+                {/* Currency Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-surface-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-2xl">payments</span>
+                    </div>
+                    <div>
+                      <h4 className="font-headline font-bold text-base text-on-surface">Payment Currency</h4>
+                      <p className="text-xs text-on-surface-variant/80">Choose your preferred currency to make the payment</p>
+                    </div>
+                  </div>
+                  <div className="relative shrink-0 w-full sm:w-60">
+                    <select
+                      value={selectedCurrency}
+                      onChange={(e) => setSelectedCurrency(e.target.value)}
+                      className="w-full bg-surface-container-low text-on-surface font-semibold text-sm rounded-xl py-3 pl-4 pr-10 border-none focus:ring-2 focus:ring-primary/40 appearance-none cursor-pointer"
+                    >
+                      {Object.entries(CURRENCIES).map(([code, details]) => (
+                        <option key={code} value={code} className="text-on-surface bg-surface-lowest">
+                          {details.symbol} {details.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
+                      expand_more
+                    </span>
+                  </div>
+                </div>
+
                 {/* Payment Options Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Pay Now */}
                   <div 
                     onClick={() => setPaymentOption('partial')}
-                    className={`cursor-pointer rounded-2xl p-6 border-2 transition-all ${paymentOption === 'partial' ? 'border-secondary bg-secondary/5 shadow-md' : 'border-outline-variant/30 bg-white hover:border-secondary/50'}`}
+                    className={`cursor-pointer rounded-2xl p-6 border-2 transition-all ${paymentOption === 'partial' ? 'border-secondary bg-secondary/5 shadow-md scale-[1.01]' : 'border-outline-variant/30 bg-white hover:border-secondary/50'}`}
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
@@ -323,18 +585,18 @@ const ApplicationProgressPage = () => {
                     </div>
                     <h3 className="font-bold text-lg text-on-surface mb-1">Pay Now</h3>
                     <div className="mb-4">
-                      <span className="text-3xl font-bold text-on-surface">£{payNowAmount}</span>
+                      <span className="text-3xl font-bold text-on-surface">{curr.symbol}{displayPayNow}</span>
                       <span className="text-sm text-on-surface-variant"> today</span>
                     </div>
-                    <p className="text-sm text-on-surface-variant">£{payNowAmount} due today. Remaining amount will be paid when a call with our executive is scheduled.</p>
+                    <p className="text-sm text-on-surface-variant">{curr.symbol}{displayPayNow} due today. Remaining amount will be paid when a call with our executive is scheduled.</p>
                   </div>
 
                   {/* Pay in Full */}
                   <div 
                     onClick={() => setPaymentOption('full')}
-                    className={`cursor-pointer rounded-2xl p-6 border-2 transition-all relative overflow-hidden ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-md' : 'border-outline-variant/30 bg-white hover:border-primary/50'}`}
+                    className={`cursor-pointer rounded-2xl p-6 border-2 transition-all relative overflow-hidden ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-outline-variant/30 bg-white hover:border-primary/50'}`}
                   >
-                    <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                       {discountPercentage}% Discount
                     </div>
                     <div className="flex justify-between items-start mb-4">
@@ -347,8 +609,8 @@ const ApplicationProgressPage = () => {
                     </div>
                     <h3 className="font-bold text-lg text-on-surface mb-1">Pay in Full</h3>
                     <div className="mb-4 flex items-end gap-2">
-                      <span className="text-sm text-on-surface-variant line-through mb-1">£{totalAmount}</span>
-                      <span className="text-3xl font-bold text-primary">£{payInFullAmount}</span>
+                      <span className="text-sm text-on-surface-variant line-through mb-1">{curr.symbol}{displayTotal}</span>
+                      <span className="text-3xl font-bold text-primary">{curr.symbol}{displayPayInFull}</span>
                     </div>
                     <p className="text-sm text-on-surface-variant">Pay the entire amount upfront for our premium concierge service with a 30% discount.</p>
                   </div>
@@ -426,7 +688,7 @@ const ApplicationProgressPage = () => {
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-full" />
                   <span className="relative z-10 flex items-center gap-2">
-                    {loading ? 'Processing...' : `Pay £${paymentOption === 'partial' ? payNowAmount : payInFullAmount} & Submit`} 
+                    {loading ? 'Processing...' : `Pay ${curr.symbol}${paymentOption === 'partial' ? displayPayNow : displayPayInFull} & Submit`} 
                     <span className="material-symbols-outlined text-sm">{loading ? 'hourglass_empty' : 'lock'}</span>
                   </span>
                 </button>
