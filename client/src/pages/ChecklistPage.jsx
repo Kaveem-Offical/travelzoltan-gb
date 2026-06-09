@@ -46,10 +46,25 @@ const ChecklistPage = () => {
     });
   };
 
-  const docsRequiredNow = visaData?.required_documents?.documents_required_now || [
+  const fallbackDocsNow = [
     { name: 'Passport Front and Back', description: 'Valid for at least 6 months beyond intended stay.', icon: 'travel' },
     { name: 'UK Valid Status (Online Status)', description: 'Proof of current legal status or residency requirement.', icon: 'badge' }
   ];
+
+  let docsRequiredNow = fallbackDocsNow;
+  let docsRequiredLater = [];
+
+  if (visaData?.required_documents) {
+    const visaCatDocs = visaData.required_documents[selectedVisaCategory] || {};
+    const applicantCatDocs = visaCatDocs[selectedCategory] || {};
+    
+    if (applicantCatDocs.now && applicantCatDocs.now.length > 0) {
+      docsRequiredNow = applicantCatDocs.now;
+    }
+    if (applicantCatDocs.later && applicantCatDocs.later.length > 0) {
+      docsRequiredLater = applicantCatDocs.later;
+    }
+  }
 
   // --- Dynamic pricing from backend ---
   const serviceFee = visaData?.service_fee;
@@ -77,13 +92,6 @@ const ChecklistPage = () => {
   const discountAmount = Math.max(0, totalAmount - payInFullAmount);
   const discountPercentage = totalAmount > 0 ? Math.round((discountAmount / totalAmount) * 100) : 0;
 
-  // --- Dynamic documents from backend ---
-  const requiredLaterRoot = visaData?.required_documents?.required_later || {};
-  const categoryDocs = requiredLaterRoot[selectedCategory] || {};
-  
-  const docsRequiredLater = [
-    ...(categoryDocs[selectedVisaCategory] || [])
-  ];
 
   const categories = [
     { key: 'student', label: 'Student', icon: 'school' },
