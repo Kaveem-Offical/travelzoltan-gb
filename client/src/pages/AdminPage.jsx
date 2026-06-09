@@ -38,22 +38,22 @@ const DOCUMENT_ICONS = [
 
 const defaultRequiredDocs = {
   tourist: {
-    student: { now: [], later: [] },
-    employed: { now: [], later: [] },
-    self_employed: { now: [], later: [] },
-    unemployed: { now: [], later: [] }
+    student: { now: [], later: [], query: [] },
+    employed: { now: [], later: [], query: [] },
+    self_employed: { now: [], later: [], query: [] },
+    unemployed: { now: [], later: [], query: [] }
   },
   visiting: {
-    student: { now: [], later: [] },
-    employed: { now: [], later: [] },
-    self_employed: { now: [], later: [] },
-    unemployed: { now: [], later: [] }
+    student: { now: [], later: [], query: [] },
+    employed: { now: [], later: [], query: [] },
+    self_employed: { now: [], later: [], query: [] },
+    unemployed: { now: [], later: [], query: [] }
   },
   business: {
-    student: { now: [], later: [] },
-    employed: { now: [], later: [] },
-    self_employed: { now: [], later: [] },
-    unemployed: { now: [], later: [] }
+    student: { now: [], later: [], query: [] },
+    employed: { now: [], later: [], query: [] },
+    self_employed: { now: [], later: [], query: [] },
+    unemployed: { now: [], later: [], query: [] }
   }
 };
 
@@ -75,6 +75,7 @@ const normalizeRequiredDocs = (docs) => {
           if (docs[vk][ac] && typeof docs[vk][ac] === 'object') {
             normalized[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
             normalized[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
+            normalized[vk][ac].query = Array.isArray(docs[vk][ac].query) ? docs[vk][ac].query : [];
           }
         });
       }
@@ -141,6 +142,7 @@ const getTotalDocsCount = (docs) => {
       if (norm[vk] && norm[vk][ac]) {
         (norm[vk][ac].now || []).forEach(d => uniqueNames.add(d.name));
         (norm[vk][ac].later || []).forEach(d => uniqueNames.add(d.name));
+        (norm[vk][ac].query || []).forEach(d => uniqueNames.add(d.name));
       }
     });
   });
@@ -154,7 +156,7 @@ const getFlatDocsArray = (docs) => {
   ['tourist', 'visiting', 'business'].forEach(vk => {
     ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
       if (norm[vk] && norm[vk][ac]) {
-        [...(norm[vk][ac].now || []), ...(norm[vk][ac].later || [])].forEach(d => {
+        [...(norm[vk][ac].now || []), ...(norm[vk][ac].later || []), ...(norm[vk][ac].query || [])].forEach(d => {
           if (!uniqueNames.has(d.name)) {
             uniqueNames.add(d.name);
             uniqueDocs.push(d);
@@ -179,7 +181,9 @@ const ConfigurationsTab = ({ showNotification }) => {
   const [activeVisaCategory, setActiveVisaCategory] = useState('tourist');
   const [activeApplicantCategory, setActiveApplicantCategory] = useState('employed');
   const [activeDocsCategory, setActiveDocsCategory] = useState('now');
-  const [newDoc, setNewDoc] = useState({ name: '', description: '', icon: 'description' });
+  const [newDoc, setNewDoc] = useState({ name: '', description: '', icon: 'description', type: 'text' });
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   useEffect(() => {
     loadConfigs();
@@ -251,11 +255,49 @@ const ConfigurationsTab = ({ showNotification }) => {
       service_fee: feeData,
       required_documents: normalizeRequiredDocs(config.required_documents)
     });
-    setNewDoc({ name: '', description: '', icon: 'description' });
+    setNewDoc({ name: '', description: '', icon: 'description', type: 'text' });
     setActiveVisaCategory('tourist');
     setActiveApplicantCategory('employed');
     setActiveDocsCategory('now');
     setShowConfigModal(true);
+  };
+
+  const handleDragStart = (e, index) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    const reordered = [...configs];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+    setConfigs(reordered);
+    setDragIndex(null);
+    setDragOverIndex(null);
+    try {
+      await adminAPI.reorderConfigurations(reordered.map(c => c.id));
+      showNotification('Order saved successfully');
+    } catch (err) {
+      showNotification('Failed to save order', 'error');
+      loadConfigs(); // revert on failure
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
   };
 
   const openEditModal = (config) => {
@@ -306,7 +348,7 @@ const ConfigurationsTab = ({ showNotification }) => {
       service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
       required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
     });
-    setNewDoc({ name: '', description: '', icon: 'description' });
+    setNewDoc({ name: '', description: '', icon: 'description', type: 'text' });
     setActiveVisaCategory('tourist');
     setActiveApplicantCategory('employed');
     setActiveDocsCategory('now');
@@ -328,7 +370,7 @@ const ConfigurationsTab = ({ showNotification }) => {
         updatedDocs[activeVisaCategory] = {};
       }
       if (!updatedDocs[activeVisaCategory][activeApplicantCategory]) {
-        updatedDocs[activeVisaCategory][activeApplicantCategory] = { now: [], later: [] };
+        updatedDocs[activeVisaCategory][activeApplicantCategory] = { now: [], later: [], query: [] };
       }
       if (!updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory]) {
         updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory] = [];
@@ -337,7 +379,7 @@ const ConfigurationsTab = ({ showNotification }) => {
       updatedDocs[activeVisaCategory][activeApplicantCategory][activeDocsCategory].push({ ...newDoc });
       
       setConfigForm({ ...configForm, required_documents: updatedDocs });
-      setNewDoc({ name: '', description: '', icon: 'description' });
+      setNewDoc({ name: '', description: '', icon: 'description', type: 'text' });
     }
   };
 
@@ -379,6 +421,7 @@ const ConfigurationsTab = ({ showNotification }) => {
           <table className="w-full">
             <thead className="bg-surface-container-low">
               <tr>
+                <th className="p-4 w-8" title="Drag to reorder"></th>
                 <th className="text-left p-4 font-semibold text-outline">Citizenship</th>
                 <th className="text-left p-4 font-semibold text-outline">Destination</th>
                 <th className="text-left p-4 font-semibold text-outline">Service Fee</th>
@@ -387,8 +430,26 @@ const ConfigurationsTab = ({ showNotification }) => {
               </tr>
             </thead>
             <tbody>
-              {configs.map((config) => (
-                <tr key={config.id} className="border-b border-surface-container-low hover:bg-surface-container-low/50">
+              {configs.map((config, index) => (
+                <tr
+                  key={config.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`border-b border-surface-container-low transition-all ${
+                    dragIndex === index
+                      ? 'opacity-40'
+                      : dragOverIndex === index
+                      ? 'bg-primary/8 border-t-2 border-t-primary'
+                      : 'hover:bg-surface-container-low/50'
+                  }`}
+                >
+                  {/* Grip handle */}
+                  <td className="p-4 w-8 cursor-grab active:cursor-grabbing text-outline/50 hover:text-outline select-none">
+                    <span className="material-symbols-outlined text-base" title="Drag to reorder">drag_indicator</span>
+                  </td>
                   <td className="p-4 font-semibold">{config.citizenship}</td>
                   <td className="p-4">{config.destination}</td>
                   <td className="p-4 font-bold">{formatCurrency(calculateTotalFee(config.service_fee))}</td>
@@ -434,7 +495,7 @@ const ConfigurationsTab = ({ showNotification }) => {
               ))}
               {configs.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-outline">
+                  <td colSpan="6" className="p-8 text-center text-outline">
                     No configurations found. Click "Add Configuration" to create one.
                   </td>
                 </tr>
@@ -591,7 +652,8 @@ const ConfigurationsTab = ({ showNotification }) => {
                   <div className="flex gap-2">
                     {[
                       { id: 'now', label: 'Require Now' },
-                      { id: 'later', label: 'Required Later' }
+                      { id: 'later', label: 'Required Later' },
+                      { id: 'query', label: 'Query Form' }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -608,69 +670,88 @@ const ConfigurationsTab = ({ showNotification }) => {
                   </div>
                 </div>
 
-                {/* Add Document Form */}
+                {/* Add Document/Question Form */}
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4 border border-outline-variant/30">
                   <h4 className="text-sm font-semibold text-primary mb-2">
-                    Add {activeDocsCategory === 'now' ? 'Required Now' : 'Required Later'} Document for {activeVisaCategory.charAt(0).toUpperCase() + activeVisaCategory.slice(1)} ({activeApplicantCategory.charAt(0).toUpperCase() + activeApplicantCategory.slice(1).replace('_', ' ')})
+                    Add {activeDocsCategory === 'now' ? 'Required Now Document' : activeDocsCategory === 'later' ? 'Required Later Document' : 'Query Form Question'} for {activeVisaCategory.charAt(0).toUpperCase() + activeVisaCategory.slice(1)} ({activeApplicantCategory.charAt(0).toUpperCase() + activeApplicantCategory.slice(1).replace('_', ' ')})
                   </h4>
                   <div>
-                    <label className="block text-xs text-outline mb-1">Document Name</label>
+                    <label className="block text-xs text-outline mb-1">{activeDocsCategory === 'query' ? 'Question Label' : 'Document Name'}</label>
                     <input
                       type="text"
                       value={newDoc.name}
                       onChange={(e) => setNewDoc({...newDoc, name: e.target.value})}
                       className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                      placeholder="e.g., Passport, Photo, Insurance..."
+                      placeholder={activeDocsCategory === 'query' ? "e.g., What is your intended travel date?" : "e.g., Passport, Photo, Insurance..."}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-outline mb-1">Description</label>
+                    <label className="block text-xs text-outline mb-1">{activeDocsCategory === 'query' ? 'Helper Text (Optional)' : 'Description'}</label>
                     <input
                       type="text"
                       value={newDoc.description}
                       onChange={(e) => setNewDoc({...newDoc, description: e.target.value})}
                       className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                      placeholder="Brief description of the document..."
+                      placeholder={activeDocsCategory === 'query' ? "Additional instructions for the applicant..." : "Brief description of the document..."}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-outline mb-1">Icon</label>
-                      <select
-                        value={newDoc.icon}
-                        onChange={(e) => setNewDoc({...newDoc, icon: e.target.value})}
-                        className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
-                      >
-                        {DOCUMENT_ICONS.map((icon) => (
-                          <option key={icon.value} value={icon.value}>
-                            {icon.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {activeDocsCategory === 'query' ? (
+                      <div>
+                        <label className="block text-xs text-outline mb-1">Input Type</label>
+                        <select
+                          value={newDoc.type}
+                          onChange={(e) => setNewDoc({...newDoc, type: e.target.value})}
+                          className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
+                        >
+                          <option value="text">Short Text</option>
+                          <option value="textarea">Long Text</option>
+                          <option value="date">Date</option>
+                          <option value="checkbox">Yes/No (Checkbox)</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs text-outline mb-1">Icon</label>
+                        <select
+                          value={newDoc.icon}
+                          onChange={(e) => setNewDoc({...newDoc, icon: e.target.value})}
+                          className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
+                        >
+                          {DOCUMENT_ICONS.map((icon) => (
+                            <option key={icon.value} value={icon.value}>
+                              {icon.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div className="flex items-end">
                       <button
                         onClick={addDocument}
                         disabled={!newDoc.name.trim()}
                         className="w-full px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                       >
-                        Add Document
+                        {activeDocsCategory === 'query' ? 'Add Question' : 'Add Document'}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Document List */}
+                {/* Document/Question List */}
                 <div className="space-y-2">
                   {getActiveDocArray().map((doc, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant/30">
                       <span className="material-symbols-outlined text-primary">
-                        {doc.icon || 'description'}
+                        {activeDocsCategory === 'query' ? 'help_outline' : (doc.icon || 'description')}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm truncate">{doc.name}</div>
                         {doc.description && (
                           <div className="text-xs text-outline truncate">{doc.description}</div>
+                        )}
+                        {activeDocsCategory === 'query' && doc.type && (
+                          <div className="text-xs text-secondary mt-1 uppercase tracking-wider font-bold">{doc.type}</div>
                         )}
                       </div>
                       <button
@@ -683,7 +764,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                   ))}
                   {getActiveDocArray().length === 0 && (
                     <div className="text-center py-4 text-outline text-sm bg-surface-container-low rounded-lg border border-dashed border-outline-variant">
-                      No documents added yet for this category.
+                      No {activeDocsCategory === 'query' ? 'questions' : 'documents'} added yet for this category.
                     </div>
                   )}
                 </div>

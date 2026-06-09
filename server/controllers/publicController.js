@@ -54,7 +54,8 @@ const defaultRequiredDocs = {
         { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
         { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
         { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-      ]
+      ],
+      query: []
     },
     employed: {
       now: [
@@ -66,7 +67,8 @@ const defaultRequiredDocs = {
         { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
         { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
         { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-      ]
+      ],
+      query: []
     },
     self_employed: {
       now: [
@@ -78,7 +80,8 @@ const defaultRequiredDocs = {
         { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
         { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
         { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-      ]
+      ],
+      query: []
     },
     unemployed: {
       now: [
@@ -90,7 +93,8 @@ const defaultRequiredDocs = {
         { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
         { icon: "flight", name: "Flight Itinerary", description: "Round trip flight reservation." },
         { icon: "hotel", name: "Hotel Booking", description: "Proof of accommodation." }
-      ]
+      ],
+      query: []
     }
   },
   visiting: {
@@ -103,7 +107,8 @@ const defaultRequiredDocs = {
         { icon: "badge", name: "Student ID card", description: "Valid student identification." },
         { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
         { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-      ]
+      ],
+      query: []
     },
     employed: {
       now: [
@@ -114,7 +119,8 @@ const defaultRequiredDocs = {
         { icon: "badge", name: "Employee ID card", description: "Valid employee identification." },
         { icon: "work", name: "Employment Contract", description: "Valid contract from your employer." },
         { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-      ]
+      ],
+      query: []
     },
     self_employed: {
       now: [
@@ -125,7 +131,8 @@ const defaultRequiredDocs = {
         { icon: "handshake", name: "Business Registration", description: "Proof of business registration." },
         { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
         { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-      ]
+      ],
+      query: []
     },
     unemployed: {
       now: [
@@ -136,7 +143,8 @@ const defaultRequiredDocs = {
         { icon: "person_off", name: "Sponsorship Letter", description: "Letter from your sponsor." },
         { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
         { icon: "mail", name: "Invitation Letter", description: "Letter from your friend or relative." }
-      ]
+      ],
+      query: []
     }
   },
   business: {
@@ -150,7 +158,8 @@ const defaultRequiredDocs = {
         { icon: "school", name: "CAS Letter", description: "Confirmation of Acceptance for Studies." },
         { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
         { icon: "receipt", name: "Conference / Event Registration", description: "Proof of registration for the business event or conference." }
-      ]
+      ],
+      query: []
     },
     employed: {
       now: [
@@ -162,7 +171,8 @@ const defaultRequiredDocs = {
         { icon: "work", name: "Employment Letter", description: "Letter from employer authorising business travel." },
         { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
         { icon: "account_balance", name: "Business Bank Statement", description: "Last 3 months bank statement showing financial solvency." }
-      ]
+      ],
+      query: []
     },
     self_employed: {
       now: [
@@ -174,7 +184,8 @@ const defaultRequiredDocs = {
         { icon: "account_balance", name: "Business Bank Statement", description: "Last 6 months business bank statement." },
         { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
         { icon: "receipt", name: "Company Profile / Letter", description: "Official company letterhead confirming the purpose of travel." }
-      ]
+      ],
+      query: []
     },
     unemployed: {
       now: [
@@ -186,7 +197,8 @@ const defaultRequiredDocs = {
         { icon: "badge", name: "Sponsor's ID Proof", description: "Passport or Resident permit of sponsor." },
         { icon: "business_center", name: "Business Invitation Letter", description: "Official invitation from the host company or conference organiser." },
         { icon: "account_balance", name: "Sponsor's Bank Statement", description: "Last 3 months bank statement from sponsor." }
-      ]
+      ],
+      query: []
     }
   }
 };
@@ -209,6 +221,7 @@ const normalizeRequiredDocs = (docs) => {
           if (docs[vk][ac] && typeof docs[vk][ac] === 'object') {
             normalized[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
             normalized[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
+            normalized[vk][ac].query = Array.isArray(docs[vk][ac].query) ? docs[vk][ac].query : [];
           }
         });
       }

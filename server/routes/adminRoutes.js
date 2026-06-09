@@ -38,6 +38,7 @@ router.get('/analytics', adminController.getAnalytics);
 // Configurations
 router.get('/configurations', adminController.getAllConfigurations);
 router.post('/configurations', adminController.createConfiguration);
+router.put('/configurations/reorder', adminController.reorderConfigurations);
 router.put('/configurations/:id', adminController.updateConfiguration);
 router.delete('/configurations/:id', adminController.deleteConfiguration);
 

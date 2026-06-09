@@ -224,6 +224,15 @@ export const adminAPI = {
       throw error.response?.data || error.message;
     }
   },
+
+  reorderConfigurations: async (orderedIds) => {
+    try {
+      const response = await api.put('/admin/configurations/reorder', { orderedIds });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 // Document API endpoints

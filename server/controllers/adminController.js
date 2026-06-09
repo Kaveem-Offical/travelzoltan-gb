@@ -351,7 +351,7 @@ const getAnalytics = async (req, res) => {
 const getAllConfigurations = async (req, res) => {
   try {
     const configurations = await VisaConfiguration.findAll({
-      order: [['citizenship', 'ASC'], ['destination', 'ASC']]
+      order: [['sort_order', 'ASC'], ['id', 'ASC']]
     });
     return res.status(200).json(configurations);
   } catch (error) {
@@ -403,6 +403,7 @@ const updateConfiguration = async (req, res) => {
     if (service_fee !== undefined) configuration.service_fee = service_fee;
     if (required_documents !== undefined) configuration.required_documents = required_documents;
     if (form_schema !== undefined) configuration.form_schema = form_schema;
+    if (req.body.sort_order !== undefined) configuration.sort_order = req.body.sort_order;
 
     await configuration.save();
 
@@ -412,6 +413,26 @@ const updateConfiguration = async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating configuration:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// PUT /api/admin/configurations/reorder
+const reorderConfigurations = async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return res.status(400).json({ message: 'orderedIds array is required.' });
+    }
+    // Bulk-update each config's sort_order to its position in the array
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        VisaConfiguration.update({ sort_order: index }, { where: { id } })
+      )
+    );
+    return res.status(200).json({ message: 'Configurations reordered successfully.' });
+  } catch (error) {
+    console.error('Error reordering configurations:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -445,5 +466,6 @@ module.exports = {
   getAllConfigurations,
   createConfiguration,
   updateConfiguration,
+  reorderConfigurations,
   deleteConfiguration
 };
