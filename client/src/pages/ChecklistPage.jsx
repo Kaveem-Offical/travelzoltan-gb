@@ -20,6 +20,10 @@ const ChecklistPage = () => {
     fetchVisaRequirements();
   }, [citizenship, destination]);
 
+  useEffect(() => {
+    setActiveTab('now');
+  }, [selectedCategory, selectedVisaCategory]);
+
   const fetchVisaRequirements = async () => {
     try {
       setLoading(true);
@@ -53,16 +57,26 @@ const ChecklistPage = () => {
 
   let docsRequiredNow = fallbackDocsNow;
   let docsRequiredLater = [];
+  let queryFormDocs = [];
 
   if (visaData?.required_documents) {
     const visaCatDocs = visaData.required_documents[selectedVisaCategory] || {};
     const applicantCatDocs = visaCatDocs[selectedCategory] || {};
     
+    // Check if the current visa data has any configured required documents (to avoid fallback if it's explicitly empty)
+    const hasAnyConfigured = Object.keys(visaData.required_documents).length > 0;
+    
     if (applicantCatDocs.now && applicantCatDocs.now.length > 0) {
       docsRequiredNow = applicantCatDocs.now;
+    } else if (hasAnyConfigured) {
+      docsRequiredNow = applicantCatDocs.now || [];
     }
+
     if (applicantCatDocs.later && applicantCatDocs.later.length > 0) {
       docsRequiredLater = applicantCatDocs.later;
+    }
+    if (applicantCatDocs.query && applicantCatDocs.query.length > 0) {
+      queryFormDocs = applicantCatDocs.query;
     }
   }
 
@@ -311,22 +325,36 @@ const ChecklistPage = () => {
                        Required Later
                        {activeTab === 'later' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
                     </button>)}
+                   {queryFormDocs.length > 0 && (
+                     <button 
+                       className={`px-6 py-3 font-bold transition-colors relative ${activeTab === 'query' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                       onClick={() => setActiveTab('query')}
+                     >
+                       Query Form
+                       {activeTab === 'query' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-primary"></div>}
+                    </button>)}
                   </div>
 
                   <div className="flex flex-col gap-4 flex-grow">
                     {activeTab === 'now' ? (
-                      docsRequiredNow.map((doc, idx) => (
-                        <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
-                          <div className="mt-1 flex-shrink-0">
-                            <span className="material-symbols-outlined text-primary">{doc.icon || 'check_circle'}</span>
+                      docsRequiredNow.length > 0 ? (
+                        docsRequiredNow.map((doc, idx) => (
+                          <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+                            <div className="mt-1 flex-shrink-0">
+                              <span className="material-symbols-outlined text-primary">{doc.icon || 'check_circle'}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider mb-1">{doc.name}</h4>
+                              <p className="text-xs text-on-surface-variant">{doc.description}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-sm text-on-surface uppercase tracking-wider mb-1">{doc.name}</h4>
-                            <p className="text-xs text-on-surface-variant">{doc.description}</p>
-                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-10 bg-surface-container-lowest rounded-xl border border-outline-variant/30 border-dashed">
+                          <p className="text-on-surface-variant text-sm">No specific documents required now for this combination.</p>
                         </div>
-                      ))
-                    ) : (
+                      )
+                    ) : activeTab === 'later' ? (
                        (!selectedCategory) ? (
                          <div className="text-center py-10 bg-surface-container-lowest rounded-xl border border-outline-variant/30 border-dashed">
                            <p className="text-on-surface-variant text-sm">Select an applicant category to view documents required later.</p>
@@ -345,9 +373,28 @@ const ChecklistPage = () => {
                          ))
                        ) : (
                          <div className="text-center py-10 bg-surface-container-lowest rounded-xl border border-outline-variant/30 border-dashed">
-                           <p className="text-on-surface-variant text-sm">No specific documents required for this combination.</p>
+                           <p className="text-on-surface-variant text-sm">No specific documents required later for this combination.</p>
                          </div>
                        )
+                    ) : (
+                      <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+                        {queryFormDocs.map((q, idx) => (
+                          <div key={idx} className="p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+                            <label className="block text-sm font-bold text-on-surface mb-2">{q.name}</label>
+                            {q.description && <p className="text-xs text-on-surface-variant mb-4">{q.description}</p>}
+                            {q.type === 'textarea' ? (
+                              <textarea rows="4" className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest" placeholder="Your answer..."></textarea>
+                            ) : q.type === 'checkbox' ? (
+                              <label className="flex items-center gap-3 p-3 bg-surface-lowest rounded-xl border border-outline-variant/30 cursor-pointer hover:border-primary/50 transition-colors">
+                                <input type="checkbox" className="w-5 h-5 accent-primary" />
+                                <span className="text-sm font-semibold">Yes</span>
+                              </label>
+                            ) : (
+                              <input type={q.type || 'text'} className="w-full p-3 rounded-xl border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-lowest" placeholder={q.type === 'date' ? '' : 'Your answer...'} />
+                            )}
+                          </div>
+                        ))}
+                      </form>
                     )}
                   </div>
                 </>

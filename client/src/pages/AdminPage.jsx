@@ -265,6 +265,7 @@ const ConfigurationsTab = ({ showNotification }) => {
   const handleDragStart = (e, index) => {
     setDragIndex(index);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleDragOver = (e, index) => {

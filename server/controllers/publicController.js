@@ -22,9 +22,9 @@ const getVisaOptions = async (req, res) => {
     console.log('[getVisaOptions] Total configs found:', allConfigs.length);
     console.log('[getVisaOptions] First few configs:', allConfigs.slice(0, 3));
 
-    // Extract unique values using Set
-    const citizenshipsSet = new Set(allConfigs.map(c => c.citizenship).filter(Boolean));
-    const destinationsSet = new Set(allConfigs.map(c => c.destination).filter(Boolean));
+    // Extract unique values using Set and trim whitespace to prevent duplicates
+    const citizenshipsSet = new Set(allConfigs.map(c => c.citizenship ? c.citizenship.trim() : null).filter(Boolean));
+    const destinationsSet = new Set(allConfigs.map(c => c.destination ? c.destination.trim() : null).filter(Boolean));
 
     const citizenships = Array.from(citizenshipsSet).sort();
     const destinations = Array.from(destinationsSet).sort();
