@@ -16,6 +16,7 @@ const getVisaOptions = async (req, res) => {
     // Get all configurations and extract unique values
     const allConfigs = await VisaConfiguration.findAll({
       attributes: ['citizenship', 'destination'],
+      order: [['sort_order', 'ASC'], ['id', 'ASC']],
       raw: true
     });
 
@@ -26,8 +27,8 @@ const getVisaOptions = async (req, res) => {
     const citizenshipsSet = new Set(allConfigs.map(c => c.citizenship ? c.citizenship.trim() : null).filter(Boolean));
     const destinationsSet = new Set(allConfigs.map(c => c.destination ? c.destination.trim() : null).filter(Boolean));
 
-    const citizenships = Array.from(citizenshipsSet).sort();
-    const destinations = Array.from(destinationsSet).sort();
+    const citizenships = Array.from(citizenshipsSet);
+    const destinations = Array.from(destinationsSet);
 
     console.log('[getVisaOptions] Parsed citizenships:', citizenships);
     console.log('[getVisaOptions] Parsed destinations:', destinations);
