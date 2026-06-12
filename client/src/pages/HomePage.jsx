@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import certificationImg from '../assets/certification.png';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -12,6 +12,9 @@ const HomePage = () => {
   const [otherDestination, setOtherDestination] = useState('');
   const [citizenshipOptions, setCitizenshipOptions] = useState([]);
   const [destinationOptions, setDestinationOptions] = useState([]);
+  const [allCitizenships, setAllCitizenships] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]);
+  const [configurations, setConfigurations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch citizenship and destination options from API
@@ -27,18 +30,63 @@ const HomePage = () => {
           console.log('[HomePage] Received data:', data);
           setCitizenshipOptions(data.citizenships || []);
           setDestinationOptions(data.destinations || []);
+          setAllCitizenships(data.citizenships || []);
+          setAllDestinations(data.destinations || []);
+          setConfigurations(data.configurations || []);
         } else {
           const errorText = await response.text();
           console.error('[HomePage] Failed to fetch visa options:', errorText);
-          // Fallback to hardcoded options if API fails
-          setCitizenshipOptions(['United Kingdom', 'Europe Nationals']);
-          setDestinationOptions(['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan']);
+          
+          // Fallback options
+          const fallbackCitizenships = ['United Kingdom', 'Europe Nationals'];
+          const fallbackDestinations = ['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan'];
+          const fallbackConfigs = [
+            { citizenship: 'United Kingdom', destination: 'Europe (Schengen States)' },
+            { citizenship: 'United Kingdom', destination: 'USA' },
+            { citizenship: 'United Kingdom', destination: 'Canada' },
+            { citizenship: 'United Kingdom', destination: 'Australia' },
+            { citizenship: 'United Kingdom', destination: 'Dubai' },
+            { citizenship: 'United Kingdom', destination: 'New Zealand' },
+            { citizenship: 'United Kingdom', destination: 'India' },
+            { citizenship: 'United Kingdom', destination: 'Japan' },
+            { citizenship: 'Europe Nationals', destination: 'Europe (Schengen States)' },
+            { citizenship: 'Europe Nationals', destination: 'USA' },
+            { citizenship: 'Europe Nationals', destination: 'Canada' },
+            { citizenship: 'Europe Nationals', destination: 'Australia' }
+          ];
+
+          setCitizenshipOptions(fallbackCitizenships);
+          setDestinationOptions(fallbackDestinations);
+          setAllCitizenships(fallbackCitizenships);
+          setAllDestinations(fallbackDestinations);
+          setConfigurations(fallbackConfigs);
         }
       } catch (error) {
         console.error('[HomePage] Error fetching visa options:', error);
-        // Fallback to hardcoded options if API fails
-        setCitizenshipOptions(['United Kingdom', 'Europe Nationals']);
-        setDestinationOptions(['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan']);
+        
+        // Fallback options
+        const fallbackCitizenships = ['United Kingdom', 'Europe Nationals'];
+        const fallbackDestinations = ['Europe (Schengen States)', 'USA', 'Canada', 'Australia', 'Dubai', 'New Zealand', 'India', 'Japan'];
+        const fallbackConfigs = [
+          { citizenship: 'United Kingdom', destination: 'Europe (Schengen States)' },
+          { citizenship: 'United Kingdom', destination: 'USA' },
+          { citizenship: 'United Kingdom', destination: 'Canada' },
+          { citizenship: 'United Kingdom', destination: 'Australia' },
+          { citizenship: 'United Kingdom', destination: 'Dubai' },
+          { citizenship: 'United Kingdom', destination: 'New Zealand' },
+          { citizenship: 'United Kingdom', destination: 'India' },
+          { citizenship: 'United Kingdom', destination: 'Japan' },
+          { citizenship: 'Europe Nationals', destination: 'Europe (Schengen States)' },
+          { citizenship: 'Europe Nationals', destination: 'USA' },
+          { citizenship: 'Europe Nationals', destination: 'Canada' },
+          { citizenship: 'Europe Nationals', destination: 'Australia' }
+        ];
+
+        setCitizenshipOptions(fallbackCitizenships);
+        setDestinationOptions(fallbackDestinations);
+        setAllCitizenships(fallbackCitizenships);
+        setAllDestinations(fallbackDestinations);
+        setConfigurations(fallbackConfigs);
       } finally {
         setLoading(false);
       }
@@ -46,6 +94,41 @@ const HomePage = () => {
 
     fetchVisaOptions();
   }, []);
+
+  // Filter citizenship and destination options based on selections
+  useEffect(() => {
+    // 1. Filter destinations based on selected citizenship
+    if (citizenship && citizenship !== 'Select Citizenship' && citizenship !== 'Other Nationals' && configurations && configurations.length > 0) {
+      const validDestinations = configurations
+        .filter(c => c.citizenship && c.citizenship.trim() === citizenship)
+        .map(c => c.destination ? c.destination.trim() : '');
+      
+      const filteredDests = allDestinations.filter(d => validDestinations.includes(d));
+      setDestinationOptions(filteredDests);
+      
+      if (destination && destination !== 'Other Countries' && !filteredDests.includes(destination)) {
+        setDestination('');
+      }
+    } else {
+      setDestinationOptions(allDestinations);
+    }
+
+    // 2. Filter citizenships based on selected destination
+    if (destination && destination !== 'Select Destination' && destination !== 'Other Countries' && configurations && configurations.length > 0) {
+      const validCitizenships = configurations
+        .filter(c => c.destination && c.destination.trim() === destination)
+        .map(c => c.citizenship ? c.citizenship.trim() : '');
+      
+      const filteredCitizens = allCitizenships.filter(c => validCitizenships.includes(c));
+      setCitizenshipOptions(filteredCitizens);
+
+      if (citizenship && citizenship !== 'Other Nationals' && !filteredCitizens.includes(citizenship)) {
+        setCitizenship('');
+      }
+    } else {
+      setCitizenshipOptions(allCitizenships);
+    }
+  }, [citizenship, destination, allCitizenships, allDestinations, configurations]);
 
   const handleCheckDetails = () => {
     if (!citizenship || citizenship === 'Select Citizenship') return;

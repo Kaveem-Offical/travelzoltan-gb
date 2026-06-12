@@ -30,12 +30,19 @@ const getVisaOptions = async (req, res) => {
     const citizenships = Array.from(citizenshipsSet);
     const destinations = Array.from(destinationsSet);
 
+    // Map and trim configurations for the response
+    const configurations = allConfigs.map(c => ({
+      citizenship: c.citizenship ? c.citizenship.trim() : '',
+      destination: c.destination ? c.destination.trim() : ''
+    }));
+
     console.log('[getVisaOptions] Parsed citizenships:', citizenships);
     console.log('[getVisaOptions] Parsed destinations:', destinations);
 
     return res.status(200).json({
       citizenships,
-      destinations
+      destinations,
+      configurations
     });
   } catch (error) {
     console.error('[getVisaOptions] Error fetching visa options:', error);
@@ -303,7 +310,10 @@ const getVisaRequirements = async (req, res) => {
     }
 
     const config = await VisaConfiguration.findOne({
-      where: { citizenship, destination }
+      where: { 
+        citizenship: citizenship.trim(), 
+        destination: destination.trim() 
+      }
     });
 
     if (!config || !config.required_documents) {

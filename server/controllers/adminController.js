@@ -365,8 +365,11 @@ const createConfiguration = async (req, res) => {
   try {
     const { citizenship, destination, service_fee, required_documents, form_schema } = req.body;
 
+    const trimmedCitizenship = citizenship ? citizenship.trim() : '';
+    const trimmedDestination = destination ? destination.trim() : '';
+
     const existing = await VisaConfiguration.findOne({
-      where: { citizenship, destination }
+      where: { citizenship: trimmedCitizenship, destination: trimmedDestination }
     });
 
     if (existing) {
@@ -374,8 +377,8 @@ const createConfiguration = async (req, res) => {
     }
 
     const config = await VisaConfiguration.create({
-      citizenship,
-      destination,
+      citizenship: trimmedCitizenship,
+      destination: trimmedDestination,
       service_fee,
       required_documents,
       form_schema

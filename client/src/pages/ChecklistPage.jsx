@@ -408,6 +408,9 @@ const ChecklistPage = () => {
               Our streamlined process makes applying for your visa simple and secure. 
               Gather your core documents and start today.
             </p>
+            <p className="text-on-surface-variant">
+              if any additional documents required our executive will reach you
+            </p>
             <button 
               onClick={handleStartApplication}
               className="mt-4 bg-[#ff4d85] text-white font-bold text-lg px-8 py-4 rounded-lg shadow-lg shadow-[#ff4d85]/30 hover:shadow-[#ff4d85]/50 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2 mx-auto"

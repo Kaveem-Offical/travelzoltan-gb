@@ -529,8 +529,9 @@ const ConfigurationsTab = ({ showNotification }) => {
                     type="text"
                     value={configForm.citizenship}
                     onChange={(e) => setConfigForm({...configForm, citizenship: e.target.value})}
-                    className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="e.g., United Kingdom"
+                    disabled={!!editingConfig}
                   />
                 </div>
                 <div>
@@ -539,8 +540,9 @@ const ConfigurationsTab = ({ showNotification }) => {
                     type="text"
                     value={configForm.destination}
                     onChange={(e) => setConfigForm({...configForm, destination: e.target.value})}
-                    className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40"
+                    className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="e.g., Europe (Schengen)"
+                    disabled={!!editingConfig}
                   />
                 </div>
               </div>
