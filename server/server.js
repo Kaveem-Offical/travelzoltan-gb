@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const { sequelize } = require('./models');
 
 // Import routes
@@ -14,8 +13,19 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(url => {
+      try {
+        return new URL(url.trim()).origin;
+      } catch (e) {
+        return url.trim();
+      }
+    })
+  : '*';
+
 app.use(cors({
-  origin: '*'
+  origin: allowedOrigins,
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,46 +38,22 @@ app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/document', documentRoutes);
 
-// Determine client dist path (try multiple locations for local dev vs Vercel)
-const possiblePaths = [
-  path.join(__dirname, '../client/dist'),
-  path.join(__dirname, '../../client/dist'),
-  path.join(process.cwd(), 'client/dist'),
-  '/var/task/client/dist'
-];
-
-let clientDistPath = null;
-for (const p of possiblePaths) {
-  if (fs.existsSync(p)) {
-    clientDistPath = p;
-    console.log('Found client dist at:', p);
-    break;
-  }
-}
-
-// Serve React client static files if found
-if (clientDistPath) {
-  app.use(express.static(clientDistPath));
-  
-  // SPA catch-all: serve index.html for any non-API routes
-  app.get('*', (req, res) => {
-    const indexPath = path.join(clientDistPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      res.status(404).json({ error: 'index.html not found' });
-    }
-  });
-} else {
-  console.warn('Client dist not found, serving API only');
-  app.get('*', (req, res) => {
-    res.status(404).json({ error: 'Client not built. Run npm run build in client folder.' });
-  });
-}
-
 // Health check endpoint (API only)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Visa Booking Platform API is running!' });
+});
+
+// GET / returns service status
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'Zoltan Visa API'
+  });
+});
+
+// Catch-all route for any other non-API routes
+app.get('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Start the server (local dev only, not for Vercel serverless)
