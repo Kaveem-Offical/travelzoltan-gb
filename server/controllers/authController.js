@@ -1,9 +1,5 @@
 const bcrypt = require('bcryptjs');
-
-// Admin credentials - In production, these should be in database
-// For now, using environment variables with fallback defaults
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2a$10$YourHashedPasswordHere'; // Default: 'admin123'
+const { Admin } = require('../models');
 
 /**
  * Validate credentials for Basic Auth
@@ -21,7 +17,8 @@ const login = async (req, res) => {
     }
 
     // Check username
-    if (username !== ADMIN_USERNAME) {
+    const admin = await Admin.findOne({ where: { username } });
+    if (!admin) {
       return res.status(401).json({ 
         success: false,
         message: 'Invalid credentials' 
@@ -30,16 +27,14 @@ const login = async (req, res) => {
 
     // Validate password
     let isPasswordValid = false;
-    
-    // Try bcrypt comparison first
     try {
-      isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+      isPasswordValid = await bcrypt.compare(password, admin.password_hash);
     } catch (e) {
-      // Hash format invalid
+      // Hash comparison failed
     }
     
-    // Fallback to plain text for default dev credentials
-    if (!isPasswordValid && password === 'admin123') {
+    // Fallback to plain text for default dev credentials in case hashing was bypassed
+    if (!isPasswordValid && password === 'admin123' && admin.password_hash === 'admin123') {
       isPasswordValid = true;
     }
 
@@ -54,7 +49,7 @@ const login = async (req, res) => {
       success: true,
       message: 'Login successful',
       user: {
-        username: ADMIN_USERNAME,
+        username: admin.username,
         role: 'admin'
       }
     });
@@ -86,41 +81,101 @@ const verifyCredentials = async (req, res) => {
   const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
   const [username, password] = credentials.split(':');
   
-  // Check username
-  if (username !== ADMIN_USERNAME) {
-    return res.status(401).json({ 
-      success: false,
-      valid: false,
-      message: 'Invalid credentials',
-      wwwAuthenticate: 'Basic realm="Admin"'
-    });
-  }
-
-  // Validate password
-  let isPasswordValid = false;
   try {
-    isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-  } catch (e) {
-    isPasswordValid = password === 'admin123';
-  }
+    // Check username
+    const admin = await Admin.findOne({ where: { username } });
+    if (!admin) {
+      return res.status(401).json({ 
+        success: false,
+        valid: false,
+        message: 'Invalid credentials',
+        wwwAuthenticate: 'Basic realm="Admin"'
+      });
+    }
 
-  if (!isPasswordValid) {
-    return res.status(401).json({ 
+    // Validate password
+    let isPasswordValid = false;
+    try {
+      isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+    } catch (e) {
+      // Hash comparison failed
+    }
+
+    if (!isPasswordValid && password === 'admin123' && admin.password_hash === 'admin123') {
+      isPasswordValid = true;
+    }
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        success: false,
+        valid: false,
+        message: 'Invalid credentials',
+        wwwAuthenticate: 'Basic realm="Admin"'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      valid: true,
+      user: {
+        username: admin.username,
+        role: 'admin'
+      }
+    });
+  } catch (error) {
+    console.error('Verify credentials error:', error);
+    return res.status(500).json({ 
       success: false,
       valid: false,
-      message: 'Invalid credentials',
-      wwwAuthenticate: 'Basic realm="Admin"'
+      message: 'Internal server error' 
     });
   }
+};
 
-  return res.status(200).json({
-    success: true,
-    valid: true,
-    user: {
-      username: ADMIN_USERNAME,
-      role: 'admin'
+/**
+ * Update Admin Username and Password
+ */
+const changeCredentials = async (req, res) => {
+  try {
+    const { username: currentUsername } = req.user; // Attached by requireAuth middleware
+    const { newUsername, newPassword } = req.body;
+
+    if (!newUsername || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New username and new password are required'
+      });
     }
-  });
+
+    // Look up the admin in the database
+    const admin = await Admin.findOne({ where: { username: currentUsername } });
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin account not found'
+      });
+    }
+
+    // Generate new hash for new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update the admin credentials
+    admin.username = newUsername;
+    admin.password_hash = passwordHash;
+    await admin.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Credentials updated successfully'
+    });
+  } catch (error) {
+    console.error('Change credentials error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
 };
 
 // POST /api/admin/logout
@@ -135,7 +190,6 @@ const logout = async (req, res) => {
 module.exports = {
   login,
   verifyCredentials,
-  logout,
-  ADMIN_USERNAME,
-  ADMIN_PASSWORD_HASH
+  changeCredentials,
+  logout
 };

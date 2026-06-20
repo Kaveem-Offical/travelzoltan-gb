@@ -823,12 +823,61 @@ const AdminPage = () => {
   const [appPage, setAppPage] = useState(0);
   const [notification, setNotification] = useState(null);
 
+  // Settings tab states
+  const [settingsUsername, setSettingsUsername] = useState(localStorage.getItem('adminUsername') || '');
+  const [settingsPassword, setSettingsPassword] = useState('');
+  const [settingsConfirmPassword, setSettingsConfirmPassword] = useState('');
+  const [settingsLoading, setSettingsLoading] = useState(false);
+
+  const handleSettingsUpdate = async (e) => {
+    e.preventDefault();
+    if (!settingsUsername.trim()) {
+      showNotification('Username cannot be empty', 'error');
+      return;
+    }
+    if (!settingsPassword) {
+      showNotification('Password cannot be empty', 'error');
+      return;
+    }
+    if (settingsPassword !== settingsConfirmPassword) {
+      showNotification('Passwords do not match', 'error');
+      return;
+    }
+
+    try {
+      setSettingsLoading(true);
+      await adminAPI.changeCredentials(settingsUsername, settingsPassword);
+      
+      // Update local storage so the session continues with the new credentials
+      localStorage.setItem('adminUsername', settingsUsername);
+      localStorage.setItem('adminPassword', settingsPassword);
+      
+      // Update basic auth header locally
+      const storedUser = localStorage.getItem('adminUser');
+      if (storedUser) {
+        const userObj = JSON.parse(storedUser);
+        userObj.username = settingsUsername;
+        localStorage.setItem('adminUser', JSON.stringify(userObj));
+      }
+      
+      setSettingsPassword('');
+      setSettingsConfirmPassword('');
+      showNotification('Username and password updated successfully');
+    } catch (err) {
+      console.error('Error changing credentials:', err);
+      showNotification(err.message || 'Failed to update credentials', 'error');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'applications', label: 'Applications', icon: 'description' },
     { id: 'payments', label: 'Payments', icon: 'payments' },
     { id: 'analytics', label: 'Analytics', icon: 'analytics' },
     { id: 'configurations', label: 'Configurations', icon: 'tune' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
   ];
 
   // Show notification
@@ -1082,6 +1131,60 @@ const AdminPage = () => {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const renderSettings = () => {
+    return (
+      <div className="max-w-xl bg-surface-container-lowest rounded-lg editorial-shadow p-6 space-y-6">
+        <h3 className="font-headline text-xl font-bold mb-2">Change Admin Credentials</h3>
+        <p className="text-sm text-outline mb-6">Update the username and password used to access the Admin Panel. Hashing is used to store the password securely.</p>
+        
+        <form onSubmit={handleSettingsUpdate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-on-surface">New Username</label>
+            <input
+              type="text"
+              required
+              value={settingsUsername}
+              onChange={(e) => setSettingsUsername(e.target.value)}
+              className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-on-surface"
+              placeholder="Enter new username"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-on-surface">New Password</label>
+            <input
+              type="password"
+              required
+              value={settingsPassword}
+              onChange={(e) => setSettingsPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-on-surface"
+              placeholder="Enter new password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-on-surface">Confirm New Password</label>
+            <input
+              type="password"
+              required
+              value={settingsConfirmPassword}
+              onChange={(e) => setSettingsConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-on-surface"
+              placeholder="Confirm new password"
+            />
+          </div>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={settingsLoading}
+              className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/95 transition-all shadow-md hover:shadow-lg disabled:opacity-75"
+            >
+              {settingsLoading ? 'Updating...' : 'Save Settings'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
   };
 
   const renderDashboard = () => {
@@ -1882,6 +1985,7 @@ const AdminPage = () => {
                 {activeMenu === 'payments' && 'Track payments and revenue'}
                 {activeMenu === 'analytics' && 'Insights and performance metrics'}
                 {activeMenu === 'configurations' && 'Manage visa configurations'}
+                {activeMenu === 'settings' && 'Update Admin panel credentials'}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -1922,6 +2026,7 @@ const AdminPage = () => {
               {activeMenu === 'payments' && renderPayments()}
               {activeMenu === 'analytics' && renderAnalytics()}
               {activeMenu === 'configurations' && <ConfigurationsTab showNotification={showNotification} />}
+              {activeMenu === 'settings' && renderSettings()}
             </>
           )}
         </div>

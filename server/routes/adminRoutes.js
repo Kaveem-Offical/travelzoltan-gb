@@ -23,6 +23,9 @@ router.use(requireAuth);
 // Dashboard
 router.get('/dashboard-stats', adminController.getDashboardStats);
 
+// Credentials
+router.put('/change-credentials', authController.changeCredentials);
+
 // Applications
 router.get('/applications', adminController.getAllApplications);
 router.get('/applications/:id', adminController.getApplicationById);

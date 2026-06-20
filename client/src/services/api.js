@@ -156,6 +156,16 @@ export const adminAPI = {
     }
   },
 
+  // Change Admin username and password
+  changeCredentials: async (newUsername, newPassword) => {
+    try {
+      const response = await api.put('/admin/change-credentials', { newUsername, newPassword });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Applications
   getAllApplications: async (params = {}) => {
     try {
