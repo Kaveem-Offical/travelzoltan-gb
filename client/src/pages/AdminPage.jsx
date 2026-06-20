@@ -1663,6 +1663,30 @@ const AdminPage = () => {
                   <p className="font-semibold">{selectedApplication.phone || 'N/A'}</p>
                 </div>
                 <div className="p-4 bg-surface-container-low rounded-lg">
+                  <p className="text-sm text-outline mb-1">WhatsApp Phone</p>
+                  <p className="font-semibold">{selectedApplication.user_data?.alternativePhone || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg">
+                  <p className="text-sm text-outline mb-1">Passport Number</p>
+                  <p className="font-semibold">{selectedApplication.user_data?.passportNumber || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg">
+                  <p className="text-sm text-outline mb-1">Nationality</p>
+                  <p className="font-semibold">{selectedApplication.user_data?.nationality || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg col-span-2">
+                  <p className="text-sm text-outline mb-1">Residential Address</p>
+                  <p className="font-semibold whitespace-pre-line">{selectedApplication.user_data?.residentialAddress || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg">
+                  <p className="text-sm text-outline mb-1">Employment Status</p>
+                  <p className="font-semibold capitalize">{selectedApplication.user_data?.applicantStatus || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg">
+                  <p className="text-sm text-outline mb-1">Visa Category</p>
+                  <p className="font-semibold capitalize">{selectedApplication.user_data?.visaCategory || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-surface-container-low rounded-lg col-span-2">
                   <p className="text-sm text-outline mb-1">Application Date</p>
                   <p className="font-semibold">{formatDate(selectedApplication.created_at)}</p>
                 </div>
@@ -1673,6 +1697,48 @@ const AdminPage = () => {
                 <p className="text-sm text-outline mb-2">Visa Route</p>
                 <p className="font-semibold text-lg">{selectedApplication.visa_type}</p>
                 <p className="text-sm text-outline mt-2">Service Fee: {formatCurrency(selectedApplication.visaConfiguration?.service_fee)}</p>
+              </div>
+
+              {/* Payment Details */}
+              <div className="p-4 bg-surface-container-low rounded-lg">
+                <p className="text-sm text-outline mb-2 font-semibold">Payment Details</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-outline">Payment Status: </span>
+                    <span className="font-semibold uppercase">{selectedApplication.payment_status || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-outline">Payment Option: </span>
+                    <span className="font-semibold capitalize">{selectedApplication.user_data?.paymentOption || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-outline">Currency: </span>
+                    <span className="font-semibold uppercase">{selectedApplication.user_data?.paymentCurrency || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-outline">Amount Paid: </span>
+                    <span className="font-semibold text-primary">
+                      {selectedApplication.user_data?.paymentCurrency ? (
+                        `${selectedApplication.user_data.paymentCurrency === 'GBP' ? '£' : 
+                           selectedApplication.user_data.paymentCurrency === 'USD' ? '$' : 
+                           selectedApplication.user_data.paymentCurrency === 'EUR' ? '€' : 
+                           selectedApplication.user_data.paymentCurrency === 'INR' ? '₹' : ''} ${selectedApplication.user_data.paymentAmountGBP || 'N/A'}`
+                      ) : 'N/A'}
+                    </span>
+                  </div>
+                  {selectedApplication.payment_id && (
+                    <div className="col-span-2 mt-1">
+                      <span className="text-outline">Payment ID: </span>
+                      <span className="font-mono text-xs">{selectedApplication.payment_id}</span>
+                    </div>
+                  )}
+                  {selectedApplication.order_id && (
+                    <div className="col-span-2">
+                      <span className="text-outline">Order ID: </span>
+                      <span className="font-mono text-xs">{selectedApplication.order_id}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Status */}
