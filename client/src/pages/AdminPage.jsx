@@ -1178,9 +1178,10 @@ const AdminPage = () => {
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  app.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                  app.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-blue-100 text-blue-700'
+                  app.status === 'Process Completed' || app.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                  app.status === 'Documents Pending' || app.status === 'Payment Pending' || app.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  app.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
+                  'bg-red-100 text-red-700'
                 }`}>
                   {app.status}
                 </span>
@@ -1261,9 +1262,11 @@ const AdminPage = () => {
                 className="px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40"
               >
                 <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Approved</option>
-                <option value="failed">Rejected</option>
+                <option value="Documents Pending">Documents Pending</option>
+                <option value="Payment Pending">Payment Pending</option>
+                <option value="In Review">In Review</option>
+                <option value="Process Completed">Process Completed</option>
+                <option value="Rejected">Rejected</option>
               </select>
               <button 
                 onClick={() => handleExport('applications')}
@@ -1296,8 +1299,9 @@ const AdminPage = () => {
                   <td className="p-4">{formatCurrency(app.visaConfiguration?.service_fee)}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      app.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                      app.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                      app.status === 'Process Completed' || app.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                      app.status === 'Documents Pending' || app.status === 'Payment Pending' || app.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                      app.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
                       'bg-red-100 text-red-700'
                     }`}>
                       {app.status}
@@ -1674,8 +1678,9 @@ const AdminPage = () => {
               <div className="p-4 bg-surface-container-low rounded-lg">
                 <p className="text-sm text-outline mb-2">Current Status</p>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  selectedApplication.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                  selectedApplication.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  selectedApplication.status === 'Process Completed' || selectedApplication.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                  selectedApplication.status === 'Documents Pending' || selectedApplication.status === 'Payment Pending' || selectedApplication.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  selectedApplication.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
                   'bg-red-100 text-red-700'
                 }`}>
                   {selectedApplication.status}
@@ -1723,10 +1728,10 @@ const AdminPage = () => {
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-surface-container-high">
                 <button 
-                  onClick={() => handleStatusUpdate(selectedApplication.id, 'Approved', document.getElementById('adminNotes')?.value)}
+                  onClick={() => handleStatusUpdate(selectedApplication.id, 'Process Completed', document.getElementById('adminNotes')?.value)}
                   className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
                 >
-                  Approve
+                  Process Completed
                 </button>
                 <button 
                   onClick={() => handleStatusUpdate(selectedApplication.id, 'In Review', document.getElementById('adminNotes')?.value)}

@@ -97,6 +97,7 @@ const ApplicationProgressPage = () => {
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState('idle');
   const [submitted, setSubmitted] = useState(false);
+  const [applicationId, setApplicationId] = useState(null);
 
   useEffect(() => {
     if (!visaData) {
@@ -158,11 +159,39 @@ const ApplicationProgressPage = () => {
     });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStage === 1) {
       if (!formData.name || !formData.surname || !formData.email || !formData.phoneLocal || !formData.passportNumber || !formData.nationality || !formData.residentialAddress) {
         alert('Please fill in all personal details.');
         return;
+      }
+
+      try {
+        setLoading(true);
+        const submitData = {
+          configuration_id: visaData.configuration_id || 1,
+          user_data: {
+            ...formData,
+            applicantStatus: selectedCategory,
+            visaCategory: selectedVisaCategory,
+            status: 'Documents Pending'
+          }
+        };
+
+        if (applicationId) {
+          await visaAPI.updateApplication(applicationId, submitData);
+        } else {
+          const response = await visaAPI.createApplication(submitData);
+          if (response.applicationId) {
+            setApplicationId(response.applicationId);
+          }
+        }
+      } catch (err) {
+        console.error('Error saving contact details lead:', err);
+        alert('Failed to save contact details. Please try again.');
+        return;
+      } finally {
+        setLoading(false);
       }
     }
     
@@ -170,6 +199,33 @@ const ApplicationProgressPage = () => {
       if (Object.keys(coreDocuments).length < coreDocsConfig.length) {
         alert('Please upload all required documents before proceeding.');
         return;
+      }
+
+      try {
+        setLoading(true);
+        const submitData = new FormData();
+        const documentTypes = [];
+        
+        Object.entries(coreDocuments).forEach(([docType, file]) => {
+          submitData.append('documents', file);
+          documentTypes.push(docType);
+        });
+        
+        if (documentTypes.length > 0) {
+          submitData.append('document_types', JSON.stringify(documentTypes));
+        }
+
+        if (applicationId) {
+          await visaAPI.uploadDocuments(applicationId, submitData);
+        } else {
+          console.warn('applicationId missing when uploading documents');
+        }
+      } catch (err) {
+        console.error('Error saving documents:', err);
+        alert('Failed to save uploaded documents. Please try again.');
+        return;
+      } finally {
+        setLoading(false);
       }
     }
     
@@ -229,37 +285,59 @@ const ApplicationProgressPage = () => {
     try {
       setLoading(true);
       
-      const submitData = new FormData();
-      submitData.append('configuration_id', visaData.configuration_id || 1);
-      submitData.append('user_data', JSON.stringify({
-        ...formData,
-        applicantStatus: selectedCategory,
-        visaCategory: selectedVisaCategory,
-        paymentOption,
-        paymentCurrency: selectedCurrency,
-        paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount
-      }));
+      let currentAppId = applicationId;
       
-      const documentTypes = [];
-      
-      Object.entries(coreDocuments).forEach(([docType, file]) => {
-        submitData.append('documents', file);
-        documentTypes.push(docType);
-      });
-      
-      if (documentTypes.length > 0) {
-        submitData.append('document_types', JSON.stringify(documentTypes));
+      if (currentAppId) {
+        // Update existing application user_data with payment details
+        await visaAPI.updateApplication(currentAppId, {
+          user_data: {
+            ...formData,
+            applicantStatus: selectedCategory,
+            visaCategory: selectedVisaCategory,
+            paymentOption,
+            paymentCurrency: selectedCurrency,
+            paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount
+          }
+        });
+      } else {
+        // Fallback: create application from scratch if applicationId is somehow missing
+        console.warn('applicationId missing in handleSubmit, creating now');
+        const submitData = new FormData();
+        submitData.append('configuration_id', visaData.configuration_id || 1);
+        submitData.append('user_data', JSON.stringify({
+          ...formData,
+          applicantStatus: selectedCategory,
+          visaCategory: selectedVisaCategory,
+          paymentOption,
+          paymentCurrency: selectedCurrency,
+          paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount,
+          status: 'Payment Pending'
+        }));
+        
+        const documentTypes = [];
+        Object.entries(coreDocuments).forEach(([docType, file]) => {
+          submitData.append('documents', file);
+          documentTypes.push(docType);
+        });
+        
+        if (documentTypes.length > 0) {
+          submitData.append('document_types', JSON.stringify(documentTypes));
+        }
+
+        const response = await visaAPI.createApplication(submitData);
+        if (response.applicationId) {
+          currentAppId = response.applicationId;
+          setApplicationId(currentAppId);
+        }
       }
 
-      const response = await visaAPI.createApplication(submitData);
-      
-      if (response.applicationId) {
+      if (currentAppId) {
         setPaymentStatus('pending');
-        const orderData = await visaAPI.createPaymentOrder(response.applicationId, selectedCurrency, paymentOption);
+        const orderData = await visaAPI.createPaymentOrder(currentAppId, selectedCurrency, paymentOption);
 
         setPaymentStatus('processing');
         
-        await handleRazorpayPayment(response.applicationId, orderData);
+        await handleRazorpayPayment(currentAppId, orderData);
         
         setPaymentStatus('completed');
         setSubmitted(true);

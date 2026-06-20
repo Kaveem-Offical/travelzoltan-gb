@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = 'https://api.zoltanvisa.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -74,10 +74,35 @@ export const visaAPI = {
     }
   },
 
-  // Create a new visa application
-  createApplication: async (formData) => {
+  // Create a new visa application (handles both JSON lead creation and multipart/form-data upload)
+  createApplication: async (data) => {
     try {
-      const response = await api.post('/applications', formData, {
+      const isFormData = data instanceof FormData;
+      const response = await api.post('/applications', data, {
+        headers: {
+          'Content-Type': isFormData ? 'multipart/form-data' : 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Update an existing application's details
+  updateApplication: async (id, data) => {
+    try {
+      const response = await api.put(`/applications/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Upload documents for an existing application
+  uploadDocuments: async (id, formData) => {
+    try {
+      const response = await api.post(`/applications/${id}/documents`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

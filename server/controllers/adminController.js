@@ -74,7 +74,15 @@ const getAllApplications = async (req, res) => {
     
     const whereClause = {};
     if (status && status !== 'all') {
-      whereClause.payment_status = status;
+      if (status === 'pending') {
+        whereClause.status = { [Op.or]: ['Documents Pending', 'Payment Pending', 'Pending'] };
+      } else if (status === 'completed') {
+        whereClause.status = 'Process Completed';
+      } else if (status === 'failed') {
+        whereClause.status = 'Rejected';
+      } else {
+        whereClause.status = status;
+      }
     }
     
     const applications = await Application.findAll({
@@ -91,11 +99,11 @@ const getAllApplications = async (req, res) => {
       offset: parseInt(offset)
     });
 
-    // Add application status based on payment_status
+    // Add application status based on payment_status/status
     const enrichedApplications = applications.map(app => ({
       ...app.toJSON(),
-      status: app.payment_status === 'completed' ? 'Approved' : 
-              app.payment_status === 'pending' ? 'Pending' : 'In Review',
+      status: app.status || (app.payment_status === 'completed' ? 'Process Completed' : 
+              app.payment_status === 'pending' ? 'Payment Pending' : 'In Review'),
       applicant_name: app.user_data?.fullName || app.user_data?.name || 'N/A',
       visa_type: `${app.visaConfiguration?.citizenship} to ${app.visaConfiguration?.destination}`
     }));
@@ -133,8 +141,8 @@ const getApplicationById = async (req, res) => {
 
     const enrichedApplication = {
       ...application.toJSON(),
-      status: application.payment_status === 'completed' ? 'Approved' : 
-              application.payment_status === 'pending' ? 'Pending' : 'In Review',
+      status: application.status || (application.payment_status === 'completed' ? 'Process Completed' : 
+              application.payment_status === 'pending' ? 'Payment Pending' : 'In Review'),
       applicant_name: application.user_data?.fullName || application.user_data?.name || 'N/A',
       email: application.user_data?.email || 'N/A',
       phone: application.user_data?.phone || 'N/A'
@@ -160,7 +168,10 @@ const updateApplicationStatus = async (req, res) => {
 
     // Map admin status to payment_status
     const statusMap = {
+      'Process Completed': 'completed',
       'Approved': 'completed',
+      'Documents Pending': 'pending',
+      'Payment Pending': 'pending',
       'Pending': 'pending',
       'In Review': 'pending',
       'Rejected': 'failed'
@@ -169,6 +180,8 @@ const updateApplicationStatus = async (req, res) => {
     if (statusMap[status]) {
       application.payment_status = statusMap[status];
     }
+    
+    application.status = status;
     
     if (notes) {
       application.user_data = { ...application.user_data, admin_notes: notes };

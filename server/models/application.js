@@ -45,6 +45,11 @@ module.exports = (sequelize, DataTypes) => {
     order_id: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Documents Pending'
     }
   }, {
     sequelize,

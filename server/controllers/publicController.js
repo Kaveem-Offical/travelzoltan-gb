@@ -361,12 +361,20 @@ const createApplication = async (req, res) => {
       }
     }
 
+    let initialStatus = 'Documents Pending';
+    if (parsedUserData.status) {
+      initialStatus = parsedUserData.status;
+    } else if (req.files && req.files.length > 0) {
+      initialStatus = 'Payment Pending';
+    }
+
     // Create application first
     const newApplication = await Application.create({
       configuration_id,
       user_data: parsedUserData,
       document_urls: [], // Deprecated field, keeping for backward compatibility
-      payment_status: 'pending'
+      payment_status: 'pending',
+      status: initialStatus
     });
 
     // Upload documents if provided
@@ -558,6 +566,7 @@ const verifyPayment = async (req, res) => {
       application.payment_status = 'completed';
       application.payment_id = razorpay_payment_id;
       application.order_id = razorpay_order_id;
+      application.status = 'Process Completed';
       await application.save();
 
       return res.status(200).json({
@@ -586,10 +595,120 @@ const createPaymentIntent = async (req, res) => {
   return createPaymentOrder(req, res);
 };
 
+const updateApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { configuration_id, user_data } = req.body;
+
+    const application = await Application.findByPk(id);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    if (configuration_id) {
+      application.configuration_id = configuration_id;
+    }
+
+    if (user_data) {
+      const parsedUserData = typeof user_data === 'string' ? JSON.parse(user_data) : user_data;
+      application.user_data = {
+        ...application.user_data,
+        ...parsedUserData
+      };
+      if (parsedUserData.status) {
+        application.status = parsedUserData.status;
+      }
+    }
+
+    await application.save();
+
+    return res.status(200).json({
+      message: 'Application updated successfully',
+      applicationId: application.id,
+      application
+    });
+  } catch (error) {
+    console.error('Error updating application:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+const uploadApplicationDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { document_types } = req.body;
+
+    const application = await Application.findByPk(id);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    let parsedDocumentTypes = [];
+    if (document_types) {
+      try {
+        parsedDocumentTypes = typeof document_types === 'string' ? JSON.parse(document_types) : document_types;
+      } catch (e) {
+        console.warn('Invalid document_types format');
+      }
+    }
+
+    const uploadedDocuments = [];
+    if (req.files && req.files.length > 0) {
+      console.log(`[Application Documents] Uploading ${req.files.length} documents for application ID ${id}...`);
+
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const documentType = parsedDocumentTypes[i] || `document_${i + 1}`;
+
+        try {
+          const uploadResult = await uploadService.uploadDocument(file, documentType);
+
+          const document = await Document.create({
+            application_id: application.id,
+            document_type: documentType,
+            file_url: uploadResult.file_url,
+            storage_type: uploadResult.storage_type,
+            file_name: uploadResult.file_name,
+            mime_type: uploadResult.mime_type,
+            file_size: uploadResult.file_size,
+            drive_file_id: uploadResult.drive_file_id || null,
+            cloudinary_public_id: uploadResult.cloudinary_public_id || null
+          });
+
+          uploadedDocuments.push({
+            id: document.id,
+            document_type: documentType,
+            file_name: uploadResult.file_name,
+            storage_type: uploadResult.storage_type
+          });
+        } catch (uploadError) {
+          console.error(`[Application Documents] Failed to upload document ${i + 1}:`, uploadError.message);
+        }
+      }
+    }
+
+    // Since documents are now uploaded, transition status to Payment Pending
+    application.status = 'Payment Pending';
+    await application.save();
+
+    return res.status(200).json({
+      message: 'Documents uploaded successfully',
+      applicationId: application.id,
+      documentsUploaded: uploadedDocuments.length,
+      documents: uploadedDocuments
+    });
+  } catch (error) {
+    console.error('Error uploading application documents:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
 module.exports = {
   getVisaOptions,
   getVisaRequirements,
   createApplication,
+  updateApplication,
+  uploadApplicationDocuments,
   createPaymentIntent,
   createPaymentOrder,
   verifyPayment
