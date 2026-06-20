@@ -169,6 +169,7 @@ const updateApplicationStatus = async (req, res) => {
     // Map admin status to payment_status
     const statusMap = {
       'Process Completed': 'completed',
+      'Payment Received': 'completed',
       'Approved': 'completed',
       'Documents Pending': 'pending',
       'Payment Pending': 'pending',

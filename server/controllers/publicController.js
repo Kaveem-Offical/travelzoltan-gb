@@ -566,7 +566,7 @@ const verifyPayment = async (req, res) => {
       application.payment_status = 'completed';
       application.payment_id = razorpay_payment_id;
       application.order_id = razorpay_order_id;
-      application.status = 'Process Completed';
+      application.status = 'Payment Received';
       await application.save();
 
       return res.status(200).json({
