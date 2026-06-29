@@ -335,7 +335,7 @@ const ChecklistPage = () => {
                     </button>)}
                   </div>
 
-                  <div className="flex flex-col gap-4 flex-grow">
+                  <div className="flex flex-col gap-4">
                     {activeTab === 'now' ? (
                       docsRequiredNow.length > 0 ? (
                         docsRequiredNow.map((doc, idx) => (
@@ -399,6 +399,7 @@ const ChecklistPage = () => {
                   </div>
                 </>
               )}
+              <span className='mx-2 mt-8 text-sm'>Note: Case to Case Additional Documents May be required. If Required Our Executive will reach you.</span>
             </div>
           </section>
 
@@ -408,9 +409,9 @@ const ChecklistPage = () => {
               Our streamlined process makes applying for your visa simple and secure. 
               Gather your core documents and start today.
             </p>
-            <p className="text-on-surface-variant">
+            {/* <p className="text-on-surface-variant">
               if any additional documents required our executive will reach you
-            </p>
+            </p> */}
             <button 
               onClick={handleStartApplication}
               className="mt-4 bg-[#ff4d85] text-white font-bold text-lg px-8 py-4 rounded-lg shadow-lg shadow-[#ff4d85]/30 hover:shadow-[#ff4d85]/50 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2 mx-auto"

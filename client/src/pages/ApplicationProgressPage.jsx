@@ -434,7 +434,7 @@ const ApplicationProgressPage = () => {
                         type="tel" 
                       />
                       <label className={`absolute transition-all font-medium ${formData.phoneLocal ? '-top-3.5 text-xs text-primary left-0' : 'text-base text-on-surface-variant/60 top-3 left-12'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-placeholder-shown:left-12 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0`}>
-                        Phone Number
+                        Phone Number ( whatsapp )
                       </label>
                     </div>
 
@@ -473,7 +473,7 @@ const ApplicationProgressPage = () => {
       : 'top-3 text-sm text-on-surface-variant/60 left-[110px] right-0'
     }
   `}>
-  Alternative Phone Number (whatsapp)
+  Alternative Phone Number
 </label>
 </div>
 
