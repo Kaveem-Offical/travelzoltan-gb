@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { visaAPI } from '../services/api';
+import { hasPayInFullOption, getPayNowPoints, getPayInFullPoints, resolvePointText } from '../utils/paymentUtils';
 
 const ChecklistPage = () => {
   const location = useLocation();
@@ -93,21 +94,57 @@ const ChecklistPage = () => {
   })();
 
   const payNowAmount = (() => {
-    if (!serviceFee || typeof serviceFee !== 'object') return totalAmount / 2;
-    return serviceFee.pay_now_amount || totalAmount / 2;
+    if (!serviceFee || typeof serviceFee !== 'object') return totalAmount;
+    return serviceFee.pay_now_amount !== undefined && serviceFee.pay_now_amount !== null
+      ? (parseFloat(serviceFee.pay_now_amount) || totalAmount)
+      : totalAmount;
   })();
 
   const payInFullAmount = (() => {
-    if (!serviceFee || typeof serviceFee !== 'object') return totalAmount;
-    return serviceFee.pay_in_full_amount || totalAmount;
+    if (!serviceFee || typeof serviceFee !== 'object') return 0;
+    return parseFloat(serviceFee.pay_in_full_amount) || 0;
   })();
 
+  const hasPayInFull = hasPayInFullOption(serviceFee);
+
   // Discount = absolute price difference between total and pay-in-full
-  const discountAmount = Math.max(0, totalAmount - payInFullAmount);
-  const discountPercentage = totalAmount > 0 ? Math.round((discountAmount / totalAmount) * 100) : 0;
+  const discountAmount = hasPayInFull ? Math.max(0, totalAmount - payInFullAmount) : 0;
+  const discountPercentage = (hasPayInFull && totalAmount > 0) ? Math.round((discountAmount / totalAmount) * 100) : 0;
 
+  const payNowPoints = getPayNowPoints(serviceFee);
+  const payInFullPoints = getPayInFullPoints(serviceFee);
 
-  const categories = [
+  // Helper to count documents for a specific visa category across all applicant categories
+  const getDocsCountForVisaCategory = (vkKey) => {
+    if (!visaData?.required_documents) return -1;
+    const vkDocs = visaData.required_documents[vkKey];
+    if (!vkDocs || typeof vkDocs !== 'object') return 0;
+
+    let total = 0;
+    Object.values(vkDocs).forEach(acDocs => {
+      if (acDocs && typeof acDocs === 'object') {
+        total += (Array.isArray(acDocs.now) ? acDocs.now.length : 0);
+        total += (Array.isArray(acDocs.later) ? acDocs.later.length : 0);
+        total += (Array.isArray(acDocs.query) ? acDocs.query.length : 0);
+      }
+    });
+    return total;
+  };
+
+  // Helper to count documents for a specific applicant category under a given visa category
+  const getDocsCountForApplicantCategory = (acKey, vkKey) => {
+    if (!visaData?.required_documents) return -1;
+    const acDocs = visaData.required_documents[vkKey]?.[acKey];
+    if (!acDocs || typeof acDocs !== 'object') return 0;
+
+    let total = 0;
+    total += (Array.isArray(acDocs.now) ? acDocs.now.length : 0);
+    total += (Array.isArray(acDocs.later) ? acDocs.later.length : 0);
+    total += (Array.isArray(acDocs.query) ? acDocs.query.length : 0);
+    return total;
+  };
+
+  const allCategories = [
     { key: 'student', label: 'Student', icon: 'school' },
     { key: 'employed', label: 'Employed', icon: 'work' },
     { key: 'self_employed', label: 'Self-Employed', icon: 'handshake' },
@@ -115,11 +152,63 @@ const ChecklistPage = () => {
     { key: 'other', label: 'Other / Query', icon: 'more_horiz' }
   ];
 
-  const visaCategories = [
+  const allVisaCategories = [
     { key: 'tourist', label: 'Tourist', icon: 'flight_takeoff' },
     { key: 'visiting', label: 'Visit (Family/Friend)', icon: 'family_restroom' },
     { key: 'business', label: 'Business Visa', icon: 'business_center' }
   ];
+
+  // Filter visa categories: hide options that have 0 documents added in backend
+  const availableVisaCategories = allVisaCategories.filter(vc => {
+    const count = getDocsCountForVisaCategory(vc.key);
+    return count === -1 || count > 0;
+  });
+
+  const activeVisaCategoriesList = availableVisaCategories.length > 0 ? availableVisaCategories : allVisaCategories;
+
+  // Auto-select first available visa category if currently selected one is not in available options
+  useEffect(() => {
+    if (activeVisaCategoriesList.length > 0 && !activeVisaCategoriesList.some(vc => vc.key === selectedVisaCategory)) {
+      setSelectedVisaCategory(activeVisaCategoriesList[0].key);
+    }
+  }, [activeVisaCategoriesList, selectedVisaCategory]);
+
+  // Filter applicant categories: hide options that have 0 documents added in backend under selected visa category
+  const availableCategories = allCategories.filter(cat => {
+    if (cat.key === 'other') return true;
+    const count = getDocsCountForApplicantCategory(cat.key, selectedVisaCategory);
+    return count === -1 || count > 0;
+  });
+
+  const activeCategoriesList = availableCategories.length > 0 ? availableCategories : allCategories;
+
+  // Auto-select first available applicant category if currently selected one is not in available options
+  useEffect(() => {
+    if (activeCategoriesList.length > 0 && !activeCategoriesList.some(cat => cat.key === selectedCategory)) {
+      setSelectedCategory(activeCategoriesList[0].key);
+    }
+  }, [activeCategoriesList, selectedCategory, selectedVisaCategory]);
+
+  // Dynamic layout calculation for categories grid to eliminate empty space gaps
+  const getCategoryGridClass = () => {
+    const len = activeCategoriesList.length;
+    if (len === 1) return 'grid grid-cols-1 gap-4';
+    if (len === 2) return 'grid grid-cols-2 gap-4';
+    if (len === 3) {
+      return activeCategoriesList.some(c => c.key === 'other') 
+        ? 'grid grid-cols-2 gap-4' 
+        : 'grid grid-cols-1 sm:grid-cols-3 gap-4';
+    }
+    return 'grid grid-cols-2 gap-4';
+  };
+
+  const getCategoryItemClass = (catKey) => {
+    const len = activeCategoriesList.length;
+    if (catKey === 'other' && len % 2 !== 0 && len > 1) {
+      return 'col-span-2';
+    }
+    return 'col-span-1';
+  };
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-24 bg-surface-lowest">
@@ -128,7 +217,7 @@ const ChecklistPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="z-10">
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-primary/10 text-primary border border-primary/20 rounded-full">
-              Digital Curator
+              Your Trusted Digital Visa Consultant
             </span>
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface mb-6 leading-[1.1]">
               Document Checklist for <span className="text-primary">{citizenship}</span>
@@ -173,7 +262,7 @@ const ChecklistPage = () => {
             <div className="text-center mb-8">
               <h2 className="font-headline text-4xl font-bold text-on-surface">Application Requirements & Pricing</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+            <div className={`grid grid-cols-1 ${hasPayInFull ? 'md:grid-cols-2 max-w-4xl' : 'max-w-xl'} gap-8 mx-auto w-full`}>
               {/* Pay Now */}
               <div className="bg-red-50 rounded-2xl p-8 border border-red-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
@@ -186,90 +275,126 @@ const ChecklistPage = () => {
                 </div>
                 <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
                   <span className="font-bold text-on-surface mb-1 text-base">Total: £{totalAmount}</span>
-                  <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
-                    <span>£{payNowAmount} due today to start process</span>
-                  </span>
-                  <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-primary mt-0.5">check_circle</span> 
-                    <span>Remaining amount paid upon call with executive</span>
-                  </span>
+                  {payNowPoints.map((pt, idx) => (
+                    <span key={idx} className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">check_circle</span> 
+                      <span>{resolvePointText(pt, payNowAmount, '£')}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              {/* Pay in Full */}
-              <div className="bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
-                <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                  {discountAmount > 0 ? `Save £${discountAmount.toFixed(0)}` : `${discountPercentage}% Off`}
+              {/* Pay in Full - Render only if configured */}
+              {hasPayInFull && (
+                <div className="bg-white rounded-2xl p-8 border border-outline-variant/30 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative overflow-hidden">
+                  <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    {discountAmount > 0 ? `Save £${discountAmount.toFixed(0)}` : `${discountPercentage}% Off`}
+                  </div>
+                  <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4 mt-2">
+                    <span className="material-symbols-outlined text-3xl">workspace_premium</span>
+                  </div>
+                  <h3 className="font-bold text-xl text-on-surface mb-2">Pay in Full</h3>
+                  <div className="mb-4 flex items-end justify-center gap-2">
+                    <span className="text-xl text-on-surface-variant/60 line-through mb-1">£{totalAmount}</span>
+                    <span className="text-4xl font-bold text-on-surface">£{payInFullAmount}</span>
+                  </div>
+                  <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
+                    <span className="font-bold mb-1 text-base">Total: £{payInFullAmount}</span>
+                    {payInFullPoints.map((pt, idx) => (
+                      <span key={idx} className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">check_circle</span> 
+                        <span>{resolvePointText(pt, payInFullAmount, '£')}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4 mt-2">
-                  <span className="material-symbols-outlined text-3xl">workspace_premium</span>
-                </div>
-                <h3 className="font-bold text-xl text-on-surface mb-2">Pay in Full</h3>
-                <div className="mb-4 flex items-end justify-center gap-2">
-                  <span className="text-xl text-on-surface-variant/60 line-through mb-1">£{totalAmount}</span>
-                  <span className="text-4xl font-bold text-on-surface">£{payInFullAmount}</span>
-                </div>
-                <div className="text-sm text-on-surface-variant mb-6 flex-grow flex flex-col gap-3 w-full text-left bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/20">
-                  <span className="font-bold mb-1 text-base">Total: £{payInFullAmount}</span>
-                  <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">check_circle</span> 
-                    <span>Pay entire amount upfront</span>
-                  </span>
-                  <span className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">check_circle</span> 
-                    <span>Premium concierge service included</span>
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </section>
 
           <div className="w-full h-px bg-outline-variant/30 my-8"></div>
 
           {/* Section 2: Applicant Category & Documents */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-            <div className="lg:col-span-5 flex flex-col gap-6">
-                            {selectedCategory && selectedCategory !== 'other' && (
-                <div className="mt-4 bg-white rounded-xl p-6 border border-outline-variant/30 shadow-sm">
-                  <h4 className="font-bold text-on-surface mb-4">Select Visa Category</h4>
-                  <div className="flex flex-col gap-3">
-                    {visaCategories.map(vc => (
-                      <label key={vc.key} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedVisaCategory === vc.key ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:border-primary/50'}`}>
-                        <input 
-                          type="radio" 
-                          name="visa_cat" 
-                          className="text-primary focus:ring-primary h-5 w-5 accent-primary" 
-                          checked={selectedVisaCategory === vc.key}
-                          onChange={() => setSelectedVisaCategory(vc.key)}
-                        />
-                        <span className="font-bold text-on-surface">{vc.label}</span>
-                        <span className={`material-symbols-outlined ml-auto ${selectedVisaCategory === vc.key ? 'text-primary' : 'text-on-surface-variant'}`}>{vc.icon}</span>
-                      </label>
-                    ))}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12 items-stretch">
+            <div className="lg:col-span-5 flex flex-col justify-start gap-6">
+              
+              {/* Applicant Category Selection Card */}
+              <div className="bg-white rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined">category</span>
+                  </div>
+                  <div>
+                    <h2 className="font-headline text-xl font-bold text-on-surface">Applicant Category</h2>
+                    <p className="text-xs text-on-surface-variant">Select your category to view specific requirements</p>
                   </div>
                 </div>
-              )}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">category</span>
+                
+                <div className={getCategoryGridClass()}>
+                  {activeCategoriesList.map(cat => (
+                    <button 
+                      key={cat.key}
+                      onClick={() => setSelectedCategory(cat.key)}
+                      className={`${getCategoryItemClass(cat.key)} rounded-xl p-4 flex flex-col items-center gap-2 transition-all shadow-sm focus:outline-none ${
+                        selectedCategory === cat.key 
+                          ? 'bg-primary/10 border-2 border-primary text-primary font-bold shadow-md' 
+                          : 'bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface-variant'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
+                      <span className="font-bold text-xs uppercase tracking-wider">{cat.label}</span>
+                    </button>
+                  ))}
                 </div>
-                <h2 className="font-headline text-2xl font-bold text-on-surface">Applicant Category</h2>
               </div>
-              <p className="text-on-surface-variant">Select your category to view specific document requirements.</p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                {categories.map(cat => (
-                  <button 
-                    key={cat.key}
-                    onClick={() => setSelectedCategory(cat.key)}
-                    className={`col-span-${cat.key === 'other' ? '2' : '1'} rounded-xl p-4 flex flex-col items-center gap-2 transition-all shadow-sm focus:outline-none ${selectedCategory === cat.key ? 'bg-primary/10 border-2 border-primary text-primary' : 'bg-white border border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface-variant'}`}
-                  >
-                    <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
-                    <span className="font-bold text-sm uppercase tracking-wider">{cat.label}</span>
-                  </button>
-                ))}
-              </div>
+
+              {/* Visa Category Selection Card */}
+              {selectedCategory && selectedCategory !== 'other' && (
+                <div className="bg-white rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                      <span className="material-symbols-outlined">flight_takeoff</span>
+                    </div>
+                    <div>
+                      <h2 className="font-headline text-xl font-bold text-on-surface">Visa Category</h2>
+                      <p className="text-xs text-on-surface-variant">
+                        {activeVisaCategoriesList.length === 1 ? 'Available visa type for this selection' : 'Select your travel visa category'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {activeVisaCategoriesList.length === 1 ? (
+                    <div className="flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 text-primary font-bold shadow-sm">
+                      <span className="material-symbols-outlined text-xl">{activeVisaCategoriesList[0].icon}</span>
+                      <span className="text-sm">{activeVisaCategoriesList[0].label}</span>
+                      <span className="material-symbols-outlined ml-auto text-primary">check_circle</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {activeVisaCategoriesList.map(vc => (
+                        <label 
+                          key={vc.key} 
+                          className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                            selectedVisaCategory === vc.key 
+                              ? 'border-primary bg-primary/5 text-primary font-bold shadow-sm' 
+                              : 'border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface'
+                          }`}
+                        >
+                          <input 
+                            type="radio" 
+                            name="visa_cat" 
+                            className="text-primary focus:ring-primary h-5 w-5 accent-primary" 
+                            checked={selectedVisaCategory === vc.key}
+                            onChange={() => setSelectedVisaCategory(vc.key)}
+                          />
+                          <span className="text-sm font-semibold">{vc.label}</span>
+                          <span className={`material-symbols-outlined ml-auto ${selectedVisaCategory === vc.key ? 'text-primary' : 'text-on-surface-variant'}`}>{vc.icon}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
             </div>
 

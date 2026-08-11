@@ -223,18 +223,23 @@ const normalizeRequiredDocs = (docs) => {
   );
   
   if (hasNewKeys) {
+    const result = {
+      tourist: { student: { now: [], later: [], query: [] }, employed: { now: [], later: [], query: [] }, self_employed: { now: [], later: [], query: [] }, unemployed: { now: [], later: [], query: [] } },
+      visiting: { student: { now: [], later: [], query: [] }, employed: { now: [], later: [], query: [] }, self_employed: { now: [], later: [], query: [] }, unemployed: { now: [], later: [], query: [] } },
+      business: { student: { now: [], later: [], query: [] }, employed: { now: [], later: [], query: [] }, self_employed: { now: [], later: [], query: [] }, unemployed: { now: [], later: [], query: [] } }
+    };
     ['tourist', 'visiting', 'business'].forEach(vk => {
       if (docs[vk] && typeof docs[vk] === 'object') {
         ['student', 'employed', 'self_employed', 'unemployed'].forEach(ac => {
           if (docs[vk][ac] && typeof docs[vk][ac] === 'object') {
-            normalized[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
-            normalized[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
-            normalized[vk][ac].query = Array.isArray(docs[vk][ac].query) ? docs[vk][ac].query : [];
+            result[vk][ac].now = Array.isArray(docs[vk][ac].now) ? docs[vk][ac].now : [];
+            result[vk][ac].later = Array.isArray(docs[vk][ac].later) ? docs[vk][ac].later : [];
+            result[vk][ac].query = Array.isArray(docs[vk][ac].query) ? docs[vk][ac].query : [];
           }
         });
       }
     });
-    return normalized;
+    return result;
   }
 
   let oldNow = [];
@@ -478,15 +483,19 @@ const createPaymentOrder = async (req, res) => {
     let amountGBP = 130; // default total
     if (config && config.service_fee) {
       const fee = config.service_fee;
-      if (typeof fee === 'object') {
+      if (typeof fee === 'object' && fee !== null) {
+        const total = parseFloat(fee.total_amount) || 130;
         if (paymentOption === 'partial') {
-          amountGBP = fee.pay_now_amount || (fee.total_amount ? fee.total_amount / 2 : 65);
+          amountGBP = fee.pay_now_amount !== undefined && fee.pay_now_amount !== null && parseFloat(fee.pay_now_amount) > 0
+            ? parseFloat(fee.pay_now_amount)
+            : total;
         } else {
-          amountGBP = fee.pay_in_full_amount || (fee.total_amount ? fee.total_amount * 0.7 : 91);
+          amountGBP = fee.pay_in_full_amount !== undefined && fee.pay_in_full_amount !== null && parseFloat(fee.pay_in_full_amount) > 0
+            ? parseFloat(fee.pay_in_full_amount)
+            : total;
         }
       } else {
-        const total = parseFloat(fee) || 130;
-        amountGBP = paymentOption === 'partial' ? total / 2 : total * 0.7;
+        amountGBP = parseFloat(fee) || 130;
       }
     }
 

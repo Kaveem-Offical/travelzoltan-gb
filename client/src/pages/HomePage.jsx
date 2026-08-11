@@ -152,7 +152,7 @@ const HomePage = () => {
         <div className="max-w-screen-2xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 z-10">
             <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-primary/10 text-primary font-headline font-bold text-sm tracking-wide">
-              THE DIGITAL CURATOR
+              THE YOUR TRUSTED DIGITAL VISA CONSULTANT
             </span>
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
               Worldwide Visa Assistance. <span className="text-primary">Simplified.</span>

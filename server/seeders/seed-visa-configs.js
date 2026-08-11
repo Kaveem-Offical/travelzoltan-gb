@@ -177,13 +177,21 @@ const required_documents_structure = {
 };
 
 const form_schema_default = {
-  fields: [
-    { name: 'fullName', type: 'text', required: true, label: 'Full Name' },
-    { name: 'email', type: 'email', required: true, label: 'Email Address' },
-    { name: 'phone', type: 'tel', required: true, label: 'Phone Number' },
-    { name: 'passportNumber', type: 'text', required: true, label: 'Passport Number' }
-  ]
+  personal_details_fields: {
+    name: { visible: true, required: true, label: 'First Name' },
+    surname: { visible: true, required: true, label: 'Surname' },
+    email: { visible: true, required: true, label: 'Email Address' },
+    phoneLocal: { visible: true, required: true, label: 'Phone Number (WhatsApp)' },
+    alternativePhoneLocal: { visible: true, required: false, label: 'Alternative Phone Number' },
+    passportNumber: { visible: true, required: true, label: 'Passport Number' },
+    nationality: { visible: true, required: true, label: 'Nationality' },
+    residentialAddress: { visible: true, required: true, label: 'Residential Address' },
+    dateOfBirth: { visible: false, required: false, label: 'Date of Birth' },
+    destinationAddress: { visible: false, required: false, label: 'Destination Details / Address' },
+    accommodationAddress: { visible: false, required: false, label: 'Family/Friend or Hotel Address' }
+  }
 };
+
 
 const sampleConfigurations = [
   {

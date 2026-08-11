@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../services/api';
 import DocumentViewer from '../components/DocumentViewer';
+import { DEFAULT_PAY_NOW_POINTS, DEFAULT_PAY_IN_FULL_POINTS, getPayNowPoints, getPayInFullPoints } from '../utils/paymentUtils';
 
 // Format currency helper
 const formatCurrency = (amount) => {
@@ -15,6 +16,49 @@ const calculateTotalFee = (serviceFee) => {
     return serviceFee.total_amount || (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0);
   }
   return parseFloat(serviceFee) || 0;
+};
+
+// Normalize service_fee to object format with amounts and custom points
+const normalizeFeeData = (feeData) => {
+  if (typeof feeData === 'number' || typeof feeData === 'string') {
+    const total = parseFloat(feeData) || 0;
+    return {
+      total_amount: total,
+      pay_now_amount: total,
+      pay_in_full_amount: 0,
+      pay_now_points: [...DEFAULT_PAY_NOW_POINTS],
+      pay_in_full_points: [...DEFAULT_PAY_IN_FULL_POINTS]
+    };
+  }
+  if (!feeData || typeof feeData !== 'object') {
+    return {
+      total_amount: 0,
+      pay_now_amount: 0,
+      pay_in_full_amount: 0,
+      pay_now_points: [...DEFAULT_PAY_NOW_POINTS],
+      pay_in_full_points: [...DEFAULT_PAY_IN_FULL_POINTS]
+    };
+  }
+
+  const total = feeData.total_amount !== undefined 
+    ? parseFloat(feeData.total_amount) || 0 
+    : ((feeData.admin_fee || 0) + (feeData.service_fee || 0) + (feeData.express_fee || 0));
+
+  const payNow = feeData.pay_now_amount !== undefined 
+    ? parseFloat(feeData.pay_now_amount) || 0 
+    : total;
+
+  const payInFull = feeData.pay_in_full_amount !== undefined 
+    ? parseFloat(feeData.pay_in_full_amount) || 0 
+    : 0;
+
+  return {
+    total_amount: total,
+    pay_now_amount: payNow,
+    pay_in_full_amount: payInFull,
+    pay_now_points: getPayNowPoints(feeData),
+    pay_in_full_points: getPayInFullPoints(feeData)
+  };
 };
 
 // Available document icons
@@ -168,6 +212,36 @@ const getFlatDocsArray = (docs) => {
   return uniqueDocs;
 };
 
+const DEFAULT_PERSONAL_DETAILS_FIELDS = [
+  { id: 'name', label: 'First Name', defaultVisible: true, defaultRequired: true },
+  { id: 'surname', label: 'Surname', defaultVisible: true, defaultRequired: true },
+  { id: 'email', label: 'Email Address', defaultVisible: true, defaultRequired: true },
+  { id: 'phoneLocal', label: 'Phone Number (WhatsApp)', defaultVisible: true, defaultRequired: true },
+  { id: 'alternativePhoneLocal', label: 'Alternative Phone Number', defaultVisible: true, defaultRequired: false },
+  { id: 'passportNumber', label: 'Passport Number', defaultVisible: true, defaultRequired: true },
+  { id: 'nationality', label: 'Nationality', defaultVisible: true, defaultRequired: true },
+  { id: 'residentialAddress', label: 'Residential Address', defaultVisible: true, defaultRequired: true },
+  { id: 'dateOfBirth', label: 'Date of Birth', defaultVisible: false, defaultRequired: false },
+  { id: 'destinationAddress', label: 'Destination Details / Address', defaultVisible: false, defaultRequired: false },
+  { id: 'accommodationAddress', label: 'Family/Friend or Hotel Address', defaultVisible: false, defaultRequired: false }
+];
+
+const normalizeFormSchema = (form_schema) => {
+  const fields = form_schema?.personal_details_fields || {};
+  const result = { personal_details_fields: {} };
+
+  DEFAULT_PERSONAL_DETAILS_FIELDS.forEach(f => {
+    const existing = fields[f.id];
+    result.personal_details_fields[f.id] = {
+      label: f.label,
+      visible: existing !== undefined && existing.visible !== undefined ? !!existing.visible : f.defaultVisible,
+      required: existing !== undefined && existing.required !== undefined ? !!existing.required : f.defaultRequired
+    };
+  });
+
+  return result;
+};
+
 const ConfigurationsTab = ({ showNotification }) => {
   const [configs, setConfigs] = useState([]);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -176,7 +250,8 @@ const ConfigurationsTab = ({ showNotification }) => {
     citizenship: '',
     destination: '',
     service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
-    required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
+    required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs)),
+    form_schema: normalizeFormSchema(null)
   });
   const [activeVisaCategory, setActiveVisaCategory] = useState('tourist');
   const [activeApplicantCategory, setActiveApplicantCategory] = useState('employed');
@@ -196,6 +271,27 @@ const ConfigurationsTab = ({ showNotification }) => {
     } catch (err) {
       showNotification('Failed to load configurations', 'error');
     }
+  };
+
+  const updateFormFieldConfig = (fieldId, key, value) => {
+    setConfigForm(prev => {
+      const currentSchema = prev.form_schema || normalizeFormSchema(null);
+      const currentField = currentSchema.personal_details_fields?.[fieldId] || {};
+      const updatedFields = {
+        ...currentSchema.personal_details_fields,
+        [fieldId]: {
+          ...currentField,
+          [key]: value
+        }
+      };
+      return {
+        ...prev,
+        form_schema: {
+          ...currentSchema,
+          personal_details_fields: updatedFields
+        }
+      };
+    });
   };
 
   const handleSaveConfig = async () => {
@@ -228,32 +324,13 @@ const ConfigurationsTab = ({ showNotification }) => {
 
   const handleDuplicateConfig = (config) => {
     setEditingConfig(null);
-    // Normalize service_fee to object format (same logic as openEditModal)
-    let feeData = config.service_fee;
-    if (typeof feeData === 'number' || typeof feeData === 'string') {
-      const total = parseFloat(feeData) || 0;
-      feeData = {
-        pay_now_amount: total / 2,
-        total_amount: total,
-        pay_in_full_amount: total * 0.7
-      };
-    } else if (!feeData || typeof feeData !== 'object') {
-      feeData = { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 };
-    } else {
-      if (feeData.service_fee !== undefined && feeData.pay_now_amount === undefined) {
-        const total = (feeData.admin_fee || 0) + (feeData.service_fee || 0) + (feeData.express_fee || 0);
-        feeData = {
-          pay_now_amount: total / 2,
-          total_amount: total,
-          pay_in_full_amount: total * 0.7
-        };
-      }
-    }
+    let feeData = normalizeFeeData(config.service_fee);
     setConfigForm({
       citizenship: config.citizenship + ' (Copy)',
       destination: config.destination,
       service_fee: feeData,
-      required_documents: normalizeRequiredDocs(config.required_documents)
+      required_documents: normalizeRequiredDocs(config.required_documents),
+      form_schema: normalizeFormSchema(config.form_schema)
     });
     setNewDoc({ name: '', description: '', icon: 'description', type: 'text' });
     setActiveVisaCategory('tourist');
@@ -303,29 +380,7 @@ const ConfigurationsTab = ({ showNotification }) => {
 
   const openEditModal = (config) => {
     setEditingConfig(config);
-    // Normalize service_fee to object format
-    let feeData = config.service_fee;
-    if (typeof feeData === 'number' || typeof feeData === 'string') {
-      const total = parseFloat(feeData) || 0;
-      feeData = {
-        pay_now_amount: total / 2,
-        total_amount: total,
-        pay_in_full_amount: total * 0.7
-      };
-    } else if (!feeData || typeof feeData !== 'object') {
-      feeData = { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 };
-    } else {
-      if (feeData.service_fee !== undefined && feeData.pay_now_amount === undefined) {
-          const total = (feeData.admin_fee || 0) + (feeData.service_fee || 0) + (feeData.express_fee || 0);
-          feeData = {
-              pay_now_amount: total / 2,
-              total_amount: total,
-              pay_in_full_amount: total * 0.7
-          };
-      }
-    }
-
-    // Normalize required_documents to object format
+    let feeData = normalizeFeeData(config.service_fee);
     let docs = config.required_documents;
     let normalizedDocs = normalizeRequiredDocs(docs);
 
@@ -333,7 +388,8 @@ const ConfigurationsTab = ({ showNotification }) => {
       citizenship: config.citizenship,
       destination: config.destination,
       service_fee: feeData,
-      required_documents: normalizedDocs
+      required_documents: normalizedDocs,
+      form_schema: normalizeFormSchema(config.form_schema)
     });
     setActiveVisaCategory('tourist');
     setActiveApplicantCategory('employed');
@@ -346,8 +402,15 @@ const ConfigurationsTab = ({ showNotification }) => {
     setConfigForm({
       citizenship: '',
       destination: '',
-      service_fee: { pay_now_amount: 0, total_amount: 0, pay_in_full_amount: 0 },
-      required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs))
+      service_fee: {
+        total_amount: 0,
+        pay_now_amount: 0,
+        pay_in_full_amount: 0,
+        pay_now_points: [...DEFAULT_PAY_NOW_POINTS],
+        pay_in_full_points: [...DEFAULT_PAY_IN_FULL_POINTS]
+      },
+      required_documents: JSON.parse(JSON.stringify(defaultRequiredDocs)),
+      form_schema: normalizeFormSchema(null)
     });
     setNewDoc({ name: '', description: '', icon: 'description', type: 'text' });
     setActiveVisaCategory('tourist');
@@ -395,11 +458,15 @@ const ConfigurationsTab = ({ showNotification }) => {
   };
 
   const updateFeeBreakdown = (field, value) => {
+    let newValue = value;
+    if (field === 'total_amount' || field === 'pay_now_amount' || field === 'pay_in_full_amount') {
+      newValue = parseFloat(value) || 0;
+    }
     setConfigForm({
       ...configForm,
       service_fee: {
         ...configForm.service_fee,
-        [field]: parseFloat(value) || 0
+        [field]: newValue
       }
     });
   };
@@ -546,13 +613,13 @@ const ConfigurationsTab = ({ showNotification }) => {
                   />
                 </div>
               </div>
-              {/* Fee Breakdown */}
+              {/* Fee Breakdown & Custom Bullet Points */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Commercials</label>
-                <div className="bg-surface-container-low rounded-lg p-4 space-y-3">
+                <label className="block text-sm font-semibold mb-2">Commercials & Payment Options</label>
+                <div className="bg-surface-container-low rounded-lg p-4 space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs text-outline mb-1">Total Amount (£)</label>
+                      <label className="block text-xs font-medium text-outline mb-1">Total Amount (£)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -563,7 +630,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-outline mb-1">Pay Now Amount (£)</label>
+                      <label className="block text-xs font-medium text-outline mb-1">Pay Now Amount (£)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -574,7 +641,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-outline mb-1">Pay in Full Discounted (£)</label>
+                      <label className="block text-xs font-medium text-outline mb-1">Pay in Full Discounted (£)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -585,11 +652,100 @@ const ConfigurationsTab = ({ showNotification }) => {
                       />
                     </div>
                   </div>
+                  <p className="text-xs text-outline italic">
+                    * Note: If 'Pay in Full Discounted' is left empty or 0, only the 'Pay Now' option will be shown to customers.
+                  </p>
+
+                  {/* Customizable Bullet Points */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-outline-variant/40">
+                    <div>
+                      <label className="block text-xs font-bold text-on-surface mb-1">
+                        Pay Now Points (one per line)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(configForm.service_fee.pay_now_points) ? configForm.service_fee.pay_now_points.join('\n') : ''}
+                        onChange={(e) => updateFeeBreakdown('pay_now_points', e.target.value.split('\n'))}
+                        className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-xs font-mono"
+                        placeholder="£{amount} due today to start process&#10;Remaining amount paid upon call with executive&#10;Premium concierge service included"
+                      />
+                      <span className="text-[11px] text-outline block mt-0.5">
+                        Use &#123;amount&#125; for dynamic Pay Now amount placeholder.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-on-surface mb-1">
+                        Pay in Full Points (one per line)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={Array.isArray(configForm.service_fee.pay_in_full_points) ? configForm.service_fee.pay_in_full_points.join('\n') : ''}
+                        onChange={(e) => updateFeeBreakdown('pay_in_full_points', e.target.value.split('\n'))}
+                        className="w-full px-3 py-2 bg-surface-container-high rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-xs font-mono"
+                        placeholder="Pay entire amount upfront&#10;Premium concierge service included"
+                      />
+                      <span className="text-[11px] text-outline block mt-0.5">
+                        Leave empty to use default points.
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="pt-2 border-t border-outline-variant flex justify-between items-center">
                     <span className="text-sm text-outline">Total Service Fee:</span>
                     <span className="font-bold text-primary">
                       {formatCurrency(calculateTotalFee(configForm.service_fee))}
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Details Form Configuration */}
+              <div>
+                <label className="block text-sm font-semibold mb-1">Personal Details Form Fields</label>
+                <p className="text-xs text-outline mb-3">
+                  Configure which input fields are shown or hidden in the applicant's personal details form for this route.
+                </p>
+                <div className="bg-surface-container-low rounded-lg p-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {DEFAULT_PERSONAL_DETAILS_FIELDS.map(field => {
+                      const currentConfig = configForm.form_schema?.personal_details_fields?.[field.id] || {
+                        visible: field.defaultVisible,
+                        required: field.defaultRequired
+                      };
+                      return (
+                        <div key={field.id} className="flex items-center justify-between p-2.5 bg-surface-container-high rounded-lg text-xs">
+                          <div className="flex flex-col pr-2">
+                            <span className="font-semibold text-on-surface">{field.label}</span>
+                            <span className="text-[10px] text-outline">
+                              {!currentConfig.visible ? 'Hidden by default' : (currentConfig.required ? 'Required field' : 'Optional field')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <label className="flex items-center gap-1.5 cursor-pointer text-on-surface-variant select-none">
+                              <input
+                                type="checkbox"
+                                checked={currentConfig.visible}
+                                onChange={(e) => updateFormFieldConfig(field.id, 'visible', e.target.checked)}
+                                className="rounded border-outline text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                              />
+                              <span>Show</span>
+                            </label>
+                            {currentConfig.visible && (
+                              <label className="flex items-center gap-1.5 cursor-pointer text-on-surface-variant select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={currentConfig.required}
+                                  onChange={(e) => updateFormFieldConfig(field.id, 'required', e.target.checked)}
+                                  className="rounded border-outline text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                />
+                                <span>Required</span>
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1789,6 +1945,24 @@ const AdminPage = () => {
                   <p className="text-sm text-outline mb-1">Visa Category</p>
                   <p className="font-semibold capitalize">{selectedApplication.user_data?.visaCategory || 'N/A'}</p>
                 </div>
+                {selectedApplication.user_data?.dateOfBirth && (
+                  <div className="p-4 bg-surface-container-low rounded-lg">
+                    <p className="text-sm text-outline mb-1">Date of Birth</p>
+                    <p className="font-semibold">{selectedApplication.user_data.dateOfBirth}</p>
+                  </div>
+                )}
+                {selectedApplication.user_data?.destinationAddress && (
+                  <div className="p-4 bg-surface-container-low rounded-lg col-span-2">
+                    <p className="text-sm text-outline mb-1">Destination Details / Address</p>
+                    <p className="font-semibold whitespace-pre-line">{selectedApplication.user_data.destinationAddress}</p>
+                  </div>
+                )}
+                {selectedApplication.user_data?.accommodationAddress && (
+                  <div className="p-4 bg-surface-container-low rounded-lg col-span-2">
+                    <p className="text-sm text-outline mb-1">Family/Friend or Hotel Address</p>
+                    <p className="font-semibold whitespace-pre-line">{selectedApplication.user_data.accommodationAddress}</p>
+                  </div>
+                )}
                 <div className="p-4 bg-surface-container-low rounded-lg col-span-2">
                   <p className="text-sm text-outline mb-1">Application Date</p>
                   <p className="font-semibold">{formatDate(selectedApplication.created_at)}</p>

@@ -235,7 +235,7 @@ const ChecklistPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="z-10">
             <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-[0.2em] uppercase bg-primary/10 text-primary border border-primary/20 rounded-full">
-              Digital Curator
+              Your Trusted Digital Visa Consultant
             </span>
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface mb-6 leading-[1.1]">
               Document Checklist for <span className="text-primary">{citizenship}</span>

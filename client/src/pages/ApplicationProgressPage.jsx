@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
+import { hasPayInFullOption, getPayNowPoints, getPayInFullPoints, resolvePointText } from '../utils/paymentUtils';
 
 // List of countries for nationality dropdown
 const countriesList = [
@@ -18,112 +19,139 @@ const countriesList = [
   "Jamaica", "Japan", "Jordan",
   "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
   "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
-  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
   "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
   "Oman",
   "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
   "Qatar",
   "Romania", "Russia", "Rwanda",
-  "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
-  "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+  "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
   "Uganda", "Ukraine", "United Arab Emirates", "Uruguay", "Uzbekistan",
   "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen",
   "Zambia", "Zimbabwe"
 ];
 
-// List of common country codes for phone number prefix dropdown
-const countryCodes = [
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+1', country: 'US/CA', flag: '🇺🇸' },
-  { code: '+91', country: 'IN', flag: '🇮🇳' },
-  { code: '+971', country: 'AE', flag: '🇦🇪' },
-  { code: '+61', country: 'AU', flag: '🇦🇺' },
-  { code: '+65', country: 'SG', flag: '🇸🇬' },
-  { code: '+33', country: 'FR', flag: '🇫🇷' },
-  { code: '+49', country: 'DE', flag: '🇩🇪' },
-  { code: '+34', country: 'ES', flag: '🇪🇸' },
-  { code: '+39', country: 'IT', flag: '🇮🇹' },
-  { code: '+31', country: 'NL', flag: '🇳🇱' },
-  { code: '+41', country: 'CH', flag: '🇨🇭' },
-  { code: '+353', country: 'IE', flag: '🇮🇪' },
-  { code: '+64', country: 'NZ', flag: '🇳🇿' },
-  { code: '+27', country: 'ZA', flag: '🇿🇦' },
-  { code: '+86', country: 'CN', flag: '🇨🇳' },
-  { code: '+81', country: 'JP', flag: '🇯🇵' },
-  { code: '+966', country: 'SA', flag: '🇸🇦' },
-  { code: '+92', country: 'PK', flag: '🇵🇰' },
-  { code: '+880', country: 'BD', flag: '🇧🇩' },
-  { code: '+94', country: 'LK', flag: '🇱🇰' },
-  { code: '+90', country: 'TR', flag: '🇹🇷' },
-  { code: '+7', country: 'RU', flag: '🇷🇺' }
-];
-
+// Currencies mapping for currency selector
 const CURRENCIES = {
-  GBP: { symbol: '£', rate: 1.0, name: 'British Pound (GBP)' },
-  USD: { symbol: '$', rate: 1.30, name: 'US Dollar (USD)' },
-  EUR: { symbol: '€', rate: 1.18, name: 'Euro (EUR)' },
-  INR: { symbol: '₹', rate: 108.0, name: 'Indian Rupee (INR)' }
+  GBP: { symbol: '£', name: 'GBP - British Pound', rate: 1.0 },
+  USD: { symbol: '$', name: 'USD - US Dollar', rate: 1.27 },
+  EUR: { symbol: '€', name: 'EUR - Euro', rate: 1.18 },
+  INR: { symbol: '₹', name: 'INR - Indian Rupee', rate: 108.0 }
+};
+
+const DEFAULT_FORM_FIELDS_CONFIG = {
+  name: { visible: true, required: true, label: 'First Name (given name)' },
+  surname: { visible: true, required: true, label: 'Last Name (surname)' },
+  email: { visible: true, required: true, label: 'Email Address' },
+  phoneLocal: { visible: true, required: true, label: 'Phone Number (whatsapp)' },
+  alternativePhoneLocal: { visible: true, required: false, label: 'Alternative Phone Number' },
+  passportNumber: { visible: true, required: true, label: 'Passport Number' },
+  nationality: { visible: true, required: true, label: 'Nationality' },
+  residentialAddress: { visible: true, required: true, label: 'Residential Address' },
+  dateOfBirth: { visible: false, required: false, label: 'Date of Birth' },
+  destinationAddress: { visible: false, required: false, label: 'Destination Details / Address' },
+  accommodationAddress: { visible: false, required: false, label: 'Family/Friend or Hotel Address' }
+};
+
+const getFormFieldsConfig = (visaData) => {
+  const customConfig = visaData?.form_schema?.personal_details_fields || {};
+  const merged = {};
+
+  Object.keys(DEFAULT_FORM_FIELDS_CONFIG).forEach(fieldKey => {
+    const def = DEFAULT_FORM_FIELDS_CONFIG[fieldKey];
+    const custom = customConfig[fieldKey];
+    merged[fieldKey] = {
+      visible: custom !== undefined && custom.visible !== undefined ? !!custom.visible : def.visible,
+      required: custom !== undefined && custom.required !== undefined ? !!custom.required : def.required,
+      label: def.label
+    };
+  });
+
+  return merged;
 };
 
 const ApplicationProgressPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const { citizenship, destination, visaData, selectedCategory, selectedVisaCategory } = location.state || {};
-  
-  const [currentStage, setCurrentStage] = useState(1);
-  const [paymentOption, setPaymentOption] = useState('partial'); // 'partial' or 'full'
+
+  // State from location or defaults
+  const citizenship = location.state?.citizenship || 'United Kingdom';
+  const destination = location.state?.destination || 'Europe (Schengen States)';
+  const initialCategory = location.state?.selectedCategory || 'employed';
+  const initialVisaCategory = location.state?.selectedVisaCategory || 'tourist';
+
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedVisaCategory, setSelectedVisaCategory] = useState(initialVisaCategory);
+  const [visaData, setVisaData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Application workflow state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [paymentOption, setPaymentOption] = useState('partial'); // 'partial' = pay now, 'full' = pay in full
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
-  
+
+  // Form inputs
   const [formData, setFormData] = useState({
-    name: '',
-    surname: '',
     fullName: '',
     email: '',
-    phoneCountryCode: '+44',
-    phoneLocal: '',
     phone: '',
-    alternativePhoneCountryCode: '+44',
-    alternativePhoneLocal: '',
-    alternativePhone: '',
-    passportNumber: '',
-    nationality: '',
-    residentialAddress: '',
+    passportNumber: ''
   });
-  
-  const [coreDocuments, setCoreDocuments] = useState({});
-  
-  const [loading, setLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState('idle');
-  const [submitted, setSubmitted] = useState(false);
-  const [applicationId, setApplicationId] = useState(null);
+
+  // Dynamic form responses
+  const [dynamicFormValues, setDynamicFormValues] = useState({});
+
+  // Document uploads tracking: { docName: { status, id, fileUrl } }
+  const [uploadedDocs, setUploadedDocs] = useState({});
+
+  // Payment processing state
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState(null);
 
   useEffect(() => {
-    if (!visaData) {
-      navigate('/checklist');
+    fetchVisaRequirements();
+  }, [citizenship, destination]);
+
+  const fetchVisaRequirements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await visaAPI.getRequirements(citizenship, destination);
+      setVisaData(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load visa requirements');
+    } finally {
+      setLoading(false);
     }
-  }, [visaData, navigate]);
+  };
 
   if (!visaData) return null;
 
   const coreDocsConfig = visaData.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.now || [];
 
-  const serviceFee = visaData?.service_fee || { total_amount: 130, pay_now_amount: 65, pay_in_full_amount: 91 };
-  
+  const serviceFee = visaData?.service_fee;
+
   const totalAmount = typeof serviceFee === 'object' && serviceFee !== null 
     ? (serviceFee.total_amount || (serviceFee.admin_fee || 0) + (serviceFee.service_fee || 0) + (serviceFee.express_fee || 0)) 
     : parseFloat(serviceFee) || 130;
 
   const payNowAmount = typeof serviceFee === 'object' && serviceFee !== null && serviceFee.pay_now_amount 
     ? serviceFee.pay_now_amount 
-    : totalAmount / 2;
+    : totalAmount;
 
   const payInFullAmount = typeof serviceFee === 'object' && serviceFee !== null && serviceFee.pay_in_full_amount
     ? serviceFee.pay_in_full_amount
-    : totalAmount * 0.7;
+    : 0;
 
-  const discountPercentage = totalAmount > 0 ? Math.round(((totalAmount - payInFullAmount) / totalAmount) * 100) : 0;
+  const hasPayInFull = hasPayInFullOption(serviceFee);
+
+  const discountAmount = hasPayInFull ? Math.max(0, totalAmount - payInFullAmount) : 0;
+  const discountPercentage = (hasPayInFull && totalAmount > 0) ? Math.round((discountAmount / totalAmount) * 100) : 0;
+
+  const payNowPoints = getPayNowPoints(serviceFee);
+  const payInFullPoints = getPayInFullPoints(serviceFee);
 
   const curr = CURRENCIES[selectedCurrency] || CURRENCIES.GBP;
   const displayTotal = (totalAmount * curr.rate).toFixed(2);
@@ -161,8 +189,22 @@ const ApplicationProgressPage = () => {
 
   const handleNext = async () => {
     if (currentStage === 1) {
-      if (!formData.name || !formData.surname || !formData.email || !formData.phoneLocal || !formData.passportNumber || !formData.nationality || !formData.residentialAddress) {
-        alert('Please fill in all personal details.');
+      const fieldsConfig = getFormFieldsConfig(visaData);
+      const missingFields = [];
+
+      if (fieldsConfig.name.visible && fieldsConfig.name.required && !formData.name) missingFields.push('First Name');
+      if (fieldsConfig.surname.visible && fieldsConfig.surname.required && !formData.surname) missingFields.push('Last Name');
+      if (fieldsConfig.email.visible && fieldsConfig.email.required && !formData.email) missingFields.push('Email Address');
+      if (fieldsConfig.phoneLocal.visible && fieldsConfig.phoneLocal.required && !formData.phoneLocal) missingFields.push('Phone Number');
+      if (fieldsConfig.passportNumber.visible && fieldsConfig.passportNumber.required && !formData.passportNumber) missingFields.push('Passport Number');
+      if (fieldsConfig.nationality.visible && fieldsConfig.nationality.required && !formData.nationality) missingFields.push('Nationality');
+      if (fieldsConfig.residentialAddress.visible && fieldsConfig.residentialAddress.required && !formData.residentialAddress) missingFields.push('Residential Address');
+      if (fieldsConfig.dateOfBirth.visible && fieldsConfig.dateOfBirth.required && !formData.dateOfBirth) missingFields.push('Date of Birth');
+      if (fieldsConfig.destinationAddress.visible && fieldsConfig.destinationAddress.required && !formData.destinationAddress) missingFields.push('Destination Details');
+      if (fieldsConfig.accommodationAddress.visible && fieldsConfig.accommodationAddress.required && !formData.accommodationAddress) missingFields.push('Family/Friend or Hotel Address');
+
+      if (missingFields.length > 0) {
+        alert(`Please fill in all required personal details: ${missingFields.join(', ')}.`);
         return;
       }
 
@@ -357,7 +399,8 @@ const ApplicationProgressPage = () => {
 
   const renderStageContent = () => {
     switch (currentStage) {
-      case 1:
+      case 1: {
+        const fieldsConfig = getFormFieldsConfig(visaData);
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-700 ease-out fill-mode-both">
             <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 relative overflow-hidden">
@@ -372,166 +415,235 @@ const ApplicationProgressPage = () => {
                 <div className="bg-surface-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* First Name */}
-                    <div className="group relative">
-                      <input 
-                        required 
-                        name="name" 
-                        value={formData.name || ''} 
-                        onChange={handleInputChange} 
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                        placeholder="First Name" 
-                        type="text" 
-                      />
-                      <label className={`absolute left-0 transition-all font-medium ${formData.name ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        First Name (given name)
-                      </label>
-                    </div>
+                    {fieldsConfig.name.visible && (
+                      <div className="group relative">
+                        <input 
+                          required={fieldsConfig.name.required}
+                          name="name" 
+                          value={formData.name || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="First Name" 
+                          type="text" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.name ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          First Name (given name) {fieldsConfig.name.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Last Name */}
-                    <div className="group relative">
-                      <input 
-                        required 
-                        name="surname" 
-                        value={formData.surname || ''} 
-                        onChange={handleInputChange} 
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                        placeholder="Last Name" 
-                        type="text" 
-                      />
-                      <label className={`absolute left-0 transition-all font-medium ${formData.surname ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        Last Name (surname)
-                      </label>
-                    </div>
+                    {fieldsConfig.surname.visible && (
+                      <div className="group relative">
+                        <input 
+                          required={fieldsConfig.surname.required}
+                          name="surname" 
+                          value={formData.surname || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Last Name" 
+                          type="text" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.surname ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Last Name (surname) {fieldsConfig.surname.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Email */}
-                    <div className="group relative">
-                      <input 
-                        required 
-                        name="email" 
-                        value={formData.email || ''} 
-                        onChange={handleInputChange} 
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                        placeholder="Email" 
-                        type="email" 
-                      />
-                      <label className={`absolute left-0 transition-all font-medium ${formData.email ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        Email Address
-                      </label>
-                    </div>
+                    {fieldsConfig.email.visible && (
+                      <div className="group relative">
+                        <input 
+                          required={fieldsConfig.email.required}
+                          name="email" 
+                          value={formData.email || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Email" 
+                          type="email" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.email ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Email Address {fieldsConfig.email.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Phone Number */}
-                    <div className="group relative flex items-end">
-                      <div className="absolute left-0 bottom-3 z-20 flex items-center">
-                        <span className="text-on-surface-variant/60">+44</span>
+                    {fieldsConfig.phoneLocal.visible && (
+                      <div className="group relative flex items-end">
+                        <div className="absolute left-0 bottom-3 z-20 flex items-center">
+                          <span className="text-on-surface-variant/60">+44</span>
+                        </div>
+                        <input 
+                          required={fieldsConfig.phoneLocal.required}
+                          name="phoneLocal" 
+                          value={formData.phoneLocal || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-11 pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Phone Number" 
+                          type="tel" 
+                        />
+                        <label className={`absolute transition-all font-medium ${formData.phoneLocal ? '-top-3.5 text-xs text-primary left-0' : 'text-base text-on-surface-variant/60 top-3 left-12'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-placeholder-shown:left-12 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0`}>
+                          Phone Number ( whatsapp ) {fieldsConfig.phoneLocal.required && '*'}
+                        </label>
                       </div>
-                      <input 
-                        required 
-                        name="phoneLocal" 
-                        value={formData.phoneLocal || ''} 
-                        onChange={handleInputChange} 
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-11 pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                        placeholder="Phone Number" 
-                        type="tel" 
-                      />
-                      <label className={`absolute transition-all font-medium ${formData.phoneLocal ? '-top-3.5 text-xs text-primary left-0' : 'text-base text-on-surface-variant/60 top-3 left-12'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-placeholder-shown:left-12 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0`}>
-                        Phone Number ( whatsapp )
-                      </label>
-                    </div>
+                    )}
 
                     {/* Alternative Phone Number */}
-  <div className="group relative flex items-end">
-  {/* Country code selector - fixed width container */}
-  <div className="absolute left-0 bottom-0 z-20 flex items-center h-[46px]">
-    <select
-      name="alternativePhoneCountryCode"
-      value={formData.alternativePhoneCountryCode || '+44'}
-      onChange={handleInputChange}
-      className="bg-transparent border-none text-on-surface focus:outline-none text-sm font-medium cursor-pointer max-w-[90px]"
-    >
-      {countryCodes.map(c => (
-        <option key={c.code} value={c.code} className="text-on-surface bg-surface-lowest">
-          {c.flag} {c.code}
-        </option>
-      ))}
-    </select>
-    <span className="h-4 w-[1px] bg-outline-variant/50 mx-2" />
-  </div>
+                    {fieldsConfig.alternativePhoneLocal.visible && (
+                      <div className="group relative flex items-end">
+                        <div className="absolute left-0 bottom-0 z-20 flex items-center h-[46px]">
+                          <select
+                            name="alternativePhoneCountryCode"
+                            value={formData.alternativePhoneCountryCode || '+44'}
+                            onChange={handleInputChange}
+                            className="bg-transparent border-none text-on-surface focus:outline-none text-sm font-medium cursor-pointer max-w-[90px]"
+                          >
+                            {countryCodes.map(c => (
+                              <option key={c.code} value={c.code} className="text-on-surface bg-surface-lowest">
+                                {c.flag} {c.code}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="h-4 w-[1px] bg-outline-variant/50 mx-2" />
+                        </div>
 
-  <input
-    name="alternativePhoneLocal"
-    value={formData.alternativePhoneLocal || ''}
-    onChange={handleInputChange}
-    className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-[110px] pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors relative z-10"
-    placeholder="Alternative Phone Number"
-    type="tel"
-  />
+                        <input
+                          name="alternativePhoneLocal"
+                          value={formData.alternativePhoneLocal || ''}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 pl-[110px] pr-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors relative z-10"
+                          placeholder="Alternative Phone Number"
+                          type="tel"
+                        />
 
-<label className={`absolute z-30 pointer-events-none transition-all duration-200 font-medium overflow-hidden text-ellipsis whitespace-nowrap
-    peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0
-    ${formData.alternativePhoneLocal
-      ? '-top-3.5 text-xs text-primary left-0 right-0'
-      : 'top-3 text-sm text-on-surface-variant/60 left-[110px] right-0'
-    }
-  `}>
-  Alternative Phone Number
-</label>
-</div>
+                        <label className={`absolute z-30 pointer-events-none transition-all duration-200 font-medium overflow-hidden text-ellipsis whitespace-nowrap
+                            peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary peer-focus:left-0
+                            ${formData.alternativePhoneLocal
+                              ? '-top-3.5 text-xs text-primary left-0 right-0'
+                              : 'top-3 text-sm text-on-surface-variant/60 left-[110px] right-0'
+                            }
+                          `}>
+                          Alternative Phone Number {fieldsConfig.alternativePhoneLocal.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Passport Number */}
-                    <div className="group relative">
-                      <input 
-                        required 
-                        name="passportNumber" 
-                        value={formData.passportNumber || ''} 
-                        onChange={handleInputChange} 
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
-                        placeholder="Passport Number" 
-                        type="text" 
-                      />
-                      <label className={`absolute left-0 transition-all font-medium ${formData.passportNumber ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        Passport Number
-                      </label>
-                    </div>
+                    {fieldsConfig.passportNumber.visible && (
+                      <div className="group relative">
+                        <input 
+                          required={fieldsConfig.passportNumber.required}
+                          name="passportNumber" 
+                          value={formData.passportNumber || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Passport Number" 
+                          type="text" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.passportNumber ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Passport Number {fieldsConfig.passportNumber.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Nationality */}
-                    <div className="group relative">
-                      <select 
-                        required 
-                        name="nationality" 
-                        value={formData.nationality || ''} 
-                        onChange={handleInputChange}
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface focus:outline-none focus:border-primary transition-colors z-10 relative appearance-none cursor-pointer text-left"
-                      >
-                        <option value="" disabled className="text-on-surface-variant/60">Select Nationality</option>
-                        {countriesList.map(country => (
-                          <option key={country} value={country} className="text-on-surface bg-surface-lowest">
-                            {country}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="material-symbols-outlined absolute right-0 bottom-3 text-on-surface-variant/60 pointer-events-none z-20">
-                        expand_more
-                      </span>
-                      <label className={`absolute left-0 transition-all font-medium ${formData.nationality ? '-top-3.5 text-xs text-primary' : 'text-base hidden text-on-surface-variant/60 top-3'} peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        Nationality
-                      </label>
-                    </div>
+                    {fieldsConfig.nationality.visible && (
+                      <div className="group relative">
+                        <select 
+                          required={fieldsConfig.nationality.required}
+                          name="nationality" 
+                          value={formData.nationality || ''} 
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface focus:outline-none focus:border-primary transition-colors z-10 relative appearance-none cursor-pointer text-left"
+                        >
+                          <option value="" disabled className="text-on-surface-variant/60">Select Nationality</option>
+                          {countriesList.map(country => (
+                            <option key={country} value={country} className="text-on-surface bg-surface-lowest">
+                              {country}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-0 bottom-3 text-on-surface-variant/60 pointer-events-none z-20">
+                          expand_more
+                        </span>
+                        <label className={`absolute left-0 transition-all font-medium ${formData.nationality ? '-top-3.5 text-xs text-primary' : 'text-base hidden text-on-surface-variant/60 top-3'} peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Nationality {fieldsConfig.nationality.required && '*'}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Date of Birth */}
+                    {fieldsConfig.dateOfBirth.visible && (
+                      <div className="group relative">
+                        <input 
+                          required={fieldsConfig.dateOfBirth.required}
+                          name="dateOfBirth" 
+                          value={formData.dateOfBirth || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Date of Birth" 
+                          type="date" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.dateOfBirth ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Date of Birth {fieldsConfig.dateOfBirth.required && '*'}
+                        </label>
+                      </div>
+                    )}
 
                     {/* Residential Address */}
-                    <div className="group relative col-span-1 md:col-span-2">
-                      <textarea 
-                        required 
-                        name="residentialAddress" 
-                        value={formData.residentialAddress || ''} 
-                        onChange={handleInputChange} 
-                        rows="3"
-                        className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-2 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative resize-none" 
-                        placeholder="Residential Address" 
-                      />
-                      <label className={`absolute left-0 transition-all font-medium ${formData.residentialAddress ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-2'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
-                        Residential Address (Street, City, Postcode, Country)
-                      </label>
-                    </div>
+                    {fieldsConfig.residentialAddress.visible && (
+                      <div className="group relative col-span-1 md:col-span-2">
+                        <textarea 
+                          required={fieldsConfig.residentialAddress.required}
+                          name="residentialAddress" 
+                          value={formData.residentialAddress || ''} 
+                          onChange={handleInputChange} 
+                          rows="3"
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-2 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative resize-none" 
+                          placeholder="Residential Address" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.residentialAddress ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-2'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Residential Address (Street, City, Postcode, Country) {fieldsConfig.residentialAddress.required && '*'}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Destination Address / Details */}
+                    {fieldsConfig.destinationAddress.visible && (
+                      <div className="group relative col-span-1 md:col-span-2">
+                        <input 
+                          required={fieldsConfig.destinationAddress.required}
+                          name="destinationAddress" 
+                          value={formData.destinationAddress || ''} 
+                          onChange={handleInputChange} 
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-3 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative" 
+                          placeholder="Destination Details / Address" 
+                          type="text" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.destinationAddress ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Travel Destination / Address in Destination Country {fieldsConfig.destinationAddress.required && '*'}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Family/Friend or Hotel Address */}
+                    {fieldsConfig.accommodationAddress.visible && (
+                      <div className="group relative col-span-1 md:col-span-2">
+                        <textarea 
+                          required={fieldsConfig.accommodationAddress.required}
+                          name="accommodationAddress" 
+                          value={formData.accommodationAddress || ''} 
+                          onChange={handleInputChange} 
+                          rows="3"
+                          className="peer w-full bg-transparent border-b-2 border-outline-variant/50 px-0 py-2 text-on-surface placeholder-transparent focus:outline-none focus:border-primary transition-colors z-10 relative resize-none" 
+                          placeholder="Family/Friend or Hotel Address" 
+                        />
+                        <label className={`absolute left-0 transition-all font-medium ${formData.accommodationAddress ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-2'} peer-placeholder-shown:text-base peer-placeholder-shown:text-on-surface-variant/60 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                          Family/Friend or Hotel Address {fieldsConfig.accommodationAddress.required && '*'}
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -545,6 +657,7 @@ const ApplicationProgressPage = () => {
             </div>
           </div>
         );
+      }
       
       case 2:
         return (
@@ -647,7 +760,7 @@ const ApplicationProgressPage = () => {
                 </div>
 
                 {/* Payment Options Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={`grid grid-cols-1 ${hasPayInFull ? 'md:grid-cols-2 max-w-4xl' : 'max-w-xl'} gap-6 mx-auto w-full`}>
                   {/* Pay Now */}
                   <div 
                     onClick={() => setPaymentOption('partial')}
@@ -666,32 +779,48 @@ const ApplicationProgressPage = () => {
                       <span className="text-3xl font-bold text-on-surface">{curr.symbol}{displayPayNow}</span>
                       <span className="text-sm text-on-surface-variant"> today</span>
                     </div>
-                    <p className="text-sm text-on-surface-variant">{curr.symbol}{displayPayNow} due today. Remaining amount will be paid when a call with our executive is scheduled.</p>
+                    <div className="text-sm text-on-surface-variant space-y-2">
+                      {payNowPoints.map((pt, idx) => (
+                        <p key={idx} className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">check_circle</span>
+                          <span>{resolvePointText(pt, displayPayNow, curr.symbol)}</span>
+                        </p>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Pay in Full */}
-                  <div 
-                    onClick={() => setPaymentOption('full')}
-                    className={`cursor-pointer rounded-2xl p-6 border-2 transition-all relative overflow-hidden ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-outline-variant/30 bg-white hover:border-primary/50'}`}
-                  >
-                    <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      {discountPercentage}% Discount
-                    </div>
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center">
-                        <span className="material-symbols-outlined">workspace_premium</span>
+                  {/* Pay in Full - Render only if configured */}
+                  {hasPayInFull && (
+                    <div 
+                      onClick={() => setPaymentOption('full')}
+                      className={`cursor-pointer rounded-2xl p-6 border-2 transition-all relative overflow-hidden ${paymentOption === 'full' ? 'border-primary bg-primary/5 shadow-md scale-[1.01]' : 'border-outline-variant/30 bg-white hover:border-primary/50'}`}
+                    >
+                      <div className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                        {discountPercentage}% Discount
                       </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${paymentOption === 'full' ? 'border-primary bg-primary' : 'border-outline-variant/50'}`}>
-                        {paymentOption === 'full' && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center">
+                          <span className="material-symbols-outlined">workspace_premium</span>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${paymentOption === 'full' ? 'border-primary bg-primary' : 'border-outline-variant/50'}`}>
+                          {paymentOption === 'full' && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-lg text-on-surface mb-1">Pay in Full</h3>
+                      <div className="mb-4 flex items-end gap-2">
+                        <span className="text-sm text-on-surface-variant line-through mb-1">{curr.symbol}{displayTotal}</span>
+                        <span className="text-3xl font-bold text-primary">{curr.symbol}{displayPayInFull}</span>
+                      </div>
+                      <div className="text-sm text-on-surface-variant space-y-2">
+                        {payInFullPoints.map((pt, idx) => (
+                          <p key={idx} className="flex items-start gap-2">
+                            <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">check_circle</span>
+                            <span>{resolvePointText(pt, displayPayInFull, curr.symbol)}</span>
+                          </p>
+                        ))}
                       </div>
                     </div>
-                    <h3 className="font-bold text-lg text-on-surface mb-1">Pay in Full</h3>
-                    <div className="mb-4 flex items-end gap-2">
-                      <span className="text-sm text-on-surface-variant line-through mb-1">{curr.symbol}{displayTotal}</span>
-                      <span className="text-3xl font-bold text-primary">{curr.symbol}{displayPayInFull}</span>
-                    </div>
-                    <p className="text-sm text-on-surface-variant">Pay the entire amount upfront for our premium concierge service with a {discountPercentage}% discount.</p>
-                  </div>
+                  )}
                 </div>
 
                 {/* Personal Details Summary */}
@@ -747,6 +876,19 @@ const ApplicationProgressPage = () => {
                         </span>
                       </div>
                     ))}
+                    {accommodationAddress && (
+                      <div className="flex items-center justify-between p-3 hover:bg-surface-container-lowest rounded-xl transition-colors group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-primary/5 text-primary rounded-lg flex items-center justify-center">
+                            <span className="material-symbols-outlined">home</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm text-on-surface">Accommodation</h4>
+                            <p className="text-xs text-on-surface-variant mt-0.5">{accommodationAddress}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
