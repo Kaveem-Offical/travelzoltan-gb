@@ -73,6 +73,16 @@ export const visaAPI = {
       throw error.response?.data || error.message;
     }
   },
+  getRequirements: async (citizenship, destination) => {
+    try {
+      const response = await api.get('/visa-requirements', {
+        params: { citizenship, destination }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 
   // Create a new visa application (handles both JSON lead creation and multipart/form-data upload)
   createApplication: async (data) => {

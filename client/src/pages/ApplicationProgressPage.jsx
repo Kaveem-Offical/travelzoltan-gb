@@ -4,6 +4,19 @@ import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
 import { hasPayInFullOption, getPayNowPoints, getPayInFullPoints, resolvePointText } from '../utils/paymentUtils';
 
+// List of phone country codes
+const countryCodes = [
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+1', country: 'US/CA', flag: '🇺🇸' },
+  { code: '+91', country: 'IN', flag: '🇮🇳' },
+  { code: '+61', country: 'AU', flag: '🇦🇺' },
+  { code: '+971', country: 'AE', flag: '🇦🇪' },
+  { code: '+49', country: 'DE', flag: '🇩🇪' },
+  { code: '+33', country: 'FR', flag: '🇫🇷' },
+  { code: '+39', country: 'IT', flag: '🇮🇹' },
+  { code: '+34', country: 'ES', flag: '🇪🇸' }
+];
+
 // List of countries for nationality dropdown
 const countriesList = [
   "United Kingdom", "India", "United States", "Canada", "Australia", 
@@ -80,56 +93,112 @@ const ApplicationProgressPage = () => {
   const destination = location.state?.destination || 'Europe (Schengen States)';
   const initialCategory = location.state?.selectedCategory || 'employed';
   const initialVisaCategory = location.state?.selectedVisaCategory || 'tourist';
+  const initialVisaData = location.state?.visaData || null;
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedVisaCategory, setSelectedVisaCategory] = useState(initialVisaCategory);
-  const [visaData, setVisaData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [visaData, setVisaData] = useState(initialVisaData);
+  const [loading, setLoading] = useState(!initialVisaData);
   const [error, setError] = useState(null);
 
   // Application workflow state
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStage, setCurrentStage] = useState(1);
   const [paymentOption, setPaymentOption] = useState('partial'); // 'partial' = pay now, 'full' = pay in full
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
 
   // Form inputs
   const [formData, setFormData] = useState({
+    name: '',
+    surname: '',
     fullName: '',
     email: '',
+    phoneLocal: '',
+    phoneCountryCode: '+44',
     phone: '',
-    passportNumber: ''
+    alternativePhoneLocal: '',
+    alternativePhoneCountryCode: '+44',
+    alternativePhone: '',
+    passportNumber: '',
+    nationality: citizenship || '',
+    residentialAddress: '',
+    dateOfBirth: '',
+    destinationAddress: '',
+    accommodationAddress: ''
   });
 
   // Dynamic form responses
   const [dynamicFormValues, setDynamicFormValues] = useState({});
 
-  // Document uploads tracking: { docName: { status, id, fileUrl } }
-  const [uploadedDocs, setUploadedDocs] = useState({});
+  // Core Document uploads tracking: { docName: file }
+  const [coreDocuments, setCoreDocuments] = useState({});
+  const [applicationId, setApplicationId] = useState(null);
 
   // Payment processing state
+  const [paymentStatus, setPaymentStatus] = useState('idle');
+  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState(null);
 
   useEffect(() => {
-    fetchVisaRequirements();
+    if (!visaData) {
+      fetchVisaRequirements();
+    }
   }, [citizenship, destination]);
 
   const fetchVisaRequirements = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await visaAPI.getRequirements(citizenship, destination);
+      const data = await visaAPI.getVisaRequirements(citizenship, destination);
       setVisaData(data);
     } catch (err) {
-      setError(err.message || 'Failed to load visa requirements');
+      console.error('Error loading visa requirements:', err);
+      setError(err?.message || (typeof err === 'string' ? err : 'Failed to load visa requirements'));
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading && !visaData) {
+    return (
+      <div className="min-h-screen bg-surface-lowest flex items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-on-surface-variant font-medium text-lg">Loading visa requirements...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !visaData) {
+    return (
+      <div className="min-h-screen bg-surface-lowest flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-3xl shadow-lg border border-outline-variant/30 max-w-md w-full text-center space-y-4">
+          <div className="w-16 h-16 bg-error/10 text-error rounded-2xl flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-3xl">warning</span>
+          </div>
+          <h2 className="text-2xl font-bold text-on-surface">Failed to load details</h2>
+          <p className="text-on-surface-variant text-sm">{error}</p>
+          <button
+            onClick={fetchVisaRequirements}
+            className="bg-primary text-white font-bold px-6 py-3 rounded-full shadow-md hover:bg-primary/90 transition-all"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!visaData) return null;
 
-  const coreDocsConfig = visaData.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.now || [];
+  const coreDocsConfig = visaData.required_documents?.[selectedVisaCategory]?.[selectedCategory]?.now || [
+    { icon: "travel", name: "Passport Front and Back", description: "Valid for at least 6 months beyond intended stay." },
+    { icon: "badge", name: "UK Valid Status (Online Status)", description: "Proof of current legal status or residency requirement." }
+  ];
 
   const serviceFee = visaData?.service_fee;
 
@@ -876,7 +945,7 @@ const ApplicationProgressPage = () => {
                         </span>
                       </div>
                     ))}
-                    {accommodationAddress && (
+                    {formData.accommodationAddress && (
                       <div className="flex items-center justify-between p-3 hover:bg-surface-container-lowest rounded-xl transition-colors group">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-primary/5 text-primary rounded-lg flex items-center justify-center">
@@ -884,7 +953,7 @@ const ApplicationProgressPage = () => {
                           </div>
                           <div>
                             <h4 className="font-semibold text-sm text-on-surface">Accommodation</h4>
-                            <p className="text-xs text-on-surface-variant mt-0.5">{accommodationAddress}</p>
+                            <p className="text-xs text-on-surface-variant mt-0.5">{formData.accommodationAddress}</p>
                           </div>
                         </div>
                       </div>
