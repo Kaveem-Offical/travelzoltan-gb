@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const PaymentTermsPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-6 md:px-12 pt-30">
@@ -11,7 +13,7 @@ const PaymentTermsPage = () => {
 
           <p>We shall not be liable for any credit card fraud. The liability to use a card fraudulently will be on the user and the onus to 'prove otherwise' shall be exclusively on the user.</p>
 
-          <p>If you have any additional queries or concerns, please contact us on the details provided in 'Contact Us' page of the website.</p>
+          <p>If you have any additional queries or concerns, please contact us on the details provided in <Link to="/contact-us" className="text-primary font-semibold hover:underline">'Contact Us' page</Link> of the website.</p>
 
           <p>While compiling this information, we have endeavored to ensure that all information is correct. However, no guarantee or representation is made to the accuracy or completeness of the information contained here. This information is subject to changes without notice.</p>
         </div>

@@ -32,6 +32,16 @@ const Footer = () => {
               <p className="font-headline font-bold text-white text-on-surface">Company</p>
               <ul className="space-y-2">
                 <li>
+                  <Link to="/about-us" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact-us" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
                   <Link to="/payment-mode" className="text-slate-500  font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
                     Payment Mode
                   </Link>
@@ -76,11 +86,11 @@ const Footer = () => {
             <div className="hidden md:block space-y-4">
               <p className="font-headline text-white font-bold text-on-surface">Social</p>
               <div className="flex gap-4">
-                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#">
+                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="https://www.travelzoltan.com" target="_blank" rel="noopener noreferrer" title="Travel Zoltan">
                   <span className="material-symbols-outlined text-sm">public</span>
                 </a>
-                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="#">
-                  <span className="material-symbols-outlined text-sm">share</span>
+                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="https://wa.me/919502060511" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                  <span className="material-symbols-outlined text-sm">chat</span>
                 </a>
               </div>
             </div>
@@ -97,11 +107,11 @@ const Footer = () => {
               <span className="font-['Inter'] text-sm">WhatsApp</span>
             </button>
             <a
-              href="tel://00442081911814"
+              href="tel:+442030261633"
               className="flex items-center gap-2 text-slate-500 hover:text-primary transition-all"
             >
               <span className="material-symbols-outlined text-sm">call</span>
-              <span className="font-['Inter'] text-sm">+44 20 8191 1814</span>
+              <span className="font-['Inter'] text-sm">+44 20 3026 1633</span>
             </a>
             <a
               href="mailto:gb@zoltanvisa.com"

@@ -59,6 +59,7 @@ function AppContent() {
           <Route path="/holidays-terms" element={<HolidaysTermsPage />} />
           <Route path="/about-us" element={<AboutUsPage />} />
           <Route path="/contact-us" element={<ContactUsPage />} />
+          <Route path="/contact" element={<ContactUsPage />} />
         </Routes>
       </div>
       {!isAdminPage && <Footer />}

@@ -1,11 +1,30 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
 const TopNavBar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isChecklistPage = location.pathname === '/checklist';
   const isAboutPage = location.pathname === '/about-us';
-  const isContactPage = location.pathname === '/contact-us';
+  const isContactPage = location.pathname === '/contact-us' || location.pathname === '/contact';
+
+  const handleTakeAction = (e) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      const selectorEl = document.getElementById('selector-box');
+      if (selectorEl) {
+        selectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else {
+      navigate('/');
+      setTimeout(() => {
+        const selectorEl = document.getElementById('selector-box');
+        if (selectorEl) {
+          selectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+    }
+  };
   
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80  backdrop-blur-md shadow-sm dark:shadow-none">
@@ -54,9 +73,12 @@ const TopNavBar = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <a href="#selector-box" className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95">
+          <button 
+            onClick={handleTakeAction} 
+            className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95 cursor-pointer border-none"
+          >
             Take Action
-          </a>
+          </button>
         </div>
       </div>
     </nav>

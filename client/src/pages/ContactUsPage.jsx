@@ -33,7 +33,7 @@ const ContactUsPage = () => {
     {
       country: 'United Kingdom',
       city: 'London',
-      phone: '+44 20 8191 1814',
+      phone: '+44 20 3026 1633',
       email: 'gb@zoltanvisa.com',
       timezone: 'GMT'
     },
@@ -88,7 +88,7 @@ const ContactUsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             <a 
-              href="tel:+442081911814"
+              href="tel:+442030261633"
               className="bg-surface-container-low p-8 rounded-xl hover:shadow-lg transition-all group"
             >
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -96,7 +96,7 @@ const ContactUsPage = () => {
               </div>
               <h3 className="font-headline text-xl font-bold mb-2 text-on-surface">Phone</h3>
               <p className="text-on-surface-variant mb-4">Call us for immediate support</p>
-              <p className="text-primary font-semibold">+44 20 8191 1814</p>
+              <p className="text-primary font-semibold">+44 20 3026 1633</p>
             </a>
 
             <a 

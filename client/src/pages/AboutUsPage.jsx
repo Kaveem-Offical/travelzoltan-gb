@@ -201,10 +201,16 @@ const AboutUsPage = () => {
                 { icon: 'business_center', title: 'Business Travel' },
                 { icon: 'concierge', title: 'Concierge Services' }
               ].map((service, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-xl shadow-sm text-center hover:shadow-md transition-all">
-                  <span className="material-symbols-outlined text-primary text-3xl mb-3">{service.icon}</span>
-                  <p className="font-semibold text-on-surface text-sm">{service.title}</p>
-                </div>
+                <a 
+                  key={idx} 
+                  href="https://www.travelzoltan.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white p-6 rounded-xl shadow-sm text-center hover:shadow-md hover:border-primary/40 border border-transparent transition-all group block cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-primary text-3xl mb-3 group-hover:scale-110 transition-transform">{service.icon}</span>
+                  <p className="font-semibold text-on-surface text-sm group-hover:text-primary transition-colors">{service.title}</p>
+                </a>
               ))}
             </div>
             
@@ -233,16 +239,16 @@ const AboutUsPage = () => {
             We are here for all your travel needs. If you are planning to travel, don't hesitate to contact us or use the chat button to get in touch.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="#support" 
-              className="bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all inline-flex items-center justify-center gap-2"
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('open-whatsapp-dialog'))}
+              className="bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer border-none"
             >
               <span className="material-symbols-outlined">chat</span>
               Chat With Us
-            </a>
+            </button>
             <a 
-              href="mailto:concierge@visacurator.com" 
-              className="bg-surface-container-lowest text-on-surface font-headline font-bold px-10 py-4 rounded-xl hover:shadow-lg transition-all inline-flex items-center justify-center gap-2 border border-outline"
+              href="mailto:gb@zoltanvisa.com" 
+              className="bg-surface-container-lowest text-on-surface font-headline font-bold px-10 py-4 rounded-xl hover:shadow-lg transition-all inline-flex items-center justify-center gap-2 border border-outline cursor-pointer"
             >
               <span className="material-symbols-outlined">mail</span>
               Email Us

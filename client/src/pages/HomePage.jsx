@@ -157,12 +157,12 @@ const HomePage = () => {
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
               Worldwide Visa Assistance. <span className="text-primary">Simplified.</span>
             </h1>
-            <p id="selector-box" className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+            <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
               Apply for visas, book flights, hotels, and airport transfers all in one place. Experience travel logistics reimagined for the modern explorer.
             </p>
             
             {/* Interactive Selector Box */}
-    <div  className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center">
+            <div id="selector-box" className="bg-surface-container-lowest editorial-shadow rounded-lg p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center scroll-mt-32">
               <div className="flex-1 w-full space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-outline ml-1">
                   Citizenship
@@ -257,7 +257,7 @@ const HomePage = () => {
               </div>
               <button
                 onClick={handleCheckDetails}
-                className="w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all active:scale-[0.98]"
+                className="w-full md:w-auto bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold px-10 py-4 rounded-xl hover:shadow-xl transition-all active:scale-[0.98] cursor-pointer"
               >
                 Check Details
               </button>
@@ -366,9 +366,12 @@ const HomePage = () => {
                 desc: 'Hand-crafted itineraries that blend popular sites with local secrets.' 
               },
             ].map((service, idx) => (
-              <div 
+              <a 
                 key={idx} 
-                className="bg-surface-container-lowest p-8 rounded-lg group hover:bg-primary transition-all duration-500 editorial-shadow"
+                href="https://www.travelzoltan.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-surface-container-lowest p-8 rounded-lg group hover:bg-primary transition-all duration-500 editorial-shadow block cursor-pointer"
               >
                 <div className="w-14 h-14 bg-surface-container-high rounded-2xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
                   <span className="material-symbols-outlined text-primary group-hover:text-white text-3xl">
@@ -381,10 +384,10 @@ const HomePage = () => {
                 <p className="text-on-surface-variant group-hover:text-white/80 mb-6 transition-colors">
                   {service.desc}
                 </p>
-                <a className="inline-flex items-center gap-2 font-bold text-primary group-hover:text-white transition-colors" href="#">
+                <span className="inline-flex items-center gap-2 font-bold text-primary group-hover:text-white transition-colors">
                   Explore <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </a>
-              </div>
+                </span>
+              </a>
             ))}
           </div>
         </div>
@@ -419,7 +422,10 @@ const HomePage = () => {
                 <p className="text-white/80 text-lg mb-8 max-w-xl">
                   A 12-day journey through the heart of Switzerland, France, and Italy.
                 </p>
-                <button className="bg-white text-on-surface font-bold px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-3">
+                <button 
+                  onClick={() => navigate('/contact-us')}
+                  className="bg-white text-on-surface font-bold px-8 py-4 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center gap-3 cursor-pointer"
+                >
                   Contact Us <span className="material-symbols-outlined text-sm">mail</span>
                 </button>
               </div>
@@ -436,7 +442,10 @@ const HomePage = () => {
                   <h4 className="font-headline text-2xl font-bold text-white mb-2">
                     Australian Coastlines
                   </h4>
-                  <button className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all">
+                  <button 
+                    onClick={() => navigate('/contact-us')}
+                    className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all cursor-pointer"
+                  >
                     Enquire Now <span className="material-symbols-outlined text-xs">arrow_forward</span>
                   </button>
                 </div>
@@ -452,7 +461,10 @@ const HomePage = () => {
                   <h4 className="font-headline text-2xl font-bold text-white mb-2">
                     Japanese Heritage
                   </h4>
-                  <button className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all">
+                  <button 
+                    onClick={() => navigate('/contact-us')}
+                    className="text-white font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all cursor-pointer"
+                  >
                     Enquire Now <span className="material-symbols-outlined text-xs">arrow_forward</span>
                   </button>
                 </div>
@@ -462,48 +474,48 @@ const HomePage = () => {
         </div>
       </section>
 
-<section className="py-24 px-6 md:px-12">
-<div className="max-w-screen-2xl mx-auto">
-<div className="bg-surface-container-highest rounded-lg overflow-hidden flex flex-col lg:flex-row">
-<div className="p-12 lg:p-20 lg:w-1/2">
-<h2 className="font-headline text-4xl font-extrabold tracking-tighter mb-8">Visit Our London Boutique Office</h2>
-<p className="text-on-surface-variant text-lg mb-12">Prefer a face-to-face consultation? Our experts are ready to welcome you at our headquarters in the heart of London.</p>
-<div className="space-y-8"> 
-<div className="flex items-start gap-6">
-<div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-<span className="material-symbols-outlined text-primary">location_on</span>
-</div>
-<div>
-<p className="font-headline font-bold text-lg">Address</p>
-<p className="text-on-surface-variant">1 St Katharine's Way, London, E1W 1UN</p>
-</div>
-</div>
-<div className="flex items-start gap-6">
-<div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-<span className="material-symbols-outlined text-primary">call</span>
-</div>
-<div>
-<p className="font-headline font-bold text-lg">Direct Line</p>
-<p className="text-on-surface-variant">+44 (0) 20 7123 4567</p>
-</div>
-</div>
-<div className="flex items-start gap-6">
-<div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-<span className="material-symbols-outlined text-primary">mail</span>
-</div>
-<div>
-<p className="font-headline font-bold text-lg">Support</p>
-<p className="text-on-surface-variant">concierge@visacurator.com</p>
-</div>
-</div>
-</div>
-</div>
-<div className="lg:w-1/2 min-h-[400px] relative">
-<img className="absolute inset-0 w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" data-alt="classic red London telephone booth on a cobblestone street with the Big Ben tower in the distance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjhDdSU6iD4d7Dwy1w1d1kfG6K0TWhhRzr7LBgUZRIasVNgKUi66LCF09ujtNcgYUY_bBLXj7TCeN78pgSE0IocPCxvU3aj2uOIVm2R_8alBzsyp3QPGgissm6kAVvq9JLEz3EWRVDR4wyHFzFicIK1xzxw27t7lfYyZ4sYkx86BGmjCANcZGpcTfbuGR_wDnPi8GsxNXwW5a9fZw7AhUrWxd9ke7U8u_h3dOPPWsqBQsgeAmleO3E7_qTE5XmBcBEAnIACEOG7io"/>
-</div>
-</div>
-</div>
-</section>
+      <section className="py-24 px-6 md:px-12">
+        <div className="max-w-screen-2xl mx-auto">
+          <div className="bg-surface-container-highest rounded-lg overflow-hidden flex flex-col lg:flex-row">
+            <div className="p-12 lg:p-20 lg:w-1/2">
+              <h2 className="font-headline text-4xl font-extrabold tracking-tighter mb-8">Visit Our London Boutique Office</h2>
+              <p className="text-on-surface-variant text-lg mb-12">Prefer a face-to-face consultation? Our experts are ready to welcome you at our headquarters in the heart of London.</p>
+              <div className="space-y-8"> 
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary">location_on</span>
+                  </div>
+                  <div>
+                    <p className="font-headline font-bold text-lg">Address</p>
+                    <p className="text-on-surface-variant">1 St Katharine's Way, London, E1W 1UN</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary">call</span>
+                  </div>
+                  <div>
+                    <p className="font-headline font-bold text-lg">Direct Line</p>
+                    <a href="tel:+442030261633" className="text-on-surface-variant hover:text-primary transition-colors font-medium">+44 20 3026 1633</a>
+                  </div>
+                </div>
+                <div className="flex items-start gap-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary">mail</span>
+                  </div>
+                  <div>
+                    <p className="font-headline font-bold text-lg">Support</p>
+                    <a href="mailto:gb@zoltanvisa.com" className="text-on-surface-variant hover:text-primary transition-colors font-medium">gb@zoltanvisa.com</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="lg:w-1/2 min-h-[400px] relative">
+              <img className="absolute inset-0 w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" data-alt="classic red London telephone booth on a cobblestone street with the Big Ben tower in the distance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjhDdSU6iD4d7Dwy1w1d1kfG6K0TWhhRzr7LBgUZRIasVNgKUi66LCF09ujtNcgYUY_bBLXj7TCeN78pgSE0IocPCxvU3aj2uOIVm2R_8alBzsyp3QPGgissm6kAVvq9JLEz3EWRVDR4wyHFzFicIK1xzxw27t7lfYyZ4sYkx86BGmjCANcZGpcTfbuGR_wDnPi8GsxNXwW5a9fZw7AhUrWxd9ke7U8u_h3dOPPWsqBQsgeAmleO3E7_qTE5XmBcBEAnIACEOG7io"/>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 };

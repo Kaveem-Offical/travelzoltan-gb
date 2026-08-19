@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const PrivacyStatementPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 py-16 px-6 md:px-12 pt-30">
@@ -11,7 +13,7 @@ const PrivacyStatementPage = () => {
 
           <p>Any information which is specifically mentioned by us as Confidential shall be maintained confidentially by the user and shall not be disclosed unless as required by law or to serve the purpose of this agreement and the obligations of both the parties therein.</p>
 
-          <p>If you are more comfortable with giving your credit card information over phone, you can call our Customer Service Centre on Toll Free number. If you have any additional queries or concerns, please Contact us, and we will reply within 24 hours.</p>
+          <p>If you are more comfortable with giving your credit card information over phone, you can call our Customer Service Centre on Toll Free number. If you have any additional queries or concerns, please <Link to="/contact-us" className="text-primary font-semibold hover:underline">Contact Us</Link>, and we will reply within 24 hours.</p>
         </div>
       </div>
     </div>

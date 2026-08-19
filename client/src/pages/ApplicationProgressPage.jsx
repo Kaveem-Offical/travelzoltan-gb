@@ -654,7 +654,7 @@ const ApplicationProgressPage = () => {
                           placeholder="Date of Birth" 
                           type="date" 
                         />
-                        <label className={`absolute left-0 transition-all font-medium ${formData.dateOfBirth ? '-top-3.5 text-xs text-primary' : 'text-base text-on-surface-variant/60 top-3'} peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-primary`}>
+                        <label className={`absolute left-0 transition-all font-medium -top-3.5 text-xs ${formData.dateOfBirth ? 'text-primary' : 'text-on-surface-variant/60'} peer-focus:text-primary`}>
                           Date of Birth {fieldsConfig.dateOfBirth.required && '*'}
                         </label>
                       </div>
