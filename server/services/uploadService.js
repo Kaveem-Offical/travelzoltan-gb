@@ -123,9 +123,17 @@ const uploadToCloudinary = async (file, documentType) => {
 
     console.log('[Cloudinary] Upload successful:', result.public_id);
 
+    // Generate optimized delivery URL (f_auto, q_auto)
+    const optimizedUrl = cloudinary.url(result.public_id, {
+      secure: true,
+      fetch_format: 'auto',
+      quality: 'auto',
+      resource_type: result.resource_type || 'image'
+    });
+
     return {
       success: true,
-      file_url: result.secure_url,
+      file_url: optimizedUrl || result.secure_url,
       storage_type: 'cloudinary',
       file_name: file.originalname,
       mime_type: file.mimetype,

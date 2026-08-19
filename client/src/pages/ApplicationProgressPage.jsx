@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
@@ -131,7 +131,10 @@ const ApplicationProgressPage = () => {
 
   // Core Document uploads tracking: { docName: file }
   const [coreDocuments, setCoreDocuments] = useState({});
+  const [docsUploaded, setDocsUploaded] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
   const [applicationId, setApplicationId] = useState(null);
+  const isSubmittingRef = useRef(false);
 
   // Payment processing state
   const [paymentStatus, setPaymentStatus] = useState('idle');
@@ -257,6 +260,8 @@ const ApplicationProgressPage = () => {
   };
 
   const handleNext = async () => {
+    if (loading || uploadingDocs || isSubmittingRef.current) return;
+
     if (currentStage === 1) {
       const fieldsConfig = getFormFieldsConfig(visaData);
       const missingFields = [];
@@ -278,6 +283,7 @@ const ApplicationProgressPage = () => {
       }
 
       try {
+        isSubmittingRef.current = true;
         setLoading(true);
         const submitData = {
           configuration_id: visaData.configuration_id || 1,
@@ -302,6 +308,7 @@ const ApplicationProgressPage = () => {
         alert('Failed to save contact details. Please try again.');
         return;
       } finally {
+        isSubmittingRef.current = false;
         setLoading(false);
       }
     }
@@ -312,31 +319,38 @@ const ApplicationProgressPage = () => {
         return;
       }
 
-      try {
-        setLoading(true);
-        const submitData = new FormData();
-        const documentTypes = [];
-        
-        Object.entries(coreDocuments).forEach(([docType, file]) => {
-          submitData.append('documents', file);
-          documentTypes.push(docType);
-        });
-        
-        if (documentTypes.length > 0) {
-          submitData.append('document_types', JSON.stringify(documentTypes));
-        }
+      if (!docsUploaded) {
+        try {
+          isSubmittingRef.current = true;
+          setUploadingDocs(true);
+          setLoading(true);
+          const submitData = new FormData();
+          const documentTypes = [];
+          
+          Object.entries(coreDocuments).forEach(([docType, file]) => {
+            submitData.append('documents', file);
+            documentTypes.push(docType.trim());
+          });
+          
+          if (documentTypes.length > 0) {
+            submitData.append('document_types', JSON.stringify(documentTypes));
+          }
 
-        if (applicationId) {
-          await visaAPI.uploadDocuments(applicationId, submitData);
-        } else {
-          console.warn('applicationId missing when uploading documents');
+          if (applicationId) {
+            await visaAPI.uploadDocuments(applicationId, submitData);
+            setDocsUploaded(true);
+          } else {
+            console.warn('applicationId missing when uploading documents');
+          }
+        } catch (err) {
+          console.error('Error saving documents:', err);
+          alert('Failed to save uploaded documents. Please try again.');
+          return;
+        } finally {
+          isSubmittingRef.current = false;
+          setUploadingDocs(false);
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Error saving documents:', err);
-        alert('Failed to save uploaded documents. Please try again.');
-        return;
-      } finally {
-        setLoading(false);
       }
     }
     
@@ -393,7 +407,10 @@ const ApplicationProgressPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (loading || uploadingDocs || isSubmittingRef.current) return;
+
     try {
+      isSubmittingRef.current = true;
       setLoading(true);
       
       let currentAppId = applicationId;
@@ -462,6 +479,7 @@ const ApplicationProgressPage = () => {
       }
       console.error('Error submitting application:', err);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
@@ -719,9 +737,22 @@ const ApplicationProgressPage = () => {
             </div>
 
             <div className="flex justify-end pt-4">
-              <button onClick={handleNext} className="group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 flex items-center gap-3 transition-all duration-300 text-white">
-                Continue to Documents
-                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <button 
+                onClick={handleNext} 
+                disabled={loading || uploadingDocs}
+                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${loading || uploadingDocs ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'}`}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Saving Details...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue to Documents</span>
+                    <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -742,20 +773,45 @@ const ApplicationProgressPage = () => {
               <div className="bg-surface-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm relative z-10">
                 <DocumentUpload
                   requiredDocuments={coreDocsConfig}
-                  onFilesChange={setCoreDocuments}
+                  onFilesChange={(files) => {
+                    setCoreDocuments(files);
+                    setDocsUploaded(false);
+                  }}
                   existingFiles={coreDocuments}
                 />
               </div>
             </div>
 
             <div className="flex justify-between items-center pt-4">
-              <button onClick={handleBack} className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300">
+              <button 
+                onClick={handleBack} 
+                disabled={loading || uploadingDocs}
+                className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span> 
                 Back
               </button>
-              <button onClick={handleNext} className="group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 flex items-center gap-3 transition-all duration-300 text-white">
-                Review & Payment
-                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <button 
+                onClick={handleNext} 
+                disabled={loading || uploadingDocs}
+                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${loading || uploadingDocs ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'}`}
+              >
+                {uploadingDocs ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Uploading Documents...</span>
+                  </>
+                ) : loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Review & Payment</span>
+                    <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -966,19 +1022,32 @@ const ApplicationProgressPage = () => {
 
             {!submitted && paymentStatus !== 'processing' && (
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-                <button onClick={handleBack} className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300 w-full md:w-auto justify-center">
+                <button 
+                  onClick={handleBack} 
+                  disabled={loading || uploadingDocs}
+                  className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300 w-full md:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span> 
                   Back to Documents
                 </button>
                 <button 
                   onClick={handleSubmit} 
-                  disabled={loading}
-                  className="group relative overflow-hidden bg-gradient-to-r from-[#ff4d85] to-[#ff758c] text-white font-bold px-12 py-4 rounded-full shadow-[0_8px_25px_rgba(255,77,133,0.3)] hover:shadow-[0_12px_35px_rgba(255,77,133,0.4)] hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-3 transition-all duration-300 w-full md:w-auto"
+                  disabled={loading || uploadingDocs || paymentStatus === 'processing'}
+                  className="group relative overflow-hidden bg-gradient-to-r from-[#ff4d85] to-[#ff758c] text-white font-bold px-12 py-4 rounded-full shadow-[0_8px_25px_rgba(255,77,133,0.3)] hover:shadow-[0_12px_35px_rgba(255,77,133,0.4)] hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-3 transition-all duration-300 w-full md:w-auto cursor-pointer disabled:cursor-not-allowed"
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-full" />
                   <span className="relative z-10 flex items-center gap-2">
-                    {loading ? 'Processing...' : `Pay ${curr.symbol}${paymentOption === 'partial' ? displayPayNow : displayPayInFull} & Submit`} 
-                    <span className="material-symbols-outlined text-sm">{loading ? 'hourglass_empty' : 'lock'}</span>
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Pay {curr.symbol}{paymentOption === 'partial' ? displayPayNow : displayPayInFull} & Submit</span>
+                        <span className="material-symbols-outlined text-sm">lock</span>
+                      </>
+                    )}
                   </span>
                 </button>
               </div>
@@ -998,6 +1067,51 @@ const ApplicationProgressPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-lowest relative font-sans">
+      {/* Uploading Documents Modal Overlay */}
+      {uploadingDocs && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/50 text-center space-y-6 animate-in zoom-in-95 duration-300 relative overflow-hidden">
+            {/* Ambient background glows */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-secondary/10 rounded-full blur-2xl pointer-events-none" />
+            
+            {/* Upload Animated Icon */}
+            <div className="relative w-20 h-20 mx-auto">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping opacity-40" />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+                <span className="material-symbols-outlined text-4xl animate-bounce">cloud_upload</span>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-headline font-bold text-on-surface mb-2">
+                Uploading Documents...
+              </h3>
+              <p className="text-sm text-on-surface-variant leading-relaxed">
+                Please wait while your files are securely encrypted and uploaded to cloud storage.
+              </p>
+            </div>
+
+            {/* Progress / Pulse Bar */}
+            <div className="space-y-2">
+              <div className="w-full bg-surface-container-low rounded-full h-2.5 overflow-hidden relative">
+                <div className="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full w-full animate-[pulse_1.5s_infinite]" />
+              </div>
+              <p className="text-xs text-on-surface-variant/70 font-medium">
+                Uploading {Object.keys(coreDocuments).length} file{Object.keys(coreDocuments).length > 1 ? 's' : ''}...
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-outline-variant/20">
+              <p className="text-xs text-amber-600 font-medium flex items-center justify-center gap-1.5">
+                <span className="material-symbols-outlined text-base">lock</span>
+                Do not refresh or close this window
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Abstract Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-primary/5 blur-[100px]" />

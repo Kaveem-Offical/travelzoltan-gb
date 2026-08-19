@@ -386,29 +386,55 @@ const createApplication = async (req, res) => {
     const uploadedDocuments = [];
     if (req.files && req.files.length > 0) {
       try {
-        console.log(`[Application] Uploading ${req.files.length} documents...`);
+        console.log(`[Application] Uploading ${req.files.length} documents concurrently...`);
 
-        // Upload each file with its document type
-        for (let i = 0; i < req.files.length; i++) {
-          const file = req.files[i];
-          const documentType = parsedDocumentTypes[i] || `document_${i + 1}`;
+        // Upload files concurrently with their document types
+        const uploadPromises = req.files.map(async (file, i) => {
+          const documentType = (parsedDocumentTypes[i] || `document_${i + 1}`).trim();
 
           try {
             // Upload with fallback logic
             const uploadResult = await uploadService.uploadDocument(file, documentType);
 
-            // Save document record to database
-            const document = await Document.create({
-              application_id: newApplication.id,
-              document_type: documentType,
-              file_url: uploadResult.file_url,
-              storage_type: uploadResult.storage_type,
-              file_name: uploadResult.file_name,
-              mime_type: uploadResult.mime_type,
-              file_size: uploadResult.file_size,
-              drive_file_id: uploadResult.drive_file_id || null,
-              cloudinary_public_id: uploadResult.cloudinary_public_id || null
+            // Check if document of this type already exists
+            const existingDoc = await Document.findOne({
+              where: {
+                application_id: newApplication.id,
+                document_type: documentType
+              }
             });
+
+            let document;
+            if (existingDoc) {
+              try {
+                await uploadService.deleteDocument(existingDoc.storage_type, existingDoc);
+              } catch (delError) {
+                console.warn(`[Application] Failed to delete previous file:`, delError.message);
+              }
+
+              await existingDoc.update({
+                file_url: uploadResult.file_url,
+                storage_type: uploadResult.storage_type,
+                file_name: uploadResult.file_name,
+                mime_type: uploadResult.mime_type,
+                file_size: uploadResult.file_size,
+                drive_file_id: uploadResult.drive_file_id || null,
+                cloudinary_public_id: uploadResult.cloudinary_public_id || null
+              });
+              document = existingDoc;
+            } else {
+              document = await Document.create({
+                application_id: newApplication.id,
+                document_type: documentType,
+                file_url: uploadResult.file_url,
+                storage_type: uploadResult.storage_type,
+                file_name: uploadResult.file_name,
+                mime_type: uploadResult.mime_type,
+                file_size: uploadResult.file_size,
+                drive_file_id: uploadResult.drive_file_id || null,
+                cloudinary_public_id: uploadResult.cloudinary_public_id || null
+              });
+            }
 
             uploadedDocuments.push({
               id: document.id,
@@ -422,8 +448,9 @@ const createApplication = async (req, res) => {
             console.error(`[Application] Failed to upload document ${i + 1}:`, uploadError.message);
             // Continue with other files even if one fails
           }
-        }
+        });
 
+        await Promise.all(uploadPromises);
         console.log(`[Application] Successfully uploaded ${uploadedDocuments.length}/${req.files.length} documents`);
       } catch (error) {
         console.error('[Application] Document upload error:', error);
@@ -663,26 +690,56 @@ const uploadApplicationDocuments = async (req, res) => {
 
     const uploadedDocuments = [];
     if (req.files && req.files.length > 0) {
-      console.log(`[Application Documents] Uploading ${req.files.length} documents for application ID ${id}...`);
+      console.log(`[Application Documents] Uploading ${req.files.length} documents concurrently for application ID ${id}...`);
 
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
-        const documentType = parsedDocumentTypes[i] || `document_${i + 1}`;
+      const uploadPromises = req.files.map(async (file, i) => {
+        const documentType = (parsedDocumentTypes[i] || `document_${i + 1}`).trim();
 
         try {
           const uploadResult = await uploadService.uploadDocument(file, documentType);
 
-          const document = await Document.create({
-            application_id: application.id,
-            document_type: documentType,
-            file_url: uploadResult.file_url,
-            storage_type: uploadResult.storage_type,
-            file_name: uploadResult.file_name,
-            mime_type: uploadResult.mime_type,
-            file_size: uploadResult.file_size,
-            drive_file_id: uploadResult.drive_file_id || null,
-            cloudinary_public_id: uploadResult.cloudinary_public_id || null
+          // Check if document of this type already exists for this application
+          const existingDoc = await Document.findOne({
+            where: {
+              application_id: application.id,
+              document_type: documentType
+            }
           });
+
+          let document;
+          if (existingDoc) {
+            // Clean up previous file from storage
+            try {
+              await uploadService.deleteDocument(existingDoc.storage_type, existingDoc);
+            } catch (delError) {
+              console.warn(`[Application Documents] Failed to delete previous file:`, delError.message);
+            }
+
+            // Update existing record
+            await existingDoc.update({
+              file_url: uploadResult.file_url,
+              storage_type: uploadResult.storage_type,
+              file_name: uploadResult.file_name,
+              mime_type: uploadResult.mime_type,
+              file_size: uploadResult.file_size,
+              drive_file_id: uploadResult.drive_file_id || null,
+              cloudinary_public_id: uploadResult.cloudinary_public_id || null
+            });
+            document = existingDoc;
+          } else {
+            // Create new record
+            document = await Document.create({
+              application_id: application.id,
+              document_type: documentType,
+              file_url: uploadResult.file_url,
+              storage_type: uploadResult.storage_type,
+              file_name: uploadResult.file_name,
+              mime_type: uploadResult.mime_type,
+              file_size: uploadResult.file_size,
+              drive_file_id: uploadResult.drive_file_id || null,
+              cloudinary_public_id: uploadResult.cloudinary_public_id || null
+            });
+          }
 
           uploadedDocuments.push({
             id: document.id,
@@ -693,7 +750,9 @@ const uploadApplicationDocuments = async (req, res) => {
         } catch (uploadError) {
           console.error(`[Application Documents] Failed to upload document ${i + 1}:`, uploadError.message);
         }
-      }
+      });
+
+      await Promise.all(uploadPromises);
     }
 
     // Since documents are now uploaded, transition status to Payment Pending
