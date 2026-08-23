@@ -72,14 +72,14 @@ const TopNavBar = () => {
           </Link>
         </div>
         
-        <div className="flex items-center gap-4">
+        {/* <div className="flex items-center gap-4">
           <button 
             onClick={handleTakeAction} 
             className="bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-semibold tracking-tight px-6 py-2.5 rounded-full hover:shadow-lg transition-all active:scale-95 cursor-pointer border-none"
           >
             Take Action
           </button>
-        </div>
+        </div> */}
       </div>
     </nav>
   );

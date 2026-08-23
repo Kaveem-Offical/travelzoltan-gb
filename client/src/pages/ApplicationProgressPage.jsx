@@ -340,7 +340,19 @@ const ApplicationProgressPage = () => {
             await visaAPI.uploadDocuments(applicationId, submitData);
             setDocsUploaded(true);
           } else {
-            console.warn('applicationId missing when uploading documents');
+            console.warn('applicationId missing when uploading documents, creating application now');
+            submitData.append('configuration_id', visaData?.configuration_id || 1);
+            submitData.append('user_data', JSON.stringify({
+              ...formData,
+              applicantStatus: selectedCategory,
+              visaCategory: selectedVisaCategory,
+              status: 'Payment Pending'
+            }));
+            const res = await visaAPI.createApplication(submitData);
+            if (res.applicationId) {
+              setApplicationId(res.applicationId);
+              setDocsUploaded(true);
+            }
           }
         } catch (err) {
           console.error('Error saving documents:', err);
@@ -740,11 +752,15 @@ const ApplicationProgressPage = () => {
               <button 
                 onClick={handleNext} 
                 disabled={loading || uploadingDocs}
-                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${loading || uploadingDocs ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'}`}
+                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${
+                  loading || uploadingDocs 
+                    ? 'opacity-60 cursor-not-allowed pointer-events-none' 
+                    : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'
+                }`}
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" />
                     <span>Saving Details...</span>
                   </>
                 ) : (
@@ -786,7 +802,7 @@ const ApplicationProgressPage = () => {
               <button 
                 onClick={handleBack} 
                 disabled={loading || uploadingDocs}
-                className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group text-on-surface-variant font-bold px-6 py-4 rounded-full hover:bg-surface-container flex items-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
               >
                 <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span> 
                 Back
@@ -794,16 +810,20 @@ const ApplicationProgressPage = () => {
               <button 
                 onClick={handleNext} 
                 disabled={loading || uploadingDocs}
-                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${loading || uploadingDocs ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'}`}
+                className={`group bg-on-surface text-surface-lowest font-bold px-8 py-4 rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] flex items-center gap-3 transition-all duration-300 text-white ${
+                  loading || uploadingDocs 
+                    ? 'opacity-60 cursor-not-allowed pointer-events-none' 
+                    : 'hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5'
+                }`}
               >
                 {uploadingDocs ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Uploading Documents...</span>
+                    <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" />
+                    <span>Processing...</span>
                   </>
                 ) : loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" />
                     <span>Processing...</span>
                   </>
                 ) : (
@@ -1067,51 +1087,6 @@ const ApplicationProgressPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-lowest relative font-sans">
-      {/* Uploading Documents Modal Overlay */}
-      {uploadingDocs && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/50 text-center space-y-6 animate-in zoom-in-95 duration-300 relative overflow-hidden">
-            {/* Ambient background glows */}
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-secondary/10 rounded-full blur-2xl pointer-events-none" />
-            
-            {/* Upload Animated Icon */}
-            <div className="relative w-20 h-20 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping opacity-40" />
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary/10 to-secondary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
-                <span className="material-symbols-outlined text-4xl animate-bounce">cloud_upload</span>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-2xl font-headline font-bold text-on-surface mb-2">
-                Uploading Documents...
-              </h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed">
-                Please wait while your files are securely encrypted and uploaded to cloud storage.
-              </p>
-            </div>
-
-            {/* Progress / Pulse Bar */}
-            <div className="space-y-2">
-              <div className="w-full bg-surface-container-low rounded-full h-2.5 overflow-hidden relative">
-                <div className="h-full bg-gradient-to-r from-primary via-secondary to-primary rounded-full w-full animate-[pulse_1.5s_infinite]" />
-              </div>
-              <p className="text-xs text-on-surface-variant/70 font-medium">
-                Uploading {Object.keys(coreDocuments).length} file{Object.keys(coreDocuments).length > 1 ? 's' : ''}...
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-outline-variant/20">
-              <p className="text-xs text-amber-600 font-medium flex items-center justify-center gap-1.5">
-                <span className="material-symbols-outlined text-base">lock</span>
-                Do not refresh or close this window
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Abstract Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-primary/5 blur-[100px]" />

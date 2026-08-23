@@ -33,7 +33,6 @@ const ContactUsPage = () => {
     {
       country: 'United Kingdom',
       city: 'London',
-      phone: '+44 20 3026 1633',
       email: 'gb@zoltanvisa.com',
       timezone: 'GMT'
     },
@@ -41,7 +40,6 @@ const ContactUsPage = () => {
       country: 'India',
       city: 'Hyderabad',
       address: 'Sarib Plaza, 16-1-24/B/5, Saidabad Colony Rd, beside MORE SUPERMARKET, New Farah Colony, Madhav Nagar, Saidabad, Hyderabad, Telangana 500059',
-      phone: '+91 95020 60511',
       email: 'in@zoltanvisa.com',
       timezone: 'IST'
     },
@@ -49,7 +47,6 @@ const ContactUsPage = () => {
       country: 'Singapore',
       city: 'Singapore',
       address: '55 changi road singapore ',
-      phone: '+65 8394 5366',
       email: 'sg@zoltanvisa.com',
       timezone: 'SGT'
     },
@@ -57,7 +54,6 @@ const ContactUsPage = () => {
       country: 'UAE',
       city: 'Dubai',
       address: 'Dhan Guard Business Centre R308 Bldg, 4th Floor, Al Mankhool, Burjuman, Burjuman Metro Station Exit 3, Dubai, UAE',
-      phone: '+971 582116467',
       email: 'ae@zoltanvisa.com',
       timezone: 'GST'
     }
