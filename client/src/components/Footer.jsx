@@ -22,8 +22,8 @@ const Footer = () => {
             </div>
             <p className="text-slate-500 dark:text-slate-400 font-['Inter'] text-sm leading-relaxed">
               {isChecklistPage 
-                ? 'Redefining the travel experience through premium your trusted digital Visa Consultantship and unrivaled visa expertise.' 
-                : 'The premier destination for discerning travelers seeking seamless visa assistance and luxury travel curation globally.'}
+                ? 'Redefining the visa experience through trusted digital consultancy and unrivaled visa expertise.' 
+                : 'The premier destination for travelers seeking seamless visa assistance, verified documentation, and expert guidance globally.'}
             </p>
           </div>
           
@@ -46,21 +46,13 @@ const Footer = () => {
                     Payment Mode
                   </Link>
                 </li>
-                <li>
-                  <Link to="/cancellation-refund" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
-                    Cancellation & Refund
-                  </Link>
-                </li>
+
                 <li>
                   <Link to="/payment-terms" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
                     Payment Terms
                   </Link>
                 </li>
-                <li>
-                  <Link to="/reservations-bookings" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
-                    Reservations & Bookings
-                  </Link>
-                </li>
+
               </ul>
             </div>
             <div className="space-y-4">

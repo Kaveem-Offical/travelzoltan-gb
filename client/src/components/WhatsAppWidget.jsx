@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const WHATSAPP_NUMBER = '919502060511';
 
 const QUICK_PROMPTS = [
+  { label: '🚫 Refusal Case Help', text: 'Hi! I have a visa rejection/refusal and want expert help to reapply.' },
   { label: '✈️ New Visa Application', text: 'Hi! I would like to apply for a new visa.' },
   { label: '📄 Required Documents', text: 'Hi! What documents do I need for my visa application?' },
   { label: '🔍 Track Application', text: 'Hi! I want to check the status of my visa application.' },

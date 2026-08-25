@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../services/api';
 import DocumentViewer from '../components/DocumentViewer';
+import LiveApprovalsTab from '../components/LiveApprovalsTab';
 import { DEFAULT_PAY_NOW_POINTS, DEFAULT_PAY_IN_FULL_POINTS, getPayNowPoints, getPayInFullPoints } from '../utils/paymentUtils';
 
 // Format currency helper
@@ -832,7 +833,7 @@ const ConfigurationsTab = ({ showNotification }) => {
                 {/* Add Document/Question Form */}
                 <div className="bg-surface-container-low rounded-lg p-4 space-y-3 mb-4 border border-outline-variant/30">
                   <h4 className="text-sm font-semibold text-primary mb-2">
-                    Add {activeDocsCategory === 'now' ? 'Required Now Document' : activeDocsCategory === 'later' ? 'Required Later Document' : 'Query Form Question'} for {activeVisaCategory.charAt(0).toUpperCase() + activeVisaCategory.slice(1)} ({activeApplicantCategory.charAt(0).toUpperCase() + activeApplicantCategory.slice(1).replace('_', ' ')})
+                    Add {activeDocsCategory === 'now' ? 'Required Now Document' : activeDocsCategory === 'later' ? 'Required Later Document' : 'Query Form Question'} for {activeVisaCategory ? activeVisaCategory.charAt(0).toUpperCase() + activeVisaCategory.slice(1) : ''} ({activeApplicantCategory ? activeApplicantCategory.charAt(0).toUpperCase() + activeApplicantCategory.slice(1).replace('_', ' ') : ''})
                   </h4>
                   <div>
                     <label className="block text-xs text-outline mb-1">{activeDocsCategory === 'query' ? 'Question Label' : 'Document Name'}</label>
@@ -1033,6 +1034,7 @@ const AdminPage = () => {
     { id: 'payments', label: 'Payments', icon: 'payments' },
     { id: 'analytics', label: 'Analytics', icon: 'analytics' },
     { id: 'configurations', label: 'Configurations', icon: 'tune' },
+    { id: 'live-approvals', label: 'Live Approvals', icon: 'verified' },
     { id: 'settings', label: 'Settings', icon: 'settings' },
   ];
 
@@ -2104,7 +2106,7 @@ const AdminPage = () => {
             </div>
             <div>
               <p className="font-headline font-bold">Admin Panel</p>
-              <p className="text-xs text-outline">Zoltan Travels</p>
+              <p className="text-xs text-outline">Zoltan Visa</p>
             </div>
           </div>
 
@@ -2159,6 +2161,7 @@ const AdminPage = () => {
                 {activeMenu === 'payments' && 'Track payments and revenue'}
                 {activeMenu === 'analytics' && 'Insights and performance metrics'}
                 {activeMenu === 'configurations' && 'Manage visa configurations'}
+                {activeMenu === 'live-approvals' && 'Manage real-time live visa approval notifications on website'}
                 {activeMenu === 'settings' && 'Update Admin panel credentials'}
               </p>
             </div>
@@ -2200,6 +2203,7 @@ const AdminPage = () => {
               {activeMenu === 'payments' && renderPayments()}
               {activeMenu === 'analytics' && renderAnalytics()}
               {activeMenu === 'configurations' && <ConfigurationsTab showNotification={showNotification} />}
+              {activeMenu === 'live-approvals' && <LiveApprovalsTab showNotification={showNotification} />}
               {activeMenu === 'settings' && renderSettings()}
             </>
           )}

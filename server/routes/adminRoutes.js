@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const authController = require('../controllers/authController');
+const liveApprovalController = require('../controllers/liveApprovalController');
 const { requireAuth } = require('../middlewares/auth');
 
 // ========== PUBLIC AUTH ROUTES (No authentication required) ==========
@@ -44,5 +45,14 @@ router.post('/configurations', adminController.createConfiguration);
 router.put('/configurations/reorder', adminController.reorderConfigurations);
 router.put('/configurations/:id', adminController.updateConfiguration);
 router.delete('/configurations/:id', adminController.deleteConfiguration);
+
+// Live Visa Approvals
+router.get('/live-approvals', liveApprovalController.getAllApprovals);
+router.post('/live-approvals', liveApprovalController.createApproval);
+router.put('/live-approvals/:id', liveApprovalController.updateApproval);
+router.put('/live-approvals/:id/toggle', liveApprovalController.toggleApprovalStatus);
+router.delete('/live-approvals/:id', liveApprovalController.deleteApproval);
+router.post('/live-approvals/import-from-applications', liveApprovalController.importFromApplications);
+router.post('/live-approvals/reset-defaults', liveApprovalController.resetDefaultApprovals);
 
 module.exports = router;

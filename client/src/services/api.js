@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.zoltanvisa.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.zoltanvisa.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -62,6 +62,17 @@ api.interceptors.response.use(
 
 // Public API endpoints
 export const visaAPI = {
+  // Get live visa approvals for website trust ticker
+  getLiveApprovals: async () => {
+    try {
+      const response = await api.get('/live-approvals');
+      return response.data;
+    } catch (error) {
+      console.warn('[API] Could not fetch live approvals, using fallback:', error);
+      return { success: false, data: [] };
+    }
+  },
+
   // Get visa requirements based on citizenship and destination
   getVisaRequirements: async (citizenship, destination) => {
     try {
@@ -273,6 +284,70 @@ export const adminAPI = {
   reorderConfigurations: async (orderedIds) => {
     try {
       const response = await api.put('/admin/configurations/reorder', { orderedIds });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Live Visa Approvals Management
+  getAllLiveApprovals: async () => {
+    try {
+      const response = await api.get('/admin/live-approvals');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  createLiveApproval: async (data) => {
+    try {
+      const response = await api.post('/admin/live-approvals', data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  updateLiveApproval: async (id, data) => {
+    try {
+      const response = await api.put(`/admin/live-approvals/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  toggleLiveApproval: async (id) => {
+    try {
+      const response = await api.put(`/admin/live-approvals/${id}/toggle`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  deleteLiveApproval: async (id) => {
+    try {
+      const response = await api.delete(`/admin/live-approvals/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  importApprovalsFromApplications: async () => {
+    try {
+      const response = await api.post('/admin/live-approvals/import-from-applications');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  resetDefaultLiveApprovals: async () => {
+    try {
+      const response = await api.post('/admin/live-approvals/reset-defaults');
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

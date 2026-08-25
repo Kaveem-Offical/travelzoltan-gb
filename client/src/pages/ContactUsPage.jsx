@@ -33,6 +33,8 @@ const ContactUsPage = () => {
     {
       country: 'United Kingdom',
       city: 'London',
+      address: "",
+      phone: '+44 20 3026 1633',
       email: 'gb@zoltanvisa.com',
       timezone: 'GMT'
     },
@@ -81,7 +83,7 @@ const ContactUsPage = () => {
       {/* Quick Contact Cards */}
       <section className="py-12 px-6 md:px-12 bg-white">
         <div className="max-w-screen-2xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <a 
               href="tel:+442030261633"
@@ -257,24 +259,30 @@ const ContactUsPage = () => {
                             {office.timezone}
                           </span>
                         </div>
-                        <p className="text-on-surface-variant text-sm mb-3">
-                          {office.address}
-                        </p>
+                        {office.address && (
+                          <p className="text-on-surface-variant text-sm mb-3">
+                            {office.address}
+                          </p>
+                        )}
                         <div className="flex flex-col sm:flex-row gap-3 text-sm">
-                          <a 
-                            href={`tel:${office.phone.replace(/\s/g, '')}`}
-                            className="flex items-center gap-2 text-primary hover:underline"
-                          >
-                            <span className="material-symbols-outlined text-sm">phone</span>
-                            {office.phone}
-                          </a>
-                          <a 
-                            href={`mailto:${office.email}`}
-                            className="flex items-center gap-2 text-primary hover:underline"
-                          >
-                            <span className="material-symbols-outlined text-sm">email</span>
-                            {office.email}
-                          </a>
+                          {office.phone && (
+                            <a 
+                              href={`tel:${office.phone.replace(/\s/g, '')}`}
+                              className="flex items-center gap-2 text-primary hover:underline"
+                            >
+                              <span className="material-symbols-outlined text-sm">phone</span>
+                              {office.phone}
+                            </a>
+                          )}
+                          {office.email && (
+                            <a 
+                              href={`mailto:${office.email}`}
+                              className="flex items-center gap-2 text-primary hover:underline"
+                            >
+                              <span className="material-symbols-outlined text-sm">email</span>
+                              {office.email}
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>

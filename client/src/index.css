@@ -177,3 +177,38 @@ body {
 .animate-typing-dot-3 {
   animation: typing-dot-bounce 1.4s infinite ease-in-out 0.4s;
 }
+
+/* Card Deck Promotion / Swipe Animations */
+@keyframes card-fly-away {
+  0% {
+    opacity: 1;
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-44px) translateX(28px) scale(0.88) rotate(8deg);
+    filter: blur(0.5px);
+  }
+}
+
+@keyframes card-rise-from-shadow {
+  0% {
+    opacity: 0.4;
+    transform: translateY(14px) scale(0.9) rotate(-3deg);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1) rotate(0deg);
+    box-shadow: 0 25px 50px -12px rgba(25, 28, 30, 0.15);
+  }
+}
+
+.animate-card-fly-away {
+  animation: card-fly-away 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-card-rise-from-shadow {
+  animation: card-rise-from-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

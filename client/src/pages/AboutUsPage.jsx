@@ -9,10 +9,10 @@ const AboutUsPage = () => {
               ABOUT ZOLTAN VISA
             </span>
             <h1 className="font-headline text-4xl md:text-6xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
-              Your Trusted Partner in <span className="text-primary">Global Travel</span>
+              Your Trusted Partner in <span className="text-primary">Global Visas</span>
             </h1>
             <p className="text-lg md:text-xl text-on-surface-variant leading-relaxed">
-              With over 20 years of excellence, we simplify visa processing and travel planning for thousands of customers worldwide.
+              With over 20 years of excellence, we simplify visa processing and document assistance for thousands of customers worldwide.
             </p>
           </div>
         </div>
@@ -30,7 +30,7 @@ const AboutUsPage = () => {
                 Our Mission
               </h2>
               <p className="text-xl md:text-2xl text-on-surface-variant leading-relaxed font-medium">
-                To provide hassle free, smooth visa assistance with exceptional travel experience to everyone traveling.
+                To provide hassle free, smooth visa assistance with exceptional guidance and support to everyone traveling.
               </p>
             </div>
           </div>
@@ -93,7 +93,7 @@ const AboutUsPage = () => {
               What Makes Us Different?
             </h2>
             <p className="text-on-surface-variant text-lg max-w-2xl mx-auto">
-              Our unique approach sets us apart from other travel companies
+              Our unique approach sets us apart from other visa consultancy services
             </p>
           </div>
           
@@ -236,7 +236,7 @@ const AboutUsPage = () => {
             Ready to Start Your Journey?
           </h2>
           <p className="text-on-surface-variant text-lg max-w-2xl mx-auto mb-8">
-            We are here for all your travel needs. If you are planning to travel, don't hesitate to contact us or use the chat button to get in touch.
+            We are here for all your visa needs. If you are planning your journey, don't hesitate to contact us or use the chat button to get in touch.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 

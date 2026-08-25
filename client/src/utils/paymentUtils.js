@@ -15,7 +15,7 @@ export const DEFAULT_PAY_IN_FULL_POINTS = [
  * Replaces placeholders like £{amount} or {amount} or {symbol} in point text
  */
 export const resolvePointText = (text, amount, symbol = '£') => {
-  if (!text) return '';
+  if (!text || typeof text !== 'string') return '';
   const numAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
   const formattedAmount = Number.isInteger(numAmount) ? numAmount.toString() : numAmount.toFixed(2).replace(/\.00$/, '');
   

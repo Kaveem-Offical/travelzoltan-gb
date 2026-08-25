@@ -44,12 +44,25 @@ const TopNavBar = () => {
           >
             Home
           </Link>
-          {/* <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#destinations">
-            Destinations
+          <a 
+            href="#services"
+            onClick={(e) => {
+              e.preventDefault();
+              if (location.pathname === '/') {
+                const el = document.getElementById('services');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                navigate('/');
+                setTimeout(() => {
+                  const el = document.getElementById('services');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+              }
+            }}
+            className="font-headline font-semibold tracking-tight text-slate-600 hover:text-primary transition-colors cursor-pointer"
+          >
+            Services & Comparison
           </a>
-          <a className="font-headline font-semibold tracking-tight text-slate-600  hover:text-primary dark:hover:text-primary-light transition-colors" href="#services">
-            Services
-          </a> */}
           <Link 
             to="/about-us" 
             className={`font-headline font-semibold tracking-tight transition-colors ${

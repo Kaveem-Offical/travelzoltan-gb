@@ -1,8 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import certificationImg from '../assets/certification.png';
+import ServicesValueSection from '../components/ServicesValueSection';
 
 const API_URL = 'https://api.zoltanvisa.com/api';
+
+// Smooth In-View Counter with cubic easing and live increment support
+const StatCounter = ({ end, decimals = 0, prefix = '', suffix = '', isIncrementing = false, duration = 1800 }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  const [inView, setInView] = useState(false);
+  const hasAnimatedRef = useRef(false);
+  const domRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (domRef.current) {
+      observer.observe(domRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+
+    if (!hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      let startTime = null;
+      let frameId;
+
+      const step = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const currentVal = ease * end;
+        setDisplayValue(currentVal);
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(step);
+        } else {
+          setDisplayValue(end);
+        }
+      };
+
+      frameId = requestAnimationFrame(step);
+      return () => {
+        if (frameId) cancelAnimationFrame(frameId);
+      };
+    } else {
+      setDisplayValue(end);
+    }
+  }, [inView, end, duration]);
+
+  const formatted = decimals > 0 
+    ? Number(displayValue).toFixed(decimals) 
+    : Math.round(displayValue);
+
+  return (
+    <span 
+      ref={domRef} 
+      className={`tabular-nums inline-block transition-all duration-300 transform ${
+        isIncrementing ? 'scale-110 text-emerald-600' : 'scale-100'
+      }`}
+    >
+      {prefix}{formatted}{suffix}
+    </span>
+  );
+};
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -16,6 +88,50 @@ const HomePage = () => {
   const [allDestinations, setAllDestinations] = useState([]);
   const [configurations, setConfigurations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [heroDestIndex, setHeroDestIndex] = useState(0);
+  const [isDiscarding, setIsDiscarding] = useState(false);
+
+  // Dynamic happy clients live counter (increments every 5s)
+  const [happyClientsCount, setHappyClientsCount] = useState(100);
+  const [isClientIncrementing, setIsClientIncrementing] = useState(false);
+
+  // Dynamic hero destinations list with fallback
+  const heroDestinations = allDestinations.length > 0 
+    ? Array.from(new Set(allDestinations)) 
+    : ['Schengen Area'];
+
+  const currentHeroDestination = heroDestinations[heroDestIndex % heroDestinations.length] || 'Schengen Area';
+  const nextHeroDestination = heroDestinations[(heroDestIndex + 1) % heroDestinations.length] || 'Schengen Area';
+
+  // Cycle through card deck: front card flies away, shadow card rises to front
+  useEffect(() => {
+    if (heroDestinations.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setIsDiscarding(true);
+
+      setTimeout(() => {
+        setHeroDestIndex((prev) => (prev + 1) % heroDestinations.length);
+        setIsDiscarding(false);
+      }, 500);
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [heroDestinations.length, allDestinations]);
+
+  // Live increment for Happy Clients every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHappyClientsCount((prev) => prev + 1);
+      setIsClientIncrementing(true);
+      const timer = setTimeout(() => {
+        setIsClientIncrementing(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch citizenship and destination options from API
   useEffect(() => {
@@ -152,13 +268,13 @@ const HomePage = () => {
         <div className="max-w-screen-2xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 z-10">
             <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-primary/10 text-primary font-headline font-bold text-sm tracking-wide">
-              THE YOUR TRUSTED DIGITAL VISA CONSULTANT
+              YOUR TRUSTED DIGITAL VISA CONSULTANT
             </span>
             <h1 className="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.1] mb-6 text-on-surface">
               Worldwide Visa Assistance. <span className="text-primary">Simplified.</span>
             </h1>
             <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
-              Apply for visas, book flights, hotels, and airport transfers all in one place. Experience travel logistics reimagined for the modern explorer.
+              Apply for visas worldwide with expert guidance, verified documentation, and real-time support. Experience seamless visa processing reimagined for modern travelers.
             </p>
             
             {/* Interactive Selector Box */}
@@ -268,26 +384,67 @@ const HomePage = () => {
             <div className="absolute top-0 right-0 w-4/5 h-[80%] rounded-[4rem] overflow-hidden rotate-3 z-0">
               <img 
                 className="w-full h-full object-cover" 
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" 
+                src="https://images.pexels.com/photos/7235892/pexels-photo-7235892.jpeg" 
                 alt="Beach"
               />
             </div>
             <div className="absolute bottom-0 left-0 w-3/4 h-[70%] rounded-[3rem] overflow-hidden -rotate-6 z-10 border-[12px] border-surface shadow-2xl">
               <img 
                 className="w-full h-full object-cover" 
-                src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&q=80" 
+                src="https://images.pexels.com/photos/28555348/pexels-photo-28555348.jpeg" 
                 alt="European Facade"
               />
             </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-surface-container-lowest p-5 rounded-lg editorial-shadow flex items-center gap-4 animate-bounce">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-600">
-                <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>
-                  check_circle
-                </span>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-outline">Visa Approved</p>
-                <p className="font-headline font-bold">Schengen Area</p>
+            {/* Animated Visa Approved Card Stack with Bouncing Effect */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[270px] select-none animate-bounce">
+              {/* Background Card (Sitting in shadow, rises to the front on discard) */}
+              {heroDestinations.length > 1 && (
+                <div 
+                  className={`absolute inset-0 bg-surface-container-lowest/90 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 flex items-center gap-4 ${
+                    isDiscarding
+                      ? 'animate-card-rise-from-shadow z-20'
+                      : 'scale-90 translate-y-3.5 -rotate-3 opacity-40 shadow-md z-10'
+                  }`}
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-600 shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{fontVariationSettings: "'FILL' 1"}}>
+                      check_circle
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-outline uppercase tracking-wider">Visa Approved</p>
+                      {isDiscarding && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>}
+                    </div>
+                    <p className="font-headline font-bold text-base md:text-lg text-on-surface truncate mt-0.5">
+                      {nextHeroDestination}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Front Card (Active card, flies away to top-right on discard) */}
+              <div 
+                className={`relative bg-surface-container-lowest/95 backdrop-blur-md p-5 rounded-2xl editorial-shadow flex items-center gap-4 border border-white/90 shadow-2xl ${
+                  isDiscarding
+                    ? 'animate-card-fly-away z-30 pointer-events-none'
+                    : 'scale-100 translate-y-0 rotate-0 opacity-100 z-20'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-600 shrink-0 shadow-inner">
+                  <span className="material-symbols-outlined text-2xl" style={{fontVariationSettings: "'FILL' 1"}}>
+                    check_circle
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-outline uppercase tracking-wider">Visa Approved</p>
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
+                  </div>
+                  <p className="font-headline font-bold text-base md:text-lg text-on-surface truncate mt-0.5">
+                    {currentHeroDestination}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -312,16 +469,27 @@ const HomePage = () => {
             </div>
             <div className="flex justify-center md:justify-end overflow-hidden">
               <div className="flex items-center gap-8">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">99.8%</p>
+                <div className="text-center min-w-[90px]">
+                  <p className="text-3xl font-bold text-primary">
+                    <StatCounter end={99.8} decimals={1} suffix="%" duration={1600} />
+                  </p>
                   <p className="text-xs text-outline">Success Rate</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">5000+</p>
-                  <p className="text-xs text-outline">Happy Travelers</p>
+                <div className="text-center min-w-[100px]">
+                  <p className="text-3xl font-bold text-primary">
+                    <StatCounter 
+                      end={happyClientsCount} 
+                      suffix="k+" 
+                      duration={1800} 
+                      isIncrementing={isClientIncrementing} 
+                    />
+                  </p>
+                  <p className="text-xs text-outline">Happy Clients</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">50+</p>
+                <div className="text-center min-w-[80px]">
+                  <p className="text-3xl font-bold text-primary">
+                    <StatCounter end={20} suffix="+" duration={1400} />
+                  </p>
                   <p className="text-xs text-outline">Countries</p>
                 </div>
               </div>
@@ -330,68 +498,8 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="services" className="py-24 px-6 md:px-12 bg-surface-container-low">
-        <div className="max-w-screen-2xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-6">
-                Complete Travel Concierge
-              </h2>
-              <p className="text-on-surface-variant text-lg">
-                We handle the complexity so you can focus on the experience. Our end-to-end services ensure your journey is seamless from takeoff to landing.
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { 
-                icon: 'flight_takeoff', 
-                title: 'Global Flights', 
-                desc: 'Curated routes with premium airlines at competitive institutional rates.' 
-              },
-              { 
-                icon: 'hotel', 
-                title: 'Luxury Stays', 
-                desc: 'Verified accommodations ranging from boutique gems to 5-star legends.' 
-              },
-              { 
-                icon: 'airport_shuttle', 
-                title: 'Elite Transfers', 
-                desc: 'Private, punctual airport transfers with professional multilingual chauffeurs.' 
-              },
-              { 
-                icon: 'explore', 
-                title: 'Tour Packages', 
-                desc: 'Hand-crafted itineraries that blend popular sites with local secrets.' 
-              },
-            ].map((service, idx) => (
-              <a 
-                key={idx} 
-                href="https://www.travelzoltan.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-surface-container-lowest p-8 rounded-lg group hover:bg-primary transition-all duration-500 editorial-shadow block cursor-pointer"
-              >
-                <div className="w-14 h-14 bg-surface-container-high rounded-2xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
-                  <span className="material-symbols-outlined text-primary group-hover:text-white text-3xl">
-                    {service.icon}
-                  </span>
-                </div>
-                <h3 className="font-headline text-2xl font-bold mb-4 group-hover:text-white transition-colors">
-                  {service.title}
-                </h3>
-                <p className="text-on-surface-variant group-hover:text-white/80 mb-6 transition-colors">
-                  {service.desc}
-                </p>
-                <span className="inline-flex items-center gap-2 font-bold text-primary group-hover:text-white transition-colors">
-                  Explore <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Services & Value Proposition Section */}
+      <ServicesValueSection />
 
       {/* Bento Grid - Destinations */}
       <section id="destinations" className="py-24 px-6 md:px-12 bg-surface">

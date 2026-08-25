@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import TopNavBar from './components/TopNavBar';
 import Footer from './components/Footer';
+import LiveVisaApprovals from './components/LiveVisaApprovals';
 import HomePage from './pages/HomePage';
 import ChecklistPage from './pages/ChecklistPage';
 import ApplicationProgressPage from './pages/ApplicationProgressPage';
@@ -62,6 +63,7 @@ function AppContent() {
           <Route path="/contact" element={<ContactUsPage />} />
         </Routes>
       </div>
+      {!isAdminPage && <LiveVisaApprovals />}
       {!isAdminPage && <Footer />}
     </div>
   );
