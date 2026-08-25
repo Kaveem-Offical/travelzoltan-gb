@@ -75,14 +75,14 @@ const TopNavBar = () => {
 
       {/* Main Navigation Bar */}
       <nav className="bg-white/90 backdrop-blur-md shadow-xs transition-all">
-        <div className="flex justify-between items-center px-6 md:px-12 py-3.5 max-w-screen-2xl mx-auto">
+        <div className="flex justify-between items-center max-w-screen-2xl mx-auto px-6 md:px-12 py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center text-primary tracking-tighter font-headline">
-            <img src={logo} alt="ZoltanVisa" className="h-10 md:h-11 object-contain" />
+            <img src={logo} alt="ZoltanVisa" className="h-12 md:h-15 object-contain" />
           </Link>
           
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8 px-6 md:px-12 py-3.5">
             <Link 
               to="/" 
               className={`font-headline font-semibold tracking-tight transition-colors py-1 ${
