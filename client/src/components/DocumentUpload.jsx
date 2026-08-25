@@ -5,7 +5,9 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
   const [errors, setErrors] = useState({});
 
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-  const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+  const ACCEPT_ATTRIBUTE = 'application/pdf,image/jpeg,image/png,image/jpg,image/webp,.pdf,.jpg,.jpeg,.png,.webp';
 
   const validateFile = (file) => {
     if (!file) return null;
@@ -15,9 +17,13 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
       return `File size exceeds 50MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
     }
 
+    const fileExt = '.' + (file.name.split('.').pop() || '').toLowerCase();
+    const isMimeAllowed = ALLOWED_TYPES.includes(file.type);
+    const isExtAllowed = ALLOWED_EXTENSIONS.includes(fileExt);
+
     // Check file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return `File type not allowed. Only PDF, JPG, and PNG are accepted.`;
+    if (!isMimeAllowed && !isExtAllowed) {
+      return `File type not allowed. Only PDF, JPG, PNG, and WEBP files are accepted.`;
     }
 
     return null;
@@ -78,8 +84,8 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
 
   const getFileIcon = (file) => {
     if (!file) return 'description';
-    if (file.type === 'application/pdf') return 'picture_as_pdf';
-    if (file.type.startsWith('image/')) return 'image';
+    if (file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')) return 'picture_as_pdf';
+    if (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name || '')) return 'image';
     return 'description';
   };
 
@@ -179,12 +185,12 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
                       <input
                         type="file"
                         id={`file-${index}`}
-                        accept=".pdf,.jpg,.jpeg,.png"
+                        accept={ACCEPT_ATTRIBUTE}
                         onChange={(e) => handleFileSelect(docName, e)}
                         className="hidden"
                       />
                       <p className="text-xs text-outline mt-1">
-                        PDF, JPG, or PNG • Max 50MB
+                        PDF, JPG, PNG, or WEBP • Max 50MB
                       </p>
                     </div>
                   )}

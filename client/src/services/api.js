@@ -110,6 +110,16 @@ export const visaAPI = {
     }
   },
 
+  // Submit a query or contact inquiry (persisted directly to backend with status 'Query Received')
+  submitQuery: async (queryData) => {
+    try {
+      const response = await api.post('/queries', queryData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Update an existing application's details
   updateApplication: async (id, data) => {
     try {

@@ -100,13 +100,25 @@ const getAllApplications = async (req, res) => {
     });
 
     // Add application status based on payment_status/status
-    const enrichedApplications = applications.map(app => ({
-      ...app.toJSON(),
-      status: app.status || (app.payment_status === 'completed' ? 'Process Completed' : 
-              app.payment_status === 'pending' ? 'Payment Pending' : 'In Review'),
-      applicant_name: app.user_data?.fullName || app.user_data?.name || 'N/A',
-      visa_type: `${app.visaConfiguration?.citizenship} to ${app.visaConfiguration?.destination}`
-    }));
+    const enrichedApplications = applications.map(app => {
+      const applicantName = app.user_data?.fullName || 
+        (app.user_data?.name ? `${app.user_data.name} ${app.user_data.surname || ''}`.trim() : 'N/A');
+      return {
+        ...app.toJSON(),
+        status: app.status || (app.payment_status === 'completed' ? 'Process Completed' : 
+                app.payment_status === 'pending' ? 'Payment Pending' : 'In Review'),
+        applicant_name: applicantName,
+        email: app.user_data?.email || 'N/A',
+        phone: app.user_data?.phone || app.user_data?.phoneLocal || 'N/A',
+        query_type: app.user_data?.queryType || (app.status === 'Contact Inquiry' ? 'Contact Inquiry' : null),
+        source: app.user_data?.source || (app.status === 'Query Received' ? 'Query Form' : 'Application'),
+        visa_type: app.visaConfiguration 
+          ? `${app.visaConfiguration.citizenship} to ${app.visaConfiguration.destination}`
+          : (app.user_data?.citizenship && app.user_data?.destination 
+              ? `${app.user_data.citizenship} to ${app.user_data.destination}` 
+              : 'Visa Application')
+      };
+    });
 
     const total = await Application.count({ where: whereClause });
 
@@ -139,13 +151,26 @@ const getApplicationById = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
+    const applicantName = application.user_data?.fullName || 
+      (application.user_data?.name ? `${application.user_data.name} ${application.user_data.surname || ''}`.trim() : 'N/A');
+
     const enrichedApplication = {
       ...application.toJSON(),
       status: application.status || (application.payment_status === 'completed' ? 'Process Completed' : 
               application.payment_status === 'pending' ? 'Payment Pending' : 'In Review'),
-      applicant_name: application.user_data?.fullName || application.user_data?.name || 'N/A',
+      applicant_name: applicantName,
       email: application.user_data?.email || 'N/A',
-      phone: application.user_data?.phone || 'N/A'
+      phone: application.user_data?.phone || application.user_data?.phoneLocal || 'N/A',
+      preferredContact: application.user_data?.preferredContact || 'WhatsApp',
+      query_type: application.user_data?.queryType || (application.status === 'Contact Inquiry' ? 'Contact Inquiry' : null),
+      message: application.user_data?.message || '',
+      queryAnswers: application.user_data?.queryAnswers || {},
+      source: application.user_data?.source || (application.status === 'Query Received' ? 'Query Form' : 'Application'),
+      visa_type: application.visaConfiguration 
+        ? `${application.visaConfiguration.citizenship} to ${application.visaConfiguration.destination}`
+        : (application.user_data?.citizenship && application.user_data?.destination 
+            ? `${application.user_data.citizenship} to ${application.user_data.destination}` 
+            : 'Visa Application')
     };
 
     return res.status(200).json(enrichedApplication);

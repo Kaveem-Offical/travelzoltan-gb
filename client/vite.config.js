@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://api.zoltanvisa.com/api',
+        target: 'https://api.zoltanvisa.com',
         changeOrigin: true,
       }
     }

@@ -94,8 +94,11 @@ const LiveVisaApprovals = () => {
 
   const handleCardClick = () => {
     const item = approvalsList[currentIndex];
-    if (!item) return;
-    navigate('/checklist', {
+    const params = new URLSearchParams({
+      citizenship: 'Indian National',
+      destination: item.destination
+    });
+    navigate(`/checklist?${params.toString()}`, {
       state: { citizenship: 'Indian National', destination: item.destination }
     });
   };

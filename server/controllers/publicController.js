@@ -771,12 +771,130 @@ const uploadApplicationDocuments = async (req, res) => {
   }
 };
 
+// POST /api/queries - Submit special category query, dynamic query form, or contact inquiry
+const submitQuery = async (req, res) => {
+  try {
+    const {
+      configuration_id,
+      citizenship,
+      destination,
+      name,
+      surname,
+      fullName,
+      email,
+      phone,
+      phoneLocal,
+      phoneCountryCode,
+      preferredContact,
+      applicantCategory,
+      applicantStatus,
+      visaCategory,
+      queryType,
+      message,
+      answers,
+      queryAnswers,
+      source
+    } = req.body;
+
+    // Contact validation: at least email or phone must be provided
+    const contactEmail = (email || '').trim();
+    const contactPhone = (phone || phoneLocal || '').trim();
+
+    if (!contactEmail && !contactPhone) {
+      return res.status(400).json({ 
+        message: 'Please provide at least an email address or phone number so we can reach out to you.' 
+      });
+    }
+
+    // Name normalization
+    const computedFullName = fullName && fullName.trim() 
+      ? fullName.trim() 
+      : [name, surname].filter(Boolean).map(s => s.trim()).join(' ') || 'Prospective Applicant';
+
+    // Find or fallback configuration_id
+    let configId = configuration_id;
+    if (!configId && (citizenship || destination)) {
+      const config = await VisaConfiguration.findOne({
+        where: {
+          ...(citizenship ? { citizenship: citizenship.trim() } : {}),
+          ...(destination ? { destination: destination.trim() } : {})
+        }
+      });
+      if (config) {
+        configId = config.id;
+      }
+    }
+
+    if (!configId) {
+      // Find the first available configuration or create a fallback
+      const anyConfig = await VisaConfiguration.findOne();
+      if (anyConfig) {
+        configId = anyConfig.id;
+      } else {
+        const newConfig = await VisaConfiguration.create({
+          citizenship: citizenship || 'United Kingdom',
+          destination: destination || 'Europe (Schengen States)',
+          visa_type: 'General Query',
+          service_fee: 0
+        });
+        configId = newConfig.id;
+      }
+    }
+
+    const formattedPhone = contactPhone 
+      ? (contactPhone.startsWith('+') ? contactPhone : `${phoneCountryCode || '+44'} ${contactPhone}`.trim())
+      : '';
+
+    const userData = {
+      name: name ? name.trim() : (computedFullName.split(' ')[0] || ''),
+      surname: surname ? surname.trim() : (computedFullName.split(' ').slice(1).join(' ') || ''),
+      fullName: computedFullName,
+      email: contactEmail,
+      phone: formattedPhone || contactPhone,
+      phoneLocal: phoneLocal ? phoneLocal.trim() : contactPhone,
+      phoneCountryCode: phoneCountryCode || '+44',
+      preferredContact: preferredContact || 'WhatsApp',
+      citizenship: citizenship || '',
+      destination: destination || '',
+      applicantStatus: applicantStatus || applicantCategory || 'other',
+      applicantCategory: applicantCategory || applicantStatus || 'other',
+      visaCategory: visaCategory || 'tourist',
+      queryType: queryType || 'Special Category Query',
+      message: message ? message.trim() : '',
+      queryAnswers: queryAnswers || answers || {},
+      source: source || (queryType === 'Contact Inquiry' ? 'Contact Page' : 'Query Form'),
+      submittedAt: new Date().toISOString()
+    };
+
+    const newQueryApplication = await Application.create({
+      configuration_id: configId,
+      user_data: userData,
+      document_urls: [],
+      payment_status: 'pending',
+      status: source === 'Contact Page' || queryType === 'Contact Inquiry' ? 'Contact Inquiry' : 'Query Received'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Query submitted successfully. Our team will reach out to you shortly.',
+      queryId: newQueryApplication.id,
+      applicationId: newQueryApplication.id,
+      status: newQueryApplication.status,
+      data: userData
+    });
+  } catch (error) {
+    console.error('[submitQuery] Error saving query:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
 module.exports = {
   getVisaOptions,
   getVisaRequirements,
   createApplication,
   updateApplication,
   uploadApplicationDocuments,
+  submitQuery,
   createPaymentIntent,
   createPaymentOrder,
   verifyPayment

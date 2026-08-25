@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import certificationImg from '../assets/certification.png';
 import ServicesValueSection from '../components/ServicesValueSection';
 
-const API_URL = 'https://api.zoltanvisa.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.zoltanvisa.com/api';
 
 // Smooth In-View Counter with cubic easing and live increment support
 const StatCounter = ({ end, decimals = 0, prefix = '', suffix = '', isIncrementing = false, duration = 1800 }) => {
@@ -256,7 +256,11 @@ const HomePage = () => {
     const finalDestination = destination === 'Other Countries' && otherDestination
       ? otherDestination
       : destination;
-    navigate('/checklist', {
+    const params = new URLSearchParams({
+      citizenship: finalCitizenship,
+      destination: finalDestination
+    });
+    navigate(`/checklist?${params.toString()}`, {
       state: { citizenship: finalCitizenship, destination: finalDestination }
     });
   };

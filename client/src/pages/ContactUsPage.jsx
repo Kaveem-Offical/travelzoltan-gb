@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { visaAPI } from '../services/api';
 
 const ContactUsPage = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ const ContactUsPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,14 +21,29 @@ const ContactUsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setSubmitStatus(null);
+    setSubmitError(null);
+
+    try {
+      await visaAPI.submitQuery({
+        name: formData.name.split(' ')[0] || formData.name,
+        surname: formData.name.split(' ').slice(1).join(' ') || '',
+        fullName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        queryType: `Contact: ${formData.subject || 'General Inquiry'}`,
+        message: formData.message,
+        source: 'Contact Page'
+      });
       setSubmitStatus('success');
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      setTimeout(() => setSubmitStatus(null), 5000);
-    }, 1500);
+      setTimeout(() => setSubmitStatus(null), 8000);
+    } catch (err) {
+      console.error('Error submitting contact form:', err);
+      setSubmitError(err.message || 'Failed to send your message. Please try again or reach us on WhatsApp.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const offices = [
@@ -226,9 +243,16 @@ const ContactUsPage = () => {
                 </button>
 
                 {submitStatus === 'success' && (
-                  <div className="bg-green-500/10 text-green-700 p-4 rounded-xl flex items-center gap-3">
-                    <span className="material-symbols-outlined">check_circle</span>
-                    <p className="font-medium">Thank you! Your message has been sent successfully. We'll get back to you soon.</p>
+                  <div className="bg-green-500/10 text-green-700 p-4 rounded-xl flex items-center gap-3 border border-green-200">
+                    <span className="material-symbols-outlined text-green-600">check_circle</span>
+                    <p className="font-medium text-sm">Thank you! Your message has been sent successfully. Our team will get back to you shortly.</p>
+                  </div>
+                )}
+
+                {submitError && (
+                  <div className="bg-red-500/10 text-red-700 p-4 rounded-xl flex items-center gap-3 border border-red-200">
+                    <span className="material-symbols-outlined text-red-600">error</span>
+                    <p className="font-medium text-sm">{submitError}</p>
                   </div>
                 )}
               </form>

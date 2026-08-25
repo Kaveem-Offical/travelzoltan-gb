@@ -11,6 +11,7 @@ router.get('/live-approvals', liveApprovalController.getPublicApprovals);
 
 // Form handling with multer - 'documents' is the field name for files
 router.post('/applications', upload.array('documents'), publicController.createApplication);
+router.post('/queries', publicController.submitQuery);
 router.put('/applications/:id', publicController.updateApplication);
 router.post('/applications/:id/documents', upload.array('documents'), publicController.uploadApplicationDocuments);
 

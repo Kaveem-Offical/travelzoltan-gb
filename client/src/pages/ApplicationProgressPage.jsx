@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
 import { hasPayInFullOption, getPayNowPoints, getPayInFullPoints, resolvePointText } from '../utils/paymentUtils';
@@ -85,14 +85,15 @@ const getFormFieldsConfig = (visaData) => {
 };
 
 const ApplicationProgressPage = () => {
+  const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // State from location or defaults
-  const citizenship = location.state?.citizenship || 'United Kingdom';
-  const destination = location.state?.destination || 'Europe (Schengen States)';
-  const initialCategory = location.state?.selectedCategory || 'employed';
-  const initialVisaCategory = location.state?.selectedVisaCategory || 'tourist';
+  // State from URL search params, location state, or defaults
+  const citizenship = searchParams.get('citizenship') || location.state?.citizenship || 'United Kingdom';
+  const destination = searchParams.get('destination') || location.state?.destination || 'Europe (Schengen States)';
+  const initialCategory = searchParams.get('category') || location.state?.selectedCategory || 'employed';
+  const initialVisaCategory = searchParams.get('visaType') || location.state?.selectedVisaCategory || 'tourist';
   const initialVisaData = location.state?.visaData || null;
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -1009,7 +1010,13 @@ const ApplicationProgressPage = () => {
                       <div key={key} className="flex items-center justify-between p-3 hover:bg-surface-container-lowest rounded-xl transition-colors group">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-primary/5 text-primary rounded-lg flex items-center justify-center">
-                            <span className="material-symbols-outlined">description</span>
+                            <span className="material-symbols-outlined">
+                              {file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf') 
+                                ? 'picture_as_pdf' 
+                                : (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name || '')) 
+                                ? 'image' 
+                                : 'description'}
+                            </span>
                           </div>
                           <div>
                             <h4 className="font-semibold text-sm text-on-surface">{key}</h4>

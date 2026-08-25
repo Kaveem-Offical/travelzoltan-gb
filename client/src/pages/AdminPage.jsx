@@ -1494,35 +1494,44 @@ const AdminPage = () => {
   };
 
   const renderApplications = () => {
-    const filteredApps = applications.applications.filter(app => 
-      appSearch === '' || 
-      app.applicant_name?.toLowerCase().includes(appSearch.toLowerCase()) ||
-      app.visa_type?.toLowerCase().includes(appSearch.toLowerCase())
-    );
+    const filteredApps = applications.applications.filter(app => {
+      const query = appSearch.toLowerCase();
+      return (
+        appSearch === '' || 
+        app.applicant_name?.toLowerCase().includes(query) ||
+        app.email?.toLowerCase().includes(query) ||
+        app.phone?.toLowerCase().includes(query) ||
+        app.visa_type?.toLowerCase().includes(query) ||
+        app.query_type?.toLowerCase().includes(query) ||
+        app.status?.toLowerCase().includes(query)
+      );
+    });
 
     return (
     <div className="space-y-6">
       <div className="bg-surface-container-lowest rounded-lg editorial-shadow overflow-hidden">
         <div className="p-6 border-b border-surface-container-high">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="font-headline text-2xl font-bold">All Applications ({applications.total})</h3>
+            <h3 className="font-headline text-2xl font-bold">All Applications & Queries ({applications.total})</h3>
             <div className="flex gap-3">
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search applications..."
+                  placeholder="Search name, email, phone..."
                   value={appSearch}
                   onChange={(e) => setAppSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40"
+                  className="pl-10 pr-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm"
                 />
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
               </div>
               <select
                 value={appFilter}
                 onChange={(e) => { setAppFilter(e.target.value); setAppPage(0); }}
-                className="px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40"
+                className="px-4 py-2 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/40 text-sm font-medium"
               >
                 <option value="all">All Status</option>
+                <option value="Query Received">🟣 Queries Received</option>
+                <option value="Contact Inquiry">🟠 Contact Inquiries</option>
                 <option value="Documents Pending">Documents Pending</option>
                 <option value="Payment Pending">Payment Pending</option>
                 <option value="Payment Received">Payment Received</option>
@@ -1533,6 +1542,7 @@ const AdminPage = () => {
               <button 
                 onClick={() => handleExport('applications')}
                 className="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg hover:bg-primary hover:text-white transition-all"
+                title="Export Applications"
               >
                 <span className="material-symbols-outlined">download</span>
               </button>
@@ -1545,8 +1555,8 @@ const AdminPage = () => {
               <tr>
                 <th className="text-left p-4 font-semibold text-outline">ID</th>
                 <th className="text-left p-4 font-semibold text-outline">Applicant</th>
-                <th className="text-left p-4 font-semibold text-outline">Visa Type</th>
-                <th className="text-left p-4 font-semibold text-outline">Fee</th>
+                <th className="text-left p-4 font-semibold text-outline">Contact</th>
+                <th className="text-left p-4 font-semibold text-outline">Visa Type / Query</th>
                 <th className="text-left p-4 font-semibold text-outline">Status</th>
                 <th className="text-left p-4 font-semibold text-outline">Date</th>
                 <th className="text-left p-4 font-semibold text-outline">Actions</th>
@@ -1555,12 +1565,29 @@ const AdminPage = () => {
             <tbody>
               {filteredApps.map((app) => (
                 <tr key={app.id} className="border-b border-surface-container-low hover:bg-surface-container-low/50">
-                  <td className="p-4 font-mono text-sm text-outline">APP-{app.id.toString().padStart(4, '0')}</td>
-                  <td className="p-4 font-semibold">{app.applicant_name || 'N/A'}</td>
-                  <td className="p-4">{app.visa_type}</td>
-                  <td className="p-4">{formatCurrency(app.visaConfiguration?.service_fee)}</td>
+                  <td className="p-4 font-mono text-sm text-outline">
+                    {app.status === 'Query Received' || app.status === 'Contact Inquiry' ? (
+                      <span className="text-purple-600 font-bold">QRY-{app.id.toString().padStart(4, '0')}</span>
+                    ) : (
+                      <span>APP-{app.id.toString().padStart(4, '0')}</span>
+                    )}
+                  </td>
+                  <td className="p-4 font-semibold">
+                    <div>{app.applicant_name || 'N/A'}</div>
+                    {app.query_type && (
+                      <span className="text-xs text-purple-600 font-normal">{app.query_type}</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-xs">
+                    {app.email && app.email !== 'N/A' && <div className="text-on-surface font-medium">{app.email}</div>}
+                    {app.phone && app.phone !== 'N/A' && <div className="text-outline">{app.phone}</div>}
+                    {(!app.email || app.email === 'N/A') && (!app.phone || app.phone === 'N/A') && <div className="text-outline">N/A</div>}
+                  </td>
+                  <td className="p-4 text-sm font-medium">{app.visa_type}</td>
                   <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                      app.status === 'Query Received' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                      app.status === 'Contact Inquiry' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
                       app.status === 'Process Completed' || app.status === 'Payment Received' || app.status === 'Approved' ? 'bg-green-100 text-green-700' :
                       app.status === 'Documents Pending' || app.status === 'Payment Pending' || app.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                       app.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
@@ -1569,7 +1596,7 @@ const AdminPage = () => {
                       {app.status}
                     </span>
                   </td>
-                  <td className="p-4 text-outline">{formatDate(app.created_at)}</td>
+                  <td className="p-4 text-outline text-xs">{formatDate(app.created_at)}</td>
                   <td className="p-4">
                     <button 
                       onClick={() => handleViewApplication(app.id)}
@@ -2020,10 +2047,96 @@ const AdminPage = () => {
                 </div>
               </div>
 
+              {/* User Query / Inquiry Details Card (if applicable) */}
+              {(selectedApplication.query_type || selectedApplication.status === 'Query Received' || selectedApplication.status === 'Contact Inquiry' || selectedApplication.message || selectedApplication.user_data?.message || (selectedApplication.queryAnswers && Object.keys(selectedApplication.queryAnswers).length > 0)) && (
+                <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50/50 rounded-xl border border-purple-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-purple-700">help_center</span>
+                      <h4 className="font-bold text-purple-950 text-base">User Query & Inquiries</h4>
+                    </div>
+                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold border border-purple-300">
+                      {selectedApplication.query_type || selectedApplication.user_data?.queryType || 'Query Form'}
+                    </span>
+                  </div>
+
+                  {(selectedApplication.message || selectedApplication.user_data?.message) && (
+                    <div className="bg-white p-4 rounded-lg border border-purple-100">
+                      <p className="text-xs font-bold text-outline uppercase tracking-wider mb-1">Applicant Message / Requirements</p>
+                      <p className="text-sm text-on-surface whitespace-pre-line leading-relaxed font-medium">
+                        {selectedApplication.message || selectedApplication.user_data?.message}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dynamic Questions Answers */}
+                  {((selectedApplication.queryAnswers && Object.keys(selectedApplication.queryAnswers).length > 0) ||
+                    (selectedApplication.user_data?.queryAnswers && Object.keys(selectedApplication.user_data?.queryAnswers).length > 0)) && (
+                    <div className="bg-white p-4 rounded-lg border border-purple-100 space-y-2">
+                      <p className="text-xs font-bold text-outline uppercase tracking-wider mb-2">Form Responses</p>
+                      {Object.entries(selectedApplication.queryAnswers || selectedApplication.user_data?.queryAnswers || {}).map(([q, ans], i) => (
+                        <div key={i} className="text-xs border-b border-surface-container-low pb-2 last:border-0 last:pb-0">
+                          <span className="font-semibold text-outline block">{q}</span>
+                          <span className="font-medium text-on-surface text-sm">
+                            {typeof ans === 'boolean' ? (ans ? 'Yes (Confirmed)' : 'No') : (ans || 'N/A')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Preferred Contact Method */}
+                  {selectedApplication.preferredContact && (
+                    <div className="flex items-center gap-2 text-xs text-purple-900 font-semibold">
+                      <span className="material-symbols-outlined text-sm text-purple-700">contact_support</span>
+                      <span>Preferred Contact Method: <strong>{selectedApplication.preferredContact}</strong></span>
+                    </div>
+                  )}
+
+                  {/* Quick Contact Reach-out Actions */}
+                  <div className="pt-3 border-t border-purple-200">
+                    <p className="text-xs font-bold text-purple-900 uppercase tracking-wider mb-2.5">Instant Reach Out</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {selectedApplication.phone && selectedApplication.phone !== 'N/A' && (
+                        <a
+                          href={`https://wa.me/${selectedApplication.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${selectedApplication.applicant_name}, this is Zoltan Visa regarding your query for ${selectedApplication.visa_type}.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 py-2.5 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-sm">chat</span>
+                          WhatsApp
+                        </a>
+                      )}
+                      {selectedApplication.email && selectedApplication.email !== 'N/A' && (
+                        <a
+                          href={`mailto:${selectedApplication.email}?subject=${encodeURIComponent(`Zoltan Visa - Regarding Your Visa Query (${selectedApplication.visa_type})`)}&body=${encodeURIComponent(`Dear ${selectedApplication.applicant_name},\n\nThank you for contacting Zoltan Visa regarding your inquiry for ${selectedApplication.visa_type}.\n\nBest regards,\nZoltan Visa Team`)}`}
+                          className="flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-sm">mail</span>
+                          Send Email
+                        </a>
+                      )}
+                      {selectedApplication.phone && selectedApplication.phone !== 'N/A' && (
+                        <a
+                          href={`tel:${selectedApplication.phone.replace(/\s/g, '')}`}
+                          className="flex items-center justify-center gap-2 py-2.5 px-3 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-lg text-xs font-bold transition-all border border-outline-variant/40"
+                        >
+                          <span className="material-symbols-outlined text-sm">call</span>
+                          Call Applicant
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Status */}
               <div className="p-4 bg-surface-container-low rounded-lg">
                 <p className="text-sm text-outline mb-2">Current Status</p>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                  selectedApplication.status === 'Query Received' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                  selectedApplication.status === 'Contact Inquiry' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
                   selectedApplication.status === 'Process Completed' || selectedApplication.status === 'Payment Received' || selectedApplication.status === 'Approved' ? 'bg-green-100 text-green-700' :
                   selectedApplication.status === 'Documents Pending' || selectedApplication.status === 'Payment Pending' || selectedApplication.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
                   selectedApplication.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
@@ -2072,7 +2185,16 @@ const AdminPage = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-surface-container-high">
+              <div className="flex gap-3 pt-4 border-t border-surface-container-high flex-wrap">
+                {(selectedApplication.status === 'Query Received' || selectedApplication.status === 'Contact Inquiry') && (
+                  <button 
+                    onClick={() => handleStatusUpdate(selectedApplication.id, 'In Review', document.getElementById('adminNotes')?.value || 'Contacted applicant via ' + (selectedApplication.preferredContact || 'phone/email'))}
+                    className="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-sm">mark_email_read</span>
+                    Mark as Contacted
+                  </button>
+                )}
                 <button 
                   onClick={() => handleStatusUpdate(selectedApplication.id, 'Process Completed', document.getElementById('adminNotes')?.value)}
                   className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"

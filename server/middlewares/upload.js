@@ -27,13 +27,15 @@ const upload = multer({
     files: 10 // Max 10 files per request
   },
   fileFilter: function (req, file, cb) {
-    // Allowed file types
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    // Allowed file types and extensions
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
     
-    if (allowedTypes.includes(file.mimetype)) {
+    if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error(`File type ${file.mimetype} not allowed. Only PDF, JPG, and PNG are accepted.`));
+      cb(new Error(`File type ${file.mimetype || ext} not allowed. Only PDF, JPG, PNG, and WEBP are accepted.`));
     }
   }
 });
