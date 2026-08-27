@@ -57,7 +57,7 @@ const TravelVisaAgreementPage = () => {
 
         {/* Quick Highlights Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-outline-variant/30 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-sm">
             <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
               <span className="material-symbols-outlined text-xl">schedule</span>
             </div>
@@ -67,7 +67,7 @@ const TravelVisaAgreementPage = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-outline-variant/30 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-sm">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-2">
               <span className="material-symbols-outlined text-xl">gavel</span>
             </div>
@@ -77,7 +77,7 @@ const TravelVisaAgreementPage = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-outline-variant/30 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-sm">
             <div className="w-9 h-9 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-2">
               <span className="material-symbols-outlined text-xl">verified</span>
             </div>
@@ -87,7 +87,7 @@ const TravelVisaAgreementPage = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-outline-variant/30 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-sm">
             <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-2">
               <span className="material-symbols-outlined text-xl">account_balance</span>
             </div>
@@ -99,7 +99,7 @@ const TravelVisaAgreementPage = () => {
         </div>
 
         {/* Full Agreement Container */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-outline-variant/30 shadow-sm space-y-8">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-outline-variant/30 shadow-sm space-y-8">
           
           {/* Preamble */}
           <div className="p-6 rounded-2xl bg-surface-container-lowest border-l-4 border-primary text-sm sm:text-base leading-relaxed italic text-on-surface/90">

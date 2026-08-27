@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { compressImageFile } from '../utils/imageCompressor';
 
 const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
   const [selectedFiles, setSelectedFiles] = useState({});
   const [errors, setErrors] = useState({});
+  const [optimizingDoc, setOptimizingDoc] = useState(null);
 
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
   const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -29,7 +31,7 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
     return null;
   };
 
-  const handleFileSelect = (documentType, event) => {
+  const handleFileSelect = async (documentType, event) => {
     const file = event.target.files[0];
     
     if (!file) {
@@ -53,12 +55,26 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
       return;
     }
 
-    // Clear error and add file
+    // Clear error
     const newErrors = { ...errors };
     delete newErrors[documentType];
     setErrors(newErrors);
 
-    const newFiles = { ...selectedFiles, [documentType]: file };
+    // Optimize image if it's a photo or image format
+    let fileToAdd = file;
+    const isImg = file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name || '');
+    if (isImg) {
+      try {
+        setOptimizingDoc(documentType);
+        fileToAdd = await compressImageFile(file, { maxDimension: 2000, quality: 0.82 });
+      } catch (optErr) {
+        console.warn('Could not optimize image, using original:', optErr);
+      } finally {
+        setOptimizingDoc(null);
+      }
+    }
+
+    const newFiles = { ...selectedFiles, [documentType]: fileToAdd };
     setSelectedFiles(newFiles);
     onFilesChange(newFiles);
   };
@@ -167,11 +183,18 @@ const DocumentUpload = ({ requiredDocuments = [], onFilesChange }) => {
                   </div>
 
                   {/* File Info or Upload Button */}
-                  {file ? (
+                  {optimizingDoc === docName ? (
+                    <div className="flex items-center gap-2 text-xs text-primary font-medium mt-2">
+                      <div className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <span>Optimizing image for fast upload...</span>
+                    </div>
+                  ) : file ? (
                     <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-2">
-                      <span className="truncate">{file.name}</span>
+                      <span className="truncate font-medium">{file.name}</span>
                       <span className="text-outline">•</span>
-                      <span>{formatFileSize(file.size)}</span>
+                      <span className="font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/50">
+                        {formatFileSize(file.size)}
+                      </span>
                     </div>
                   ) : (
                     <div className="mt-2">
