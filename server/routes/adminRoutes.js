@@ -30,6 +30,7 @@ router.put('/change-credentials', authController.changeCredentials);
 // Applications
 router.get('/applications', adminController.getAllApplications);
 router.get('/applications/:id', adminController.getApplicationById);
+router.get('/applications/:id/agreement', adminController.getApplicationAgreement);
 router.put('/applications/:id/status', adminController.updateApplicationStatus);
 
 // Payments

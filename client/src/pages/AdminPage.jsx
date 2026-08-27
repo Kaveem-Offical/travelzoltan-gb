@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../services/api';
 import DocumentViewer from '../components/DocumentViewer';
 import LiveApprovalsTab from '../components/LiveApprovalsTab';
+import TravelVisaAgreementModal from '../components/TravelVisaAgreementModal';
 import { DEFAULT_PAY_NOW_POINTS, DEFAULT_PAY_IN_FULL_POINTS, getPayNowPoints, getPayInFullPoints } from '../utils/paymentUtils';
 
 // Format currency helper
@@ -973,6 +974,7 @@ const AdminPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // Filter states
   const [appFilter, setAppFilter] = useState('all');
@@ -2047,6 +2049,73 @@ const AdminPage = () => {
                 </div>
               </div>
 
+              {/* Travel & Visa Assistance Agreement Card */}
+              <div className="p-4 bg-surface-container-low rounded-lg border border-outline-variant/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
+                    <h4 className="font-headline font-bold text-sm text-on-surface">Travel & Visa Assistance Agreement</h4>
+                  </div>
+                  {selectedApplication.user_data?.agreement?.agreed ? (
+                    <span className="bg-emerald-500/10 text-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1 w-fit">
+                      <span className="material-symbols-outlined text-xs">task_alt</span>
+                      Signed & Accepted Electronically
+                    </span>
+                  ) : (
+                    <span className="bg-amber-500/10 text-amber-600 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-500/20 flex items-center gap-1 w-fit">
+                      <span className="material-symbols-outlined text-xs">pending</span>
+                      No Agreement Recorded
+                    </span>
+                  )}
+                </div>
+
+                {selectedApplication.user_data?.agreement?.agreed ? (
+                  <div className="space-y-3 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-on-surface-variant bg-surface-lowest p-3 rounded-lg border border-outline-variant/20">
+                      <div>
+                        <span className="text-outline block">Signatory:</span>
+                        <span className="font-semibold text-on-surface">
+                          {selectedApplication.user_data.agreement.clientName || selectedApplication.applicant_name}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-outline block">Passport Number:</span>
+                        <span className="font-semibold text-on-surface">
+                          {selectedApplication.user_data.agreement.clientPassport || selectedApplication.user_data.passportNumber || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-outline block">Signed Date & Time:</span>
+                        <span className="font-semibold text-on-surface">
+                          {formatDate(selectedApplication.user_data.agreement.agreedAt)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-outline block">Agreement Version:</span>
+                        <span className="font-semibold text-on-surface">
+                          {selectedApplication.user_data.agreement.agreementVersion || '1.0 - UK'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowAgreementModal(true)}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        View Signed Agreement Copy
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-on-surface-variant">
+                    No electronic agreement record attached to this submission (inquiry or pre-agreement submission).
+                  </p>
+                )}
+              </div>
+
               {/* User Query / Inquiry Details Card (if applicable) */}
               {(selectedApplication.query_type || selectedApplication.status === 'Query Received' || selectedApplication.status === 'Contact Inquiry' || selectedApplication.message || selectedApplication.user_data?.message || (selectedApplication.queryAnswers && Object.keys(selectedApplication.queryAnswers).length > 0)) && (
                 <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50/50 rounded-xl border border-purple-200 space-y-4">
@@ -2217,6 +2286,22 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Travel & Visa Assistance Agreement Viewer Modal for Admin */}
+      {selectedApplication && (
+        <TravelVisaAgreementModal
+          isOpen={showAgreementModal}
+          onClose={() => setShowAgreementModal(false)}
+          clientDetails={{
+            fullName: selectedApplication.user_data?.agreement?.clientName || selectedApplication.applicant_name,
+            passportNumber: selectedApplication.user_data?.agreement?.clientPassport || selectedApplication.user_data?.passportNumber,
+            email: selectedApplication.user_data?.agreement?.clientEmail || selectedApplication.email,
+            agreedAt: selectedApplication.user_data?.agreement?.agreedAt
+          }}
+          agreementData={selectedApplication.user_data?.agreement}
+          isAccepted={true}
+        />
       )}
 
       {/* Sidebar */}

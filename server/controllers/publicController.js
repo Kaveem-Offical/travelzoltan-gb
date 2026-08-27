@@ -888,6 +888,44 @@ const submitQuery = async (req, res) => {
   }
 };
 
+// GET /api/applications/:id/agreement
+const getApplicationAgreement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await Application.findByPk(id, {
+      include: [{ model: VisaConfiguration, as: 'visaConfiguration' }]
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const agreement = application.user_data?.agreement || null;
+    const applicantName = application.user_data?.fullName || 
+      (application.user_data?.name ? `${application.user_data.name} ${application.user_data.surname || ''}`.trim() : 'Applicant');
+
+    const defaultAgreement = require('../data/travelVisaAgreementData');
+
+    return res.status(200).json({
+      applicationId: application.id,
+      applicantName,
+      status: application.status,
+      hasSignedAgreement: !!agreement?.agreed,
+      agreement: agreement || {
+        agreed: false,
+        agreementTitle: defaultAgreement.AGREEMENT_TITLE,
+        agreementSubtitle: defaultAgreement.AGREEMENT_SUBTITLE,
+        agreementVersion: defaultAgreement.AGREEMENT_VERSION,
+        agreementText: defaultAgreement.RAW_AGREEMENT_TEXT,
+        declarationsAccepted: defaultAgreement.CLIENT_DECLARATIONS
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching application agreement:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
 module.exports = {
   getVisaOptions,
   getVisaRequirements,
@@ -897,5 +935,6 @@ module.exports = {
   submitQuery,
   createPaymentIntent,
   createPaymentOrder,
-  verifyPayment
+  verifyPayment,
+  getApplicationAgreement
 };

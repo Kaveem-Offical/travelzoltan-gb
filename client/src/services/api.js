@@ -144,6 +144,16 @@ export const visaAPI = {
     }
   },
 
+  // Get application agreement record
+  getApplicationAgreement: async (id) => {
+    try {
+      const response = await api.get(`/applications/${id}/agreement`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Process payment
   createPaymentIntent: async (applicationId) => {
     try {
@@ -219,6 +229,15 @@ export const adminAPI = {
   updateApplicationStatus: async (id, status, notes) => {
     try {
       const response = await api.put(`/admin/applications/${id}/status`, { status, notes });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  getApplicationAgreement: async (id) => {
+    try {
+      const response = await api.get(`/admin/applications/${id}/agreement`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

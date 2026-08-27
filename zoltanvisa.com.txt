@@ -1,0 +1,58 @@
+;;
+;; Domain:     zoltanvisa.com.
+;; Exported:   2026-08-26 07:04:32
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+zoltanvisa.com	3600	IN	SOA	sima.ns.cloudflare.com. dns.cloudflare.com. 2053939447 10000 2400 604800 3600
+
+;; NS Records
+zoltanvisa.com.	86400	IN	NS	sima.ns.cloudflare.com.
+zoltanvisa.com.	86400	IN	NS	troy.ns.cloudflare.com.
+
+;; A Records
+api.zoltanvisa.com.	1	IN	A	157.230.223.112 ; cf_tags=cf-proxied:true
+autoconfig.zoltanvisa.com.	1	IN	A	198.23.53.75 ; cf_tags=cf-proxied:true
+gb.zoltanvisa.com.	1	IN	A	198.23.51.173 ; cf_tags=cf-proxied:true
+imap.zoltanvisa.com.	1	IN	A	198.23.53.39 ; cf_tags=cf-proxied:true
+pop3.zoltanvisa.com.	1	IN	A	198.23.53.39 ; cf_tags=cf-proxied:true
+smtp.zoltanvisa.com.	1	IN	A	198.23.53.42 ; cf_tags=cf-proxied:true
+www.zoltanvisa.com.	1	IN	A	198.23.51.173 ; cf_tags=cf-proxied:true
+zoltanvisa.com.	1	IN	A	198.23.51.173 ; cf_tags=cf-proxied:true
+
+;; MX Records
+www.zoltanvisa.com.	1	IN	MX	10 mx1.bluedomainhosting.com.
+www.zoltanvisa.com.	1	IN	MX	10 mx2.bluedomainhosting.com.
+zoltanvisa.com.	1	IN	MX	10 mx2.bluedomainhosting.com.
+zoltanvisa.com.	1	IN	MX	10 mx1.bluedomainhosting.com.
+
+;; SRV Records
+_autodiscover._tcp.admin.zoltanvisa.com.	1	IN	SRV	10 1 443 autodiscover.cloudlogin.co.
+_autodiscover._tcp.zoltanvisa.com.	1	IN	SRV	10 1 443 autodiscover.cloudlogin.co.
+
+;; TXT Records
+default._domainkey.zoltanvisa.com.	1	IN	TXT	"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC41vG+wqCWOd0F/oWYE+eCCtVzX+orzBn5+rXS54pC3nxuqVNMZpLiq38bIyJsAIROsvvfmDtoh5XdP8Y1PB9RYVMmqvU4wGyd2xV+9eGeH3SOHL6RYPLmhXY9v0XKamfbTfUZT8k13T5MHJZRQg1MUGJkKWVyB6IHFL7NyciBIwIDAQAB"
+_dmarc.mail.zoltanvisa.com.	1	IN	TXT	"v=DMARC1; p=none;"
+_dmarc.zoltanvisa.com.	1	IN	TXT	"v=DMARC1; p=none;"
+_domainkey.zoltanvisa.com.	1	IN	TXT	"o=~"
+zoltanvisa.com.	1	IN	TXT	"v=spf1 include:spf.supremebox.com mx -all"

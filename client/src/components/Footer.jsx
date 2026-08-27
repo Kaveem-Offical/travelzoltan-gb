@@ -73,6 +73,11 @@ const Footer = () => {
                     Privacy Statement
                   </Link>
                 </li>
+                <li>
+                  <Link to="/travel-visa-agreement" className="text-slate-500 font-['Inter'] text-sm hover:text-primary underline underline-offset-4 transition-all">
+                    Visa Assistance Agreement
+                  </Link>
+                </li>
               </ul>
             </div>
             <div className="hidden md:block space-y-4">

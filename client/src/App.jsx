@@ -21,6 +21,7 @@ import CarRentalTermsPage from './pages/CarRentalTermsPage';
 import HolidaysTermsPage from './pages/HolidaysTermsPage';
 import AboutUsPage from './pages/AboutUsPage';
 import ContactUsPage from './pages/ContactUsPage';
+import TravelVisaAgreementPage from './pages/TravelVisaAgreementPage';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -61,6 +62,7 @@ function AppContent() {
           <Route path="/about-us" element={<AboutUsPage />} />
           <Route path="/contact-us" element={<ContactUsPage />} />
           <Route path="/contact" element={<ContactUsPage />} />
+          <Route path="/travel-visa-agreement" element={<TravelVisaAgreementPage />} />
         </Routes>
       </div>
       {!isAdminPage && <LiveVisaApprovals />}

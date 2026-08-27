@@ -13,6 +13,7 @@ router.get('/live-approvals', liveApprovalController.getPublicApprovals);
 router.post('/applications', upload.array('documents'), publicController.createApplication);
 router.post('/queries', publicController.submitQuery);
 router.put('/applications/:id', publicController.updateApplication);
+router.get('/applications/:id/agreement', publicController.getApplicationAgreement);
 router.post('/applications/:id/documents', upload.array('documents'), publicController.uploadApplicationDocuments);
 
 router.post('/payments/create-intent', publicController.createPaymentIntent);

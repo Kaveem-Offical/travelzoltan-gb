@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { visaAPI } from '../services/api';
 import DocumentUpload from '../components/DocumentUpload';
+import TravelVisaAgreementModal from '../components/TravelVisaAgreementModal';
 import { hasPayInFullOption, getPayNowPoints, getPayInFullPoints, resolvePointText } from '../utils/paymentUtils';
+import {
+  AGREEMENT_TITLE,
+  AGREEMENT_SUBTITLE,
+  AGREEMENT_VERSION,
+  AGREEMENT_PREAMBLE,
+  AGREEMENT_SECTIONS,
+  CLIENT_DECLARATIONS,
+  IMPORTANT_NOTE,
+  RAW_AGREEMENT_TEXT
+} from '../data/travelVisaAgreementData';
 
 // List of phone country codes
 const countryCodes = [
@@ -142,6 +153,11 @@ const ApplicationProgressPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState(null);
+
+  // Terms & Conditions Agreement state
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [agreementModalOpen, setAgreementModalOpen] = useState(false);
+  const [agreementError, setAgreementError] = useState(null);
 
   useEffect(() => {
     if (!visaData) {
@@ -422,6 +438,34 @@ const ApplicationProgressPage = () => {
   const handleSubmit = async () => {
     if (loading || uploadingDocs || isSubmittingRef.current) return;
 
+    if (!agreementAccepted) {
+      setAgreementError('Please read and agree to the Travel & Visa Assistance Agreement before proceeding to payment.');
+      const el = document.getElementById('agreement-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+    setAgreementError(null);
+
+    const agreementPayload = {
+      agreed: true,
+      agreedAt: new Date().toISOString(),
+      clientName: formData.fullName || `${formData.name || ''} ${formData.surname || ''}`.trim(),
+      clientEmail: formData.email,
+      clientPhone: formData.phone || formData.phoneLocal,
+      clientPassport: formData.passportNumber,
+      citizenship,
+      destination,
+      visaCategory: selectedVisaCategory,
+      applicantStatus: selectedCategory,
+      agreementTitle: AGREEMENT_TITLE,
+      agreementSubtitle: AGREEMENT_SUBTITLE,
+      agreementVersion: AGREEMENT_VERSION,
+      agreementText: RAW_AGREEMENT_TEXT,
+      declarationsAccepted: CLIENT_DECLARATIONS
+    };
+
     try {
       isSubmittingRef.current = true;
       setLoading(true);
@@ -429,7 +473,7 @@ const ApplicationProgressPage = () => {
       let currentAppId = applicationId;
       
       if (currentAppId) {
-        // Update existing application user_data with payment details
+        // Update existing application user_data with payment details and signed agreement
         await visaAPI.updateApplication(currentAppId, {
           user_data: {
             ...formData,
@@ -437,7 +481,8 @@ const ApplicationProgressPage = () => {
             visaCategory: selectedVisaCategory,
             paymentOption,
             paymentCurrency: selectedCurrency,
-            paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount
+            paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount,
+            agreement: agreementPayload
           }
         });
       } else {
@@ -452,7 +497,8 @@ const ApplicationProgressPage = () => {
           paymentOption,
           paymentCurrency: selectedCurrency,
           paymentAmountGBP: paymentOption === 'partial' ? payNowAmount : payInFullAmount,
-          status: 'Payment Pending'
+          status: 'Payment Pending',
+          agreement: agreementPayload
         }));
         
         const documentTypes = [];
@@ -1043,6 +1089,186 @@ const ApplicationProgressPage = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Travel & Visa Assistance Agreement Section */}
+                <div id="agreement-section" className="bg-surface-lowest rounded-3xl border border-outline-variant/30 overflow-hidden shadow-sm transition-all duration-300">
+                  <div className="bg-surface-container-lowest px-6 py-5 border-b border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                        <span className="material-symbols-outlined text-2xl">verified_user</span>
+                      </div>
+                      <div>
+                        <h3 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+                          Travel & Visa Assistance Agreement
+                          <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            Required
+                          </span>
+                        </h3>
+                        <p className="text-xs text-on-surface-variant">
+                          Zoltan Visa UK Travel & Visa Assistance Services Terms
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setAgreementModalOpen(true)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 flex items-center gap-1.5 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base">open_in_full</span>
+                        <span>Read Fullscreen</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    {/* Quick highlights */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                        <p className="font-bold text-on-surface flex items-center gap-1.5 text-primary">
+                          <span className="material-symbols-outlined text-sm">schedule</span>
+                          35 Days + 10 Days
+                        </p>
+                        <p className="text-on-surface-variant mt-1 text-[11px]">
+                          Standard internal timeline plus 10-day grace period.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                        <p className="font-bold text-on-surface flex items-center gap-1.5 text-amber-600">
+                          <span className="material-symbols-outlined text-sm">gavel</span>
+                          No Approval Guarantee
+                        </p>
+                        <p className="text-on-surface-variant mt-1 text-[11px]">
+                          Sole decision power rests with official authorities.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                        <p className="font-bold text-on-surface flex items-center gap-1.5 text-secondary">
+                          <span className="material-symbols-outlined text-sm">verified</span>
+                          Authentic Documents
+                        </p>
+                        <p className="text-on-surface-variant mt-1 text-[11px]">
+                          Applicant is solely responsible for genuine documents.
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20">
+                        <p className="font-bold text-on-surface flex items-center gap-1.5 text-purple-600">
+                          <span className="material-symbols-outlined text-sm">payments</span>
+                          Third-Party Fees
+                        </p>
+                        <p className="text-on-surface-variant mt-1 text-[11px]">
+                          Government & embassy fees are separate from service fees.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Scrollable Agreement Reader */}
+                    <div className="relative">
+                      <div className="max-h-64 overflow-y-auto pr-3 rounded-2xl bg-surface-container-lowest p-5 border border-outline-variant/30 text-xs text-on-surface/85 space-y-4 shadow-inner">
+                        <div className="italic text-on-surface-variant/90 border-b border-outline-variant/20 pb-3">
+                          {AGREEMENT_PREAMBLE}
+                        </div>
+
+                        {AGREEMENT_SECTIONS.map((sec) => (
+                          <div key={sec.id} className="space-y-1.5">
+                            <h4 className="font-bold text-primary text-xs">{sec.title}</h4>
+                            {sec.clauses.map((c, idx) => (
+                              <div key={idx} className="space-y-1">
+                                <p>
+                                  {c.number !== '7.0' && <strong className="text-on-surface mr-1">{c.number}</strong>}
+                                  {c.text}
+                                </p>
+                                {c.bullets && (
+                                  <ul className="list-disc list-inside pl-3 space-y-0.5 text-on-surface-variant">
+                                    {c.bullets.map((b, bIdx) => (
+                                      <li key={bIdx}>{b}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+
+                        {/* Declarations list */}
+                        <div className="pt-3 border-t border-outline-variant/20 space-y-2">
+                          <h4 className="font-bold text-primary uppercase text-xs">CLIENT DECLARATION & ACCEPTANCE</h4>
+                          <p className="text-[11px] text-on-surface-variant font-medium">By accepting this Agreement, I confirm that:</p>
+                          <ul className="space-y-1 pl-1">
+                            {CLIENT_DECLARATIONS.map((dec, dIdx) => (
+                              <li key={dIdx} className="flex items-start gap-2 text-[11px]">
+                                <span className="material-symbols-outlined text-[13px] text-primary shrink-0 mt-0.5">check_circle</span>
+                                <span>{dec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <p className="text-[10px] text-on-surface-variant text-center pt-2 italic">
+                          {IMPORTANT_NOTE}
+                        </p>
+                      </div>
+                      <div className="text-right mt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setAgreementModalOpen(true)}
+                          className="text-[11px] text-primary hover:underline font-semibold"
+                        >
+                          View complete agreement in larger window →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Error Banner if user attempted without checking */}
+                    {agreementError && (
+                      <div className="p-3.5 rounded-2xl bg-error/10 border border-error/20 flex items-center gap-3 text-error text-xs font-semibold animate-in shake duration-300">
+                        <span className="material-symbols-outlined text-lg shrink-0">error</span>
+                        <span>{agreementError}</span>
+                      </div>
+                    )}
+
+                    {/* Agreement Checkbox */}
+                    <div className={`p-4 sm:p-5 rounded-2xl border-2 transition-all ${agreementAccepted ? 'border-primary/40 bg-primary/5 shadow-sm' : agreementError ? 'border-error/40 bg-error/5' : 'border-outline-variant/40 bg-white hover:border-primary/30'}`}>
+                      <label className="flex items-start gap-3.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={agreementAccepted}
+                          onChange={(e) => {
+                            setAgreementAccepted(e.target.checked);
+                            if (e.target.checked) setAgreementError(null);
+                          }}
+                          className="mt-1 w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer shrink-0 accent-primary"
+                        />
+                        <div className="space-y-1">
+                          <span className="font-bold text-sm text-on-surface block">
+                            I have read, understood, and voluntarily accept the Travel & Visa Assistance Agreement and Client Declaration.
+                          </span>
+                          <span className="text-xs text-on-surface-variant block leading-relaxed">
+                            I confirm that all documents and information provided are genuine, authentic, and accurate. I understand that Zoltan Visa does not guarantee visa approval, and that decisions are made solely by the competent authorities.
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Digital Signature & Timestamp Record */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container-lowest text-[11px] text-on-surface-variant border border-outline-variant/20">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm text-primary">draw</span>
+                        <span>
+                          Electronic Signatory: <strong className="text-on-surface font-semibold">{formData.fullName || 'Applicant'}</strong>
+                          {formData.passportNumber && <span> (Passport: {formData.passportNumber})</span>}
+                        </span>
+                      </div>
+                      <div className="font-mono text-[10px] text-outline">
+                        Ref: ZV-AGR-UK • {new Date().toLocaleDateString('en-GB')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             </div>
@@ -1089,7 +1315,7 @@ const ApplicationProgressPage = () => {
   const steps = [
     { num: 1, title: 'Personal Details', desc: 'Basic information' },
     { num: 2, title: 'Required Documents', desc: 'Upload to start' },
-    { num: 3, title: 'Review & Payment', desc: 'Select option & Pay' }
+    { num: 3, title: 'Review & Payment', desc: 'Agreement & Pay' }
   ];
 
   return (
@@ -1154,6 +1380,18 @@ const ApplicationProgressPage = () => {
           {renderStageContent()}
         </div>
       </div>
+
+      {/* Fullscreen Agreement Reader Modal */}
+      <TravelVisaAgreementModal
+        isOpen={agreementModalOpen}
+        onClose={() => setAgreementModalOpen(false)}
+        clientDetails={formData}
+        onAccept={() => {
+          setAgreementAccepted(true);
+          setAgreementError(null);
+        }}
+        isAccepted={agreementAccepted}
+      />
     </div>
   );
 };
