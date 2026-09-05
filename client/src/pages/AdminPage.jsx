@@ -2054,7 +2054,7 @@ const AdminPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
-                    <h4 className="font-headline font-bold text-sm text-on-surface">Travel & Visa Assistance Agreement</h4>
+                    <h4 className="font-headline font-bold text-sm text-on-surface">Visa Assistance Agreement</h4>
                   </div>
                   {selectedApplication.user_data?.agreement?.agreed ? (
                     <span className="bg-emerald-500/10 text-emerald-600 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1 w-fit">

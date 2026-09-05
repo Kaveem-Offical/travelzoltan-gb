@@ -102,7 +102,7 @@ const TravelVisaAgreementModal = ({
                 Official Document
               </div>
               <p className="font-headline font-bold text-base text-primary">
-                Zoltan Visa UK • Travel & Visa Assistance Agreement
+                Zoltan • Visa Assistance Agreement
               </p>
               <p className="text-xs text-slate-600 mt-0.5">
                 Standard processing timeline: 35 days (+ 10-day grace period). Governing law: England and Wales.
@@ -203,7 +203,7 @@ const TravelVisaAgreementModal = ({
 
           {/* Footer Note */}
           <div className="p-4 rounded-xl bg-slate-50 text-xs text-slate-600 text-center border border-slate-200">
-            <p className="font-bold text-slate-900 mb-1">ZoltanVisa • Your International Travel Partner</p>
+            <p className="font-bold text-slate-900 mb-1">Zoltan • Your International Partner</p>
             <p>{IMPORTANT_NOTE}</p>
           </div>
         </div>

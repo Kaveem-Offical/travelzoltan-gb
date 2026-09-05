@@ -161,7 +161,7 @@ const TravelVisaAgreementPage = () => {
 
           {/* Footer Note */}
           <div className="p-5 rounded-2xl bg-surface-container-lowest text-center text-xs sm:text-sm text-on-surface-variant border border-outline-variant/30 space-y-1">
-            <p className="font-bold text-on-surface">ZoltanVisa • Your International Travel Partner</p>
+            <p className="font-bold text-on-surface">Zoltan • Your International Partner</p>
             <p>{IMPORTANT_NOTE}</p>
           </div>
         </div>

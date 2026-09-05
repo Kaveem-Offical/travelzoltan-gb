@@ -379,7 +379,7 @@ const ApplicationProgressPage = () => {
       }
 
       if (!agreementAccepted) {
-        setAgreementError('Please read and accept the Travel & Visa Assistance Agreement and declarations to continue.');
+        setAgreementError('Please read and accept the Visa Assistance Agreement and declarations to continue.');
         const el = document.getElementById('stage2-agreement-section') || document.getElementById('agreement-section');
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -528,7 +528,7 @@ const ApplicationProgressPage = () => {
     if (loading || uploadingDocs || isSubmittingRef.current) return;
 
     if (!agreementAccepted) {
-      setAgreementError('Please read and agree to the Travel & Visa Assistance Agreement before proceeding to payment.');
+      setAgreementError('Please read and agree to the Visa Assistance Agreement before proceeding to payment.');
       const el = document.getElementById('agreement-section');
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -641,13 +641,13 @@ const ApplicationProgressPage = () => {
           </div>
           <div>
             <h3 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
-              Travel & Visa Assistance Agreement
+              Visa Assistance Agreement
               <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 Required
               </span>
             </h3>
             <p className="text-xs text-on-surface-variant">
-              Zoltan Visa UK Travel & Visa Assistance Services Terms & Declarations
+              Zoltan UK & Visa Assistance Services Terms & Declarations
             </p>
           </div>
         </div>
@@ -784,10 +784,10 @@ const ApplicationProgressPage = () => {
             />
             <div className="space-y-1">
               <span className="font-bold text-sm text-on-surface block">
-                I have read, understood, and voluntarily accept the Travel & Visa Assistance Agreement and Client Declaration.
+                I have read, understood, and voluntarily accept the Visa Assistance Agreement and Client Declaration.
               </span>
               <span className="text-xs text-on-surface-variant block leading-relaxed">
-                I confirm that all documents and information provided are genuine, authentic, and accurate. I understand that Zoltan Visa does not guarantee visa approval, and that decisions are made solely by the competent authorities.
+                I confirm that all documents and information provided are genuine, authentic, and accurate. I understand that Zoltan does not guarantee visa approval, and that decisions are made solely by the competent authorities.
               </span>
             </div>
           </label>
@@ -1097,7 +1097,7 @@ const ApplicationProgressPage = () => {
               
               <h2 className="font-headline text-4xl font-extrabold text-on-surface mb-3 tracking-tight">Required Documents & Service Agreement</h2>
               <p className="text-on-surface-variant/80 text-lg mb-10 max-w-xl">
-                Please upload your required documents and accept the Travel & Visa Assistance Agreement before proceeding to payment.
+                Please upload your required documents and accept the Visa Assistance Agreement before proceeding to payment.
               </p>
             
               <div className="bg-surface-lowest rounded-2xl p-6 border border-outline-variant/30 shadow-sm relative z-10">
@@ -1369,7 +1369,7 @@ const ApplicationProgressPage = () => {
                       </div>
                       <div>
                         <h4 className="font-bold text-sm text-emerald-950 flex items-center gap-2">
-                          Travel & Visa Assistance Agreement Accepted
+                          Visa Assistance Agreement Accepted
                           <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                             Signed
                           </span>

@@ -1,11 +1,11 @@
-// Travel & Visa Assistance Agreement Data and Full Text Constants
-// Zoltan Visa UK Travel & Visa Assistance Services
+// Visa Assistance Agreement Data and Full Text Constants
+// Zoltan UK & Visa Assistance Services
 
-export const AGREEMENT_TITLE = "TRAVEL & VISA ASSISTANCE AGREEMENT";
-export const AGREEMENT_SUBTITLE = "Zoltan Visa UK Travel & Visa Assistance Services";
+export const AGREEMENT_TITLE = "VISA ASSISTANCE AGREEMENT";
+export const AGREEMENT_SUBTITLE = "Zoltan UK & Visa Assistance Services";
 export const AGREEMENT_VERSION = "1.0 - UK";
 
-export const AGREEMENT_PREAMBLE = `This Travel & Visa Assistance Agreement (“Agreement”) sets out the terms and conditions under which Zoltan Visa (“Company”, “we”, “us” or “our”) provides travel-related and visa assistance services to the client (“Client”, “you” or “your”). By signing this Agreement, submitting an online acceptance, ticking the relevant acceptance box on our website, making payment, or instructing us to commence work, you confirm that you have read, understood, and accepted these terms and conditions.`;
+export const AGREEMENT_PREAMBLE = `This & Visa Assistance Agreement (“Agreement”) sets out the terms and conditions under which Zoltan (“Company”, “we”, “us” or “our”) provides -related and visa assistance services to the client (“Client”, “you” or “your”). By signing this Agreement, submitting an online acceptance, ticking the relevant acceptance box on our website, making payment, or instructing us to commence work, you confirm that you have read, understood and accepted these terms and conditions.`;
 
 export const AGREEMENT_SECTIONS = [
   {
@@ -14,14 +14,14 @@ export const AGREEMENT_SECTIONS = [
     clauses: [
       {
         number: "1.1",
-        text: "The Company may provide travel and visa assistance services, which may include:",
+        text: "The Company may provide and visa assistance services, which may include:",
         bullets: [
           "Application form preparation and administrative assistance;",
           "Document checklist and document organisation;",
           "Review of documents supplied by the Client;",
           "Assistance with appointment and submission procedures where applicable;",
-          "Communication and administrative coordination with relevant visa application centres, embassies, consulates, airlines, hotels, insurers and other travel service providers, where permitted;",
-          "Travel planning and related travel services where separately agreed."
+          "Communication and administrative coordination with relevant visa application centres, embassies, consulates, airlines, hotels, insurers and other service providers, where permitted;",
+          "planning and related services where separately agreed."
         ]
       },
       {
@@ -229,7 +229,7 @@ export const AGREEMENT_SECTIONS = [
       },
       {
         number: "9.2",
-        text: "Government visa fees, embassy fees, visa application centre charges, biometric fees, courier fees, translation fees, insurance costs, airline charges, hotel charges and other thirdparty expenses are separate unless expressly included in the agreed price."
+        text: "Government visa fees, embassy fees, visa application centre charges, biometric fees, courier fees, translation fees, insurance costs, airline charges, hotel charges and other third-party expenses are separate unless expressly included in the agreed price."
       },
       {
         number: "9.3",
@@ -339,7 +339,7 @@ export const AGREEMENT_SECTIONS = [
       },
       {
         number: "14.2",
-        text: "The Client authorises the Company to use and share relevant personal information and documents where reasonably necessary to provide the agreed services, including with visa application centres, embassies, consulates, government authorities and relevant travel service providers where permitted."
+        text: "The Client authorises the Company to use and share relevant personal information and documents where reasonably necessary to provide the agreed services, including with visa application centres, embassies, consulates, government authorities and relevant service providers where permitted."
       },
       {
         number: "14.3",
@@ -371,72 +371,50 @@ export const AGREEMENT_SECTIONS = [
   },
   {
     id: 16,
-    title: "16. FALSE OR FRAUDULENT DOCUMENTS",
+    title: "16. IMMIGRATION / VISA DECISION-MAKING",
     clauses: [
       {
         number: "16.1",
-        text: "The Client confirms that all documents and information supplied to the Company are genuine and authentic."
-      },
-      {
-        number: "16.2",
-        text: "The Client must not provide forged, altered, fraudulent or misleading documents."
-      },
-      {
-        number: "16.3",
-        text: "If the Client supplies false or fraudulent documentation, the Client accepts responsibility for the consequences arising from that conduct."
-      },
-      {
-        number: "16.4",
-        text: "The Company may immediately suspend or terminate services where it reasonably believes that fraudulent or unlawful documentation has been supplied."
-      }
-    ]
-  },
-  {
-    id: 17,
-    title: "17. IMMIGRATION / VISA DECISION-MAKING",
-    clauses: [
-      {
-        number: "17.1",
         text: "The Company provides the services described in the Client's service agreement and does not control the decision-making process of any embassy, consulate or immigration authority."
       },
       {
-        number: "17.2",
+        number: "16.2",
         text: "Where a service requires regulated immigration advice or representation, such services will only be provided where legally permitted and by an appropriately authorised person or organisation where required."
       },
       {
-        number: "17.3",
+        number: "16.3",
         text: "The Client should not interpret any statement by the Company as a guarantee of a visa or immigration outcome."
       }
     ]
   },
   {
-    id: 18,
-    title: "18. WEBSITE ACCEPTANCE & ELECTRONIC AGREEMENT",
+    id: 17,
+    title: "17. WEBSITE ACCEPTANCE & ELECTRONIC AGREEMENT",
     clauses: [
       {
-        number: "18.1",
+        number: "17.1",
         text: "Where this Agreement is accepted electronically, the Client's electronic acceptance, including ticking an acceptance checkbox, submitting an online form, making payment or otherwise confirming acceptance, may constitute acceptance of this Agreement where legally effective."
       },
       {
-        number: "18.2",
+        number: "17.2",
         text: "The Client confirms that they have had an opportunity to read these terms before accepting them."
       },
       {
-        number: "18.3",
+        number: "17.3",
         text: "The Company may retain records of electronic acceptance, communications, payments and instructions for legitimate business and legal purposes."
       }
     ]
   },
   {
-    id: 19,
-    title: "19. GOVERNING LAW & JURISDICTION",
+    id: 18,
+    title: "18. GOVERNING LAW & JURISDICTION",
     clauses: [
       {
-        number: "19.1",
+        number: "18.1",
         text: "This Agreement shall be governed by the laws of England and Wales, subject to any mandatory consumer protection rights applicable to the Client."
       },
       {
-        number: "19.2",
+        number: "18.2",
         text: "Any dispute shall be dealt with by the courts having appropriate jurisdiction, subject to any mandatory rights the Client may have under applicable UK law."
       }
     ]
@@ -445,14 +423,14 @@ export const AGREEMENT_SECTIONS = [
 
 export const CLIENT_DECLARATIONS = [
   "I have read and understood this Agreement and the terms applicable to the service I have purchased.",
-  "I understand that Zoltan Visa does not guarantee visa approval or any particular immigration outcome.",
+  "I understand that Zoltan does not guarantee visa approval or any particular immigration outcome.",
   "I understand that the relevant embassy, consulate or immigration authority has sole responsibility for the final visa decision.",
   "I confirm that all documents and information supplied by me are genuine, authentic, accurate and legally obtained.",
   "I understand that providing false, forged or misleading documents may have serious legal and immigration consequences, for which I may be responsible.",
   "I agree to provide requested documents and information within the required timeframe.",
-  "I understand that government, embassy, visa application centre and other thirdparty charges may be separate from the Company's professional service fee.",
-  "I authorise Zoltan Visa to process and communicate information reasonably necessary to provide the agreed services, where legally permitted.",
-  "I understand that the relevant authorities control visa decisions, processing times and requirements and may change without notice.",
+  "I understand that government, embassy, visa application centre and other third-party charges may be separate from the Company's professional service fee.",
+  "I authorise Zoltan to process and communicate information reasonably necessary to provide the agreed services, where legally permitted.",
+  "I understand that visa decisions, processing times and requirements are controlled by the relevant authorities and may change without notice.",
   "I have read and agree to the Company's Privacy Policy.",
   "I voluntarily accept these terms and conditions."
 ];
@@ -460,19 +438,21 @@ export const CLIENT_DECLARATIONS = [
 export const IMPORTANT_NOTE = "Important: This Agreement should be read together with the Company's Privacy Policy, applicable service-specific terms, quotation/invoice and any other terms expressly provided to the Client.";
 
 // Raw plaintext format suitable for storing verbatim with application records
-export const RAW_AGREEMENT_TEXT = `TRAVEL & VISA ASSISTANCE AGREEMENT
-Zoltan Visa UK Travel & Visa Assistance Services
+export const RAW_AGREEMENT_TEXT = `VISA ASSISTANCE AGREEMENT
+Zoltan
+UK & Visa Assistance Services
 
-${AGREEMENT_PREAMBLE}
+This & Visa Assistance Agreement (“Agreement”) sets out the terms and conditions under which ** Zoltan** (“Company”, “we”, “us” or “our”) provides -related and visa assistance services to the client (“Client”, “you” or “your”).
+By signing this Agreement, submitting an online acceptance, ticking the relevant acceptance box on our website, making payment, or instructing us to commence work, you confirm that you have read, understood and accepted these terms and conditions.
 
 1. SCOPE OF SERVICES
-1.1 The Company may provide travel and visa assistance services, which may include:
-  - Application form preparation and administrative assistance;
-  - Document checklist and document organisation;
-  - Review of documents supplied by the Client;
-  - Assistance with appointment and submission procedures where applicable;
-  - Communication and administrative coordination with relevant visa application centres, embassies, consulates, airlines, hotels, insurers and other travel service providers, where permitted;
-  - Travel planning and related travel services where separately agreed.
+1.1 The Company may provide and visa assistance services, which may include:
+· Application form preparation and administrative assistance;
+· Document checklist and document organisation;
+· Review of documents supplied by the Client;
+· Assistance with appointment and submission procedures where applicable;
+· Communication and administrative coordination with relevant visa application centres, embassies, consulates, airlines, hotels, insurers and other service providers, where permitted;
+· planning and related services where separately agreed.
 1.2 The exact services provided to the Client will depend on the service selected and agreed between the Parties.
 1.3 Unless expressly agreed otherwise in writing, the Company's services do not include any guarantee of visa approval, entry into a country, or a particular immigration outcome.
 
@@ -487,10 +467,10 @@ ${AGREEMENT_PREAMBLE}
 3. CLIENT DOCUMENTS & INFORMATION
 3.1 The Client must provide all documents and information requested by the Company within the timeframe specified.
 3.2 The Client is solely responsible for ensuring that all information and documents supplied are:
-  - Genuine and authentic;
-  - Accurate and complete;
-  - Legally obtained;
-  - Current and valid where applicable.
+· Genuine and authentic;
+· Accurate and complete;
+· Legally obtained;
+· Current and valid where applicable.
 3.3 The Company may rely on information and documents supplied by the Client and is not responsible for consequences arising from false, misleading, incomplete, altered, expired or inaccurate information supplied by the Client.
 3.4 The Client must immediately notify the Company if any information previously provided changes before submission or during processing.
 3.5 The Company may request additional documents or clarification where reasonably required to process the Client's application or provide the agreed service.
@@ -535,7 +515,7 @@ The Client agrees to:
 
 9. FEES & THIRD-PARTY CHARGES
 9.1 The Client agrees to pay the Company's agreed professional/service fee before or during commencement of the relevant service, as communicated to the Client.
-9.2 Government visa fees, embassy fees, visa application centre charges, biometric fees, courier fees, translation fees, insurance costs, airline charges, hotel charges and other thirdparty expenses are separate unless expressly included in the agreed price.
+9.2 Government visa fees, embassy fees, visa application centre charges, biometric fees, courier fees, translation fees, insurance costs, airline charges, hotel charges and other third-party expenses are separate unless expressly included in the agreed price.
 9.3 Third-party charges may be non-refundable or subject to the relevant third party's cancellation and refund policies.
 9.4 The Company will not be responsible for changes to third-party fees, exchange rates or government charges.
 
@@ -565,7 +545,7 @@ The Client agrees to:
 
 14. CONFIDENTIALITY & DATA PROTECTION
 14.1 The Company will handle Client information in accordance with applicable UK data protection legislation and the Company's Privacy Policy.
-14.2 The Client authorises the Company to use and share relevant personal information and documents where reasonably necessary to provide the agreed services, including with visa application centres, embassies, consulates, government authorities and relevant travel service providers where permitted.
+14.2 The Client authorises the Company to use and share relevant personal information and documents where reasonably necessary to provide the agreed services, including with visa application centres, embassies, consulates, government authorities and relevant service providers where permitted.
 14.3 The Company will not knowingly disclose Client information for unrelated purposes except where required or permitted by law.
 14.4 The Client should review the Company's Privacy Policy before submitting personal information through the website.
 
@@ -574,39 +554,34 @@ The Client agrees to:
 15.2 The Company is not responsible for matters outside its reasonable control, including decisions or actions of embassies, consulates, immigration authorities, visa application centres, airlines, hotels, insurers, courier companies or other third parties.
 15.3 Nothing in this Agreement excludes or limits any liability or consumer right that cannot lawfully be excluded or limited under UK law.
 
-16. FALSE OR FRAUDULENT DOCUMENTS
-16.1 The Client confirms that all documents and information supplied to the Company are genuine and authentic.
-16.2 The Client must not provide forged, altered, fraudulent or misleading documents.
-16.3 If the Client supplies false or fraudulent documentation, the Client accepts responsibility for the consequences arising from that conduct.
-16.4 The Company may immediately suspend or terminate services where it reasonably believes that fraudulent or unlawful documentation has been supplied.
+16. IMMIGRATION / VISA DECISION-MAKING
+16.1 The Company provides the services described in the Client's service agreement and does not control the decision-making process of any embassy, consulate or immigration authority.
+16.2 Where a service requires regulated immigration advice or representation, such services will only be provided where legally permitted and by an appropriately authorised person or organisation where required.
+16.3 The Client should not interpret any statement by the Company as a guarantee of a visa or immigration outcome.
 
-17. IMMIGRATION / VISA DECISION-MAKING
-17.1 The Company provides the services described in the Client's service agreement and does not control the decision-making process of any embassy, consulate or immigration authority.
-17.2 Where a service requires regulated immigration advice or representation, such services will only be provided where legally permitted and by an appropriately authorised person or organisation where required.
-17.3 The Client should not interpret any statement by the Company as a guarantee of a visa or immigration outcome.
+17. WEBSITE ACCEPTANCE & ELECTRONIC AGREEMENT
+17.1 Where this Agreement is accepted electronically, the Client's electronic acceptance, including ticking an acceptance checkbox, submitting an online form, making payment or otherwise confirming acceptance, may constitute acceptance of this Agreement where legally effective.
+17.2 The Client confirms that they have had an opportunity to read these terms before accepting them.
+17.3 The Company may retain records of electronic acceptance, communications, payments and instructions for legitimate business and legal purposes.
 
-18. WEBSITE ACCEPTANCE & ELECTRONIC AGREEMENT
-18.1 Where this Agreement is accepted electronically, the Client's electronic acceptance, including ticking an acceptance checkbox, submitting an online form, making payment or otherwise confirming acceptance, may constitute acceptance of this Agreement where legally effective.
-18.2 The Client confirms that they have had an opportunity to read these terms before accepting them.
-18.3 The Company may retain records of electronic acceptance, communications, payments and instructions for legitimate business and legal purposes.
-
-19. GOVERNING LAW & JURISDICTION
-19.1 This Agreement shall be governed by the laws of England and Wales, subject to any mandatory consumer protection rights applicable to the Client.
-19.2 Any dispute shall be dealt with by the courts having appropriate jurisdiction, subject to any mandatory rights the Client may have under applicable UK law.
+18. GOVERNING LAW & JURISDICTION
+18.1 This Agreement shall be governed by the laws of England and Wales, subject to any mandatory consumer protection rights applicable to the Client.
+18.2 Any dispute shall be dealt with by the courts having appropriate jurisdiction, subject to any mandatory rights the Client may have under applicable UK law.
 
 CLIENT DECLARATION & ACCEPTANCE
 By accepting this Agreement, I confirm that:
-- I have read and understood this Agreement and the terms applicable to the service I have purchased.
-- I understand that Zoltan Visa does not guarantee visa approval or any particular immigration outcome.
-- I understand that the relevant embassy, consulate or immigration authority has sole responsibility for the final visa decision.
-- I confirm that all documents and information supplied by me are genuine, authentic, accurate and legally obtained.
-- I understand that providing false, forged or misleading documents may have serious legal and immigration consequences, for which I may be responsible.
-- I agree to provide requested documents and information within the required timeframe.
-- I understand that government, embassy, visa application centre and other thirdparty charges may be separate from the Company's professional service fee.
-- I authorise Zoltan Visa to process and communicate information reasonably necessary to provide the agreed services, where legally permitted.
-- I understand that the relevant authorities control visa decisions, processing times and requirements and may change without notice.
-- I have read and agree to the Company's Privacy Policy.
-- I voluntarily accept these terms and conditions.
+· I have read and understood this Agreement and the terms applicable to the service I have purchased.
+· I understand that Zoltan does not guarantee visa approval or any particular immigration outcome.
+· I understand that the relevant embassy, consulate or immigration authority has sole responsibility for the final visa decision.
+· I confirm that all documents and information supplied by me are genuine, authentic, accurate and legally obtained.
+· I understand that providing false, forged or misleading documents may have serious legal and immigration consequences, for which I may be responsible.
+· I agree to provide requested documents and information within the required timeframe.
+· I understand that government, embassy, visa application centre and other third-party charges may be separate from the Company's professional service fee.
+· I authorise Zoltan to process and communicate information reasonably necessary to provide the agreed services, where legally permitted.
+· I understand that visa decisions, processing times and requirements are controlled by the relevant authorities and may change without notice.
+· I have read and agree to the Company's Privacy Policy.
+· I voluntarily accept these terms and conditions.
 
-ZoltanVisa Your International Travel Partner
+Zoltan
+Your International Partner
 Important: This Agreement should be read together with the Company's Privacy Policy, applicable service-specific terms, quotation/invoice and any other terms expressly provided to the Client.`;
