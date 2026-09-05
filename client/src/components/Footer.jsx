@@ -86,7 +86,7 @@ const Footer = () => {
                 <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="https://www.travelzoltan.com" target="_blank" rel="noopener noreferrer" title="Travel Zoltan">
                   <span className="material-symbols-outlined text-sm">public</span>
                 </a>
-                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="https://wa.me/919502060511" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                <a className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-primary hover:text-white transition-all" href="https://wa.me/442030261633" target="_blank" rel="noopener noreferrer" title="WhatsApp">
                   <span className="material-symbols-outlined text-sm">chat</span>
                 </a>
               </div>

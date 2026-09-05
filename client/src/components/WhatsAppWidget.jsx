@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const WHATSAPP_NUMBER = '919502060511';
+const WHATSAPP_NUMBER = '442030261633';
 
 const QUICK_PROMPTS = [
   { label: '🚫 Refusal Case Help', text: 'Hi! I have a visa rejection/refusal and want expert help to reapply.' },
